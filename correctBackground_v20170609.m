@@ -1,5 +1,5 @@
 function [signal_corr, step_locations, cloud_mask, flags, background] =...
-    correctBackground_v20170609(signal, range, time, varargin)
+    correctBackground(signal, range, time, varargin)
 %CORRECTBACKGROUND function corrects the background signal of the HALO
 %Doppler lidar instrument. The background is corrected for step-changes and
 %for the shape of the background within the step-changes respectively.
