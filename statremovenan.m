@@ -16,12 +16,12 @@ bad = 0;
 wasnan = isnan(y);
 index = find(wasnan==1);
 y_out(index) = [];
-x_out(index) = [];
+x_out(index,:) = [];
 priorw_out(index) = [];
 varargout{1} = y_out;
 varargout{2} = x_out;
 varargout{3} = priorw_out;
 
-if size(y_out) ~= size(x_out)
+if size(y_out,1) ~= size(x_out,1)
   bad = 2;
 end
