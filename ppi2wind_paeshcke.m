@@ -1,6 +1,6 @@
 function [u,v,w,ws,wd,sigma_u,sigma_v,sigma_w,sigma_ws,sigma_wd,R_sqred,CN] = ...
-    ppi2wind_Pashcke(site,DATE,vr,azi,ele,snr)
-%PPI2WIND_PASCHKE calculates u,v,w wind component profiles from radial velocities
+    ppi2wind_paeshcke(site,DATE,vr,azi,ele,snr)
+%PPI2WIND_PAESCHKE calculates u,v,w wind component profiles from radial velocities
 % by using singular value decomposition (Paschke et al., 2015)
 %
 % Inputs (units) [dimensions]:
