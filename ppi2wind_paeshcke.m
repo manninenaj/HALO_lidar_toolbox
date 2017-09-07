@@ -29,9 +29,6 @@ function [u,v,w,ws,wd,sigma_u,sigma_v,sigma_w,sigma_ws,sigma_wd,R_sqred,CN] = ..
 % University of Helsinki, Finland
 % antti.j.manninen@helsinki.fi
 
-% TBD:
-% 2) check inputs and orientations, important for 'vr' and 'snr'
-
 C = getconfig(site,DATE);
 
 % Initialize
@@ -114,7 +111,6 @@ for i = 1:size(vr,2) % loop over range gates
         sigma_w(i) = wind_comp_error(3);
         
         % Calculate sigma's for wind speed and direction
-        
         sigma_ws(i) = sqrt((u(i)*sigma_u(i))^2 + (v(i)*sigma_v(i))^2) / ...
             sqrt(u(i)^2+v(i)^2);
         sigma_wd(i) = sqrt((u(i)*sigma_v(i))^2 + (v(i)*sigma_u(i))^2) / ...
@@ -144,7 +140,7 @@ end
         
         yu = max(y);
         yl = min(y);
-        % Range of ?y?
+        % Range of y
         yr = (yu-yl);
         yz = y-yu+(yr/2);
         % Find zero-crossings
@@ -163,11 +159,6 @@ end
         
         xp = linspace(min(x),max(x),length(x));
         
-        % figure; hold on;
-        % plot(x*(180/pi),y+nanmean(r_velo(ia)),'b')
-        % plot(xp*(180/pi),fit(s,xp)+nanmean(r_velo(ia)), 'r')
-        % grid
-        
         sine_fit = fit(s,xp)+nanmean(r_velo); % calc fit and shift back
         [~,itime] = sort(iazi);
         sine_fit = sine_fit(itime); % order back w.r.t time
@@ -177,7 +168,6 @@ end
     end
 
     function [x,fval] = my_fminsearch(funfcn,x)
-        
         maxfun = 800;
         maxiter = 800;
         tolf = 1.0000e-4;
@@ -227,16 +217,7 @@ end
         func_evals = n+1;
         
         
-        % Main algorithm: iterate until
-        % (a) the maximum coordinate difference between the current best point and the
-        % other points in the simplex is less than or equal to TolX. Specifically,
-        % until max(||v2-v1||,||v3-v1||,...,||vee(n+1)-v1||) <= TolX,
-        % where ||.|| is the infinity-norm, and v1 holds the
-        % vertex with the current lowest value; AND
-        % (b) the corresponding difference in function values is less than or equal
-        % to TolFun. (Cannot use OR instead of AND.)
-        % The iteration stops if the maximum number of iterations or function evaluations
-        % are exceeded
+        % Main part
         while func_evals < maxfun && itercount < maxiter
             if max(abs(fv(1)-fv(two2np1))) <= max(tolf,10*eps(fv(1))) && ...
                     max(max(abs(vee(:,two2np1)-vee(:,onesn)))) <= max(tolx,10*eps(max(vee(:,1))))
@@ -244,7 +225,6 @@ end
             end
             
             % Compute the reflection point
-            
             % xbar = average of the n (NOT n+1) best points
             xbar = sum(vee(:,one2n), 2)/n;
             xr = (1 + rho)*xbar - rho*vee(:,end);
