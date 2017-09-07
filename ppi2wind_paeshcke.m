@@ -1,6 +1,6 @@
 function [u,v,w,ws,wd,sigma_u,sigma_v,sigma_w,sigma_ws,sigma_wd,R_sqred,CN] = ...
-    ppi2wind_paeshcke(site,DATE,vr,azi,ele,snr)
-%PPI2WIND_PAESCHKE calculates u,v,w wind component profiles from radial velocities
+    ppi2wind_Pashcke_v20170831(site,DATE,vr,azi,ele,snr)
+%PPI2WIND_PASCHKE calculates u,v,w wind component profiles from radial velocities
 % by using singular value decomposition (Paschke et al., 2015)
 %
 % Inputs (units) [dimensions]:
@@ -24,10 +24,13 @@ function [u,v,w,ws,wd,sigma_u,sigma_v,sigma_w,sigma_ws,sigma_wd,R_sqred,CN] = ..
 %   sigma_wd            wind direction profile (degrees) [range]
 %   CN                  Condition number for ws & wd (unitless) [range]
 %
-% 2017-09-07
+% 2017-08-10
 % Antti Manninen
 % University of Helsinki, Finland
 % antti.j.manninen@helsinki.fi
+
+% TBD:
+% 2) check inputs and orientations, important for 'vr' and 'snr'
 
 C = getconfig(site,DATE);
 
@@ -75,7 +78,7 @@ for i = 1:size(vr,2) % loop over range gates
         R_sqred(i) = nan;
         CN(i) = nan;
     else
-        wind_components = V * pinv(D) * U' * vr(:,i);
+        wind_components = V * my_pinv(D) * U' * vr(:,i);
         u(i) = wind_components(1);
         v(i) = wind_components(2);
         w(i) = wind_components(3);
@@ -102,7 +105,7 @@ for i = 1:size(vr,2) % loop over range gates
         
         % variance-covariance matrices
         C_vr_vr = diag(sigma_Vr);
-        C_v_v = A \ C_vr_vr / A';
+        C_v_v = my_pinv(A) * C_vr_vr * my_pinv(A)';
         
         % Calculate sigma's for u,v,w
         wind_comp_error = sqrt(diag(C_v_v));
@@ -315,6 +318,14 @@ end
         fval = fv(:,1);
     end
 
-
+    function out = my_pinv(Ain)
+        % Matrix pseudoinverse
+        [UU,DD,VV] = svd(Ain,'econ');
+        es = diag(DD);
+        tol = max(size(Ain)) * eps(norm(es,inf));
+        r1 = sum(es > tol)+1;
+        VV(:,r1:end) = []; UU(:,r1:end) = []; es(r1:end) = [];
+        es = 1./es(:);
+        out = (VV.*es.')*UU';   
+    end
 end
-
