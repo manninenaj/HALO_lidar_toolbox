@@ -1,5 +1,5 @@
 function [u,v,w,ws,wd,sigma_u,sigma_v,sigma_w,sigma_ws,sigma_wd,R_sqred,CN] = ...
-    ppi2wind_Pashcke_v20170831(site,DATE,vr,azi,ele,snr)
+    ppi2wind_Pashcke(site,DATE,vr,azi,ele,snr)
 %PPI2WIND_PASCHKE calculates u,v,w wind component profiles from radial velocities
 % by using singular value decomposition (Paschke et al., 2015)
 %
@@ -24,13 +24,10 @@ function [u,v,w,ws,wd,sigma_u,sigma_v,sigma_w,sigma_ws,sigma_wd,R_sqred,CN] = ..
 %   sigma_wd            wind direction profile (degrees) [range]
 %   CN                  Condition number for ws & wd (unitless) [range]
 %
-% 2017-08-10
+% 2017-09-07
 % Antti Manninen
 % University of Helsinki, Finland
 % antti.j.manninen@helsinki.fi
-
-% TBD:
-% 2) check inputs and orientations, important for 'vr' and 'snr'
 
 C = getconfig(site,DATE);
 
