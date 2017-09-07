@@ -55,7 +55,7 @@ A = [sind(azi(:)) .* sind(ele(:)),...
 
 % Filter background
 if isfield(C,'SNR_threshold')
-    vr(snr < C.snr_threshold) = nan;
+    vr(snr < C.SNR_threshold) = nan;
 else
     vr(snr < 1.01) = nan;    
 end
