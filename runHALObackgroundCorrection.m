@@ -26,7 +26,12 @@ end
 if length(DATES)>2
     error('''DATES'' can have max. length of 2.')
 elseif length(DATES)==1
-    DATEstart = DATES; DATEend = DATES;
+    if length(num2str(DATES))~=8
+    error(['The value in the second input ''DATES'' must be' ...
+        ' numerical date in YYYYMMDD format.'])
+    else
+        DATEstart = DATES; DATEend = DATES;
+    end
 elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && ...
         length(num2str(DATES(2)))~=8)
     error(['The value(s) in the second input ''DATES'' must be' ...
