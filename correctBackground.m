@@ -1,5 +1,6 @@
 function [signal_corr, step_locations, cloud_mask, flags, background] =...
-    correctBackground(signal, range, time, varargin)
+    correctBackground(signal, signal_corr_ripples, range, time,...
+    varargin)
 %CORRECTBACKGROUND function corrects the background signal of the HALO
 %Doppler lidar instrument. The background is corrected for step-changes and
 %for the shape of the background within the step-changes respectively.
@@ -126,7 +127,7 @@ else
     
     %% CLOUD SCREENING, cloud-aerosol masking and filling for wavelet
     [cloud_mask,signal_cld_scrd_outlr,signal_filled,flag_nofit] = ...
-        cloudScreening(signal, parameters, range);
+        cloudScreening(signal, signal_corr_ripples, range, parameters);
     
     %% MULTI-LEVEL 1D STATIONARY WAVELET DECOMPOSITION
     % The step-changes in the cloud-screened and filled signal are
@@ -217,7 +218,7 @@ else
     % The steps occur as peaks (or outliers) in the detail coeffs.,
     % so look for peaks in a subset of data. Define what is a "peak"
     % i.e. difference between a "valley" and a "peak".
-    [max_peaks_final_level, ~] = peakDetection(detail_coeff_all_sum,...
+    [max_peaks_final_level, ~] = peakDetection(detail_coeff_all_sum.^2,...
         prctile(detail_coeff_all_sum, 75));
     if ~isempty(max_peaks_final_level)
         % Shift the locations based on the haar wavelet level impulse
@@ -299,8 +300,12 @@ else
             end
             
             % Select only non nans
-            y_final_valid = signal_med_bin(~isnan(signal_med_bin));
-            x_final_valid = range(~isnan(signal_med_bin));
+            ysel = signal_drift_corrtd;
+            xsel = repmat(range(:),1,size(ysel,1))';
+            [xsel_sort,isort] = sort(xsel(:));
+            ysel = ysel(:); ysel_sort = ysel(isort);
+            y_final_valid = ysel_sort(~isnan(ysel_sort));
+            x_final_valid = xsel_sort(~isnan(ysel_sort));
             
             % Calculate 1st, 2nd deg, and constrained polynomial fits
             [B_prof_1deg,stats_1deg] = my_robustfit(x_final_valid(:), ...
@@ -314,7 +319,7 @@ else
             y_fit_prof_2deg = polyval(p_2deg_prof, range);
 
             % If 1st degree polynomial fit is better
-            if stats_1deg.ols_s/stats_2deg.ols_s < 1 || ...
+            if stats_1deg.ols_s/stats_2deg.ols_s < 1.1 || ...
                     flag_fit_step == 1
                 
                 % Correct for step change and background shape
@@ -685,26 +690,27 @@ end
 % furthest range bins (furthest 20%) into 64 subsections, which are used to
 % find a dynamic threshold for the variance-based cloud-aerosol screening.
     function [cloud_mask,signal_cld_scrd_outlr,signal_fill,flag_nofit] =...
-            cloudScreening(signal,params,range)
+            cloudScreening(signal,signal_corr_1,range,params)
         % Pad with nans to avoid the border effect
-        signal_pad_x = horzcat(signal, nan((params.win_size(1)-1)/2,...
+        signal_pad_x = horzcat(signal, nan(round((params.win_size(1)-1)/2),...
             size(signal,1))');
-        signal_pad   = horzcat(nan((params.win_size(1)-1)/2,...
+        signal_pad = horzcat(nan(round((params.win_size(1)-1)/2),...
             size(signal_pad_x,1))', signal_pad_x);
         
         % 2D running variance with a window having dimensions equal to
         % 'params.win_size'
         signal_var_pad = nan(size(signal_pad));
-        for iC = 1+(params.win_size(1)-1)/2:...
-                size(signal_pad,2)-(params.win_size(1)-1)/2
-            temp_array = signal_pad(:,iC-(params.win_size(1)-1)/2:...
-                iC+(params.win_size(1)-1)/2);
+        for iC = 1+round((params.win_size(1)-1)/2):...
+                size(signal_pad,2)-round((params.win_size(1)-1)/2)
+            temp_array = signal_pad(:,iC-round((params.win_size(1)-1)/2):...
+                iC+round((params.win_size(1)-1)/2));
             signal_var_pad(:,iC) = nanvar(temp_array,[],2);
         end
         
         % Remove padded nans
-        signal_var = signal_var_pad(:,(params.win_size(1)-1)/2+1:...
-            end-(params.win_size(1)-1)/2);
+        signal_var = signal_var_pad(:,round((params.win_size(1)-1)/2)+1:...
+            end-round((params.win_size(1)-1)/2));
+        signal_var = real(log10(signal_var));
         % Select variance in the furthest range bins (furthest 20%)
         signal_var_up20 = signal_var(:,end-round(size(signal,2)*.2)+1:end);
         
@@ -765,32 +771,34 @@ end
                 size(signal_var_up20, 1)) + 1:end ,:) = [];
         end
         
-        % Calculate median variance in each block
-        block_median = nan(1,max(block_indeces(:)));
+        % Calculate mean variance in each block
+        block_mean = nan(1,max(block_indeces(:)));
         for i_med = 1:max(block_indeces(:))
-            block_median(i_med) = ...
-                nanmedian(signal_var_up20_pad_all(block_indeces == i_med));
+            block_mean(i_med) = ...
+                nanmean(signal_var_up20_pad_all(block_indeces == i_med));
         end
         
         % Find the half of the blocks which have lowest median variance,
         % i.e. which are least influenced by clouds and aerosols, and
         % collect the calculated variance from those blocks into a
         % reference array for finding the dynamic threshold
-        [~,sorted_block_ind] = sort(block_median);
+        [~,sorted_block_ind] = sort(block_mean);
         icond_refvar = ismember(block_indeces, sorted_block_ind(1:floor(...
             8 * 8/2)));
         signal_var_ref = signal_var_up20(icond_refvar);
+%         signal_var_ref = nan(size(signal_var_up20));
+%         signal_var_ref(icond_refvar) = signal_var_up20(icond_refvar);
         
         % Find dynamic threshold based on the number of screened pixels in
         % the lowest most median variance regions of the signal. The
-        % allowed number of screened pixels is 0.5% of the total amount of
+        % allowed number of screened pixels is 10% of the total amount of
         % pixels in the reference region, variable 'ratio'
         th = 50; % initialise
         i = 1;
         signal_var_th = signal_var_ref;
         signal_var_th(signal_var_ref > prctile(signal_var(:),th)) = nan;
         ratio = sum(isnan(signal_var_th(:))) / numel(signal_var_ref);
-        while ratio(i) > .005
+        while ratio(i) > .1
             i = i + 1;
             % Increase threshold every iteration
             th(i) = th(i-1) + 1;
@@ -799,7 +807,7 @@ end
                 prctile(signal_var(:),th(i))) = nan;
             ratio(i) = sum(isnan(signal_var_th(:))) / ...
                 numel(signal_var_ref);
-            if ratio(i) == ratio(i-1)
+            if ratio(i) == ratio(i-1) || th(i)>98
                 break
             end
         end
@@ -828,6 +836,14 @@ end
         
         % Initialize
         signal_cld_scrd_outlr = signal_cloud_scr_var;
+        % Use the original uncorrected signal, i.e. no ripple removal, to 
+        % construct the filled signal, which is used only in the wavelet 
+        % transformation. If background *.txt files are absent, this has no
+        % effect since both original signal and ripple removed signal are 
+        % in that case the same. Ripple removal passes the original as
+        % output if background *.txt files are absent.
+        signal_corr_1_cld_scrd_outlr = signal_corr_1;
+        signal_corr_1_cld_scrd_outlr(isnan(signal_cld_scrd_outlr)) = nan;
         signal_fill = nan(size(signal));
         flag_nofit = nan(size(signal,1),1);
         for i_prof = 1:size(signal,1) % 24280 arm-graciosa 4 testing
@@ -838,6 +854,7 @@ end
                     signal_cld_scrd_outlr(i_prof,:), 1);
                 
                 % Remove outliers
+                signal_corr_1_cld_scrd_outlr(i_prof,i_outlrs_hi) = nan;
                 signal_cld_scrd_outlr(i_prof,i_outlrs_hi) = nan;
                 y_outlr_rmvd = signal_cld_scrd_outlr(i_prof,:);
                 x_outlr_rmvd = range;
@@ -872,12 +889,13 @@ end
                 RMSE_final_scrn_2deg = stats_final_2deg.ols_s;
                 
                 % Initialize
-                signal_fill(i_prof,:) = signal_cld_scrd_outlr(i_prof,:);
+                signal_fill(i_prof,:) = ...
+                    signal_corr_1_cld_scrd_outlr(i_prof,:);
                 
                 % Ignore additional number of range bins in case some
                 % remnant aerosol signal did remain in the lower most range
-                % bins. Note that the lower the fit reaches the more
-                % accurate it is.
+                % bins. Though, the lower the fit reaches the more accurate
+                % it is given the cloud screening was succesful.
                 signal_fill(i_prof,1:params.ignore) = nan;
                 
                 % Determine if there's enough data for a fit, based on 
@@ -908,7 +926,7 @@ end
                             y_fit_final_scrn_1deg(...
                             isnan(signal_fill(i_prof,:)));
                         
-                        % If 2nd degree polynomial fit is better
+                    % If 2nd degree polynomial fit is better
                     else
                         % Fill with 2nd deg fits
                         signal_fill(i_prof,...

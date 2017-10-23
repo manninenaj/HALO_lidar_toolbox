@@ -1,8 +1,12 @@
 function C = getconfig(site,DATE)
 %GETCONFIG reads the config file and outputs the site and date specific
 %paremeters in struct format.
+%
+% Inputs:
+% - site            string, name of the site, e.g. 'kuopio'
+% - DATE            scalar, numerical date, e.g. 20171231
 
-% Check inputs, TBD: improve
+% Check inputs
 if nargin < 2
     error('''site'' and ''DATE'' are required inputs!')
 end
@@ -26,6 +30,8 @@ if exist('halo_config.txt','file') == 2
     
     % Sort parameter/value pairs into columns
     D1 = D(not(cellfun('isempty',D))); % rm empty lines
+    i_rm = not(cellfun('isempty',strfind(D1,'SITE SPECIFIC')));
+    D1(i_rm) = []; % remove comment lines 
     split1 = regexp(D1,' = ','split'); % split after equals sign
     param_val_pairs = cell(length(split1),2);
     for i=1:length(split1)
@@ -42,11 +48,18 @@ if exist('halo_config.txt','file') == 2
         
         % Get names and values and allocate them into a struct variable
         def_param_names = param_val_pairs(1:iend_def,1);
-        def_param_values = str2double(param_val_pairs(1:iend_def,2));
+        def_param_values = param_val_pairs(1:iend_def,2);
         for i = 1:length(def_param_names)
-            C.(def_param_names{i}) = def_param_values(i);
+            if ~isnan(str2double(def_param_values{i}))
+                % Convert numeric parameters into double precision
+                C.(def_param_names{i}) = ...
+                    str2double(def_param_values{i});
+            else
+                % Text as is
+                C.(def_param_names{i}) = ...
+                    def_param_values{i};
+            end
         end
-        
         %%--- Get site specific parameters ---%%
         % Set limits
         ibegin = find(strcmp(param_val_pairs(:,2),site))+1;
@@ -93,12 +106,10 @@ if exist('halo_config.txt','file') == 2
                 '\nfrom halo_config.txt.'],DATE,site)
         end
     else
-        error(['Site ''%s'' not recognized as a site specified in' ...
-            ' halo_config.txt.\nPlease check spelling of ''site'''...
-            ' or specify your site in halo_config.txt.'],site)
+        error(['''%s'' is not specified in halo_config.txt.\nCheck' ...
+            ' spelling or add your site to the halo_config.txt.'],site)
     end
 else
     error('Please check that halo_config.txt is in your path.')
 end
 end
-
