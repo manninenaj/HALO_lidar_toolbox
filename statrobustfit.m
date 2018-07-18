@@ -1,4 +1,4 @@
-function [b,stats] = statrobustfit(X,y,wfun,tune,wasnan,addconst,priorw,dowarn)
+function [b,stats] = statrobustfit(X,y,wfun,tune,wasnan,addconst,priorw)
 %STATROBUSTFIT Calculation function for ROBUSTFIT
 
 % Copyright 1993-2011 The MathWorks, Inc.
@@ -18,7 +18,8 @@ if (addconst)
    p = p+1;
 end
 if (n<=p)
-   error(message('stats:robustfit:NotEnoughData'));
+    b=[]; stats=[];
+   return
 end
 
 if ~all(priorw==1)
@@ -39,9 +40,6 @@ else
     % Use only the non-degenerate parts of R and Q, but don't reduce
     % R because it is returned in stats and is expected to be of
     % full size.
-    if dowarn
-        warning(message('stats:robustfit:RankDeficient', xrank));
-    end
     b(perm,:) = [R(1:xrank,1:xrank) \ (Q(:,1:xrank)'*y); zeros(p-xrank,1)];
     perm = perm(1:xrank);
 end
@@ -67,12 +65,11 @@ end
 % Perform iteratively reweighted least squares to get coefficient estimates
 D = sqrt(eps(class(X)));
 iter = 0;
-iterlim = 150;
+iterlim = 500;
 wxrank = xrank;    % rank of weighted version of x
 while((iter==0) || any(abs(b-b0) > D*max(abs(b),abs(b0))))
    iter = iter+1;
    if (iter>iterlim)
-      warning(message('stats:statrobustfit:IterationLimit'));
       break;
    end
 
@@ -133,7 +130,7 @@ if (nargout>1)
    stats.coeffcorr = C;
    stats.t = NaN(size(b));
    stats.t(se>0) = b(se>0) ./ se(se>0);
-   stats.p = 2 * tcdf(-abs(stats.t), dfe);
+%   stats.p = 2 * tcdf(-abs(stats.t), dfe);
    stats.w = w;
    RR = zeros(p);
    RR(perm,perm) = R(1:xrank,1:xrank);

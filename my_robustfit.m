@@ -97,10 +97,10 @@ if nargin<7
 end
 
 % Remove missing values and check dimensions
-[anybad wasnan y X priorw] = statremovenan(y,X,priorw);
+[anybad,wasnan,y,X,priorw] = statremovenan(y,X,priorw);
 if (anybad==2)
    error(message('stats:robustfit:InputSizeMismatch'));
 end
 
 varargout=cell(1,max(1,nargout));
-[varargout{:}] = statrobustfit(X,y,wfun,tune,wasnan,doconst,priorw,dowarn);
+[varargout{:}] = statrobustfit(X,y,wfun,tune,wasnan,doconst,priorw);

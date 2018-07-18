@@ -1,0 +1,1098 @@
+function calculateHALOwStatsProduct(site,DATES,dt,timeStep,weighting)
+%calculateHALOwStatsProduct reads calibrated *co.nc files and
+%calculates vertical radial velocity statistics: mean, std.dev.,
+%variance, skewness, kurtosis with a discrete time steps. The results
+%are written in a daily *.nc files. Also, the theoretical measurement
+%errors, i.e. noise std. dev. and variance are calculated.
+%
+% Usage:
+% calculateHALOwStatsProduct(site,DATES)
+% calculateHALOwStatsProduct(site,DATES,dt)
+% calculateHALOwStatsProduct(site,DATES,dt,weighting)
+%
+% Inputs:
+% -site        string, site name, e.g. site = 'kuopio'
+% -DATES       scalar or vector, numeric, e.g. DATES = 20170401
+%              or DATES = [20170401 20170431]
+% -dt          scalar or vector, numeric, temporal resolution in minutes,
+%              e.g. dt = [1 10], or dt = 30. Default: dt = [3 10 30]
+% -timeStep    specifies in minutes how long chunks are loaded and
+%              processed at a time. Default: 240
+% -weighting   logical 'true' or 'false'. Default: 'true'
+%
+% Created 2018-01-18
+% Antti Manninen
+% University of Helsinki, Finland
+% antti.j.manninen@helsinki.fi
+
+if nargin < 2
+    error('''site'' and ''DATES'' are required inputs!')
+end
+if ~ischar(site)
+    error('The first input ''site'' must be a string.')
+end
+if length(DATES)>2
+    error('''DATES'' can have max. length of 2.')
+elseif length(DATES)==1
+    DATEstart = DATES; DATEend = DATES;
+elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && ...
+        length(num2str(DATES(2)))~=8)
+    error(['The value(s) in the second input ''DATES'' must be' ...
+        ' numerical date(s) in YYYYMMDD format.'])
+else
+    DATEstart = DATES(1); DATEend = DATES(2);
+end
+if nargin < 3
+    % Temporal resolutions, min/60 = hrs
+    dt = [3 30 60]; dt = dt./60;
+    weighting = false;
+    timeStep = 60;
+elseif nargin == 3
+    if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
+        error(['The 3rd input must a numerical scalar or vector'...
+            ' specifying the temporal resolution in full minutes,'...
+            ' and less than or equal to 60.'])
+    else
+        % Temporal resolutions, min/60 = hrs
+        dt = dt./60;
+    end
+end
+if nargin < 4
+    timeStep = 60;
+    weighting = false;
+end
+if nargin == 4
+    if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
+        error(['The 3rd input must a numerical scalar or vector'...
+            ' specifying the temporal resolution in full minutes,'...
+            ' and less than or equal to 60.'])
+    else
+        % Temporal resolutions, min/60 = hrs
+        dt = dt./60;
+    end
+    if ~isnumeric(timeStep) | timeStep < 60 | timeStep > 1440 | ~isscalar(timeStep) | ...
+            int16(timeStep)~=timeStep | ~all(int16(timeStep./dt)==timeStep./dt)
+        error(sprintf(['The 4th input ''timeSptep'' has to be numerical integer,'...
+            ' larger than 1 (min), less than 1440 (min),\nand'...
+            ' divisible by the 3rd input ''dt''. So, function works only'...
+            ' with multiples of 60 (min): 60, 120, 240.']))
+    end
+end
+if nargin < 5
+    weighting = false;
+end
+if nargin == 5
+    if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
+        error(['The 3rd input must a numerical scalar or vector'...
+            ' specifying the temporal resolution in full minutes,'...
+            ' and less than or equal to 60.'])
+    else
+        % Temporal resolutions, min/60 = hrs
+        dt = dt./60;
+    end
+    if not(islogical(weighting))
+        error('The 5th input has to be logical ''true'' or ''false''.')
+    end
+    if ~isnumeric(timeStep) | timeStep < 60 | timeStep > 1440 | ~isscalar(timeStep) | ...
+            int16(timeStep)~=timeStep | ~all(int16(timeStep./dt)==timeStep./dt)
+        error(sprintf(['The 4th input ''timeSptep'' has to be numerical integer,'...
+            ' larger than 1 (min), less than 1440 (min),\nand'...
+            ' divisible by the 3rd input ''dt''. So, function works only'...
+            ' with multiples of 60 (min): 60, 120, 240.']))
+    end
+    
+elseif nargin > 5
+    error('Too many inputs.')
+end
+
+% Use datenum to accommodate leap years etc.
+for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
+        datenum(num2str(DATEend),'yyyymmdd')
+    
+    % Convert date into required formats
+    thedate = datestr(iDATE,'yyyymmdd');
+    DATE = str2double(thedate);
+    
+    % Get default and site/unit/period specific parameters
+    C = getconfig(site,DATE);
+    
+    % Get list of files
+    [dir_to_folder_in,halo_files] = getHALOfileList(site,DATE,'calibrated','stare','co');
+    [dir_to_folder_out,~] = getHALOfileList(site,DATE,'product','wstats');
+    
+    % Check path to write out
+    status = checkHALOpath(site,DATE,'product','wstats');
+    if isempty(status)
+        fprintf('Can''t write %s - %s.',num2str(DATE),site);
+        continue;
+    end
+    
+    % Load, assume only one *_co.nc file per day
+    if isempty(halo_files), continue; end
+    
+    fprintf('\nGenerating the Halo wstats product.\n')
+    
+    % Define groups, which are used to process the data in chunks
+    ncid = netcdf.open([dir_to_folder_in halo_files{1}],'NC_NOWRITE');
+    varid = netcdf.inqVarID(ncid,'time');
+    time_info = double(netcdf.getVar(ncid,varid));
+    varid = netcdf.inqVarID(ncid,'range');
+    range_len = length(double(netcdf.getVar(ncid,varid)));
+    netcdf.close(ncid)
+    
+    ref_time_info = transpose((1:1:86400)/3600);
+    ref_time_block_indices = ones(timeStep*60,86400/(timeStep*60)) + ...
+        repmat(0:(86400/(timeStep*60))-1,timeStep*60,1);
+    ref_time_block_indices = ref_time_block_indices(:);
+    [~,ib] = look4nearest(time_info,ref_time_info);
+    ref_time_info_block = ref_time_block_indices(ib);
+    
+    att = []; dim = [];
+    for idt1 = 1:length(dt)
+        tres = num2str(dt(idt1)*60); % time reso in string
+        bn = 'radial_velocity'; % base for the name
+        
+        att = addAttributes(C,tres,bn,weighting,att,dt(idt1));
+        
+        % time
+        data.(['time_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        dim.(['time_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        
+        % Initialize cell arrays for collection of the chunks
+        data.([bn '_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_stddev_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        if dt(idt1)*60>=30
+            data.([bn '_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        end
+        data.([bn '_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_stddev_error_' ,tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        if dt(idt1)*60>=30
+            data.([bn '_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        end
+        data.(['signal_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['signal_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['beta_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['beta_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['signal_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['signal_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['beta_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['beta_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_instrumental_error_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_instrumental_error_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['beta_instrumental_error_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['beta_instrumental_error_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['nsamples_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        
+        if weighting
+            data.([bn '_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_weighted_stddev_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            if dt(idt1)*60>=30
+                data.([bn '_weighted_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+                data.([bn '_weighted_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            end
+            data.([bn '_weighted_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_weighted_stddev_error_' ,tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            if dt(idt1)*60>=30
+                data.([bn '_weighted_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+                data.([bn '_weighted_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            end
+            data.(['signal_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['signal_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['beta_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['beta_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['signal_weighted_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['signal_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['beta_weighted_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['beta_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_instrumental_error_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_instrumental_error_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['beta_instrumental_error_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['beta_instrumental_error_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        end
+    end
+    
+    % Iterate over unique time steps
+    for ichunk = 1:numel(unique(ref_time_block_indices))
+        
+        % Find start and end of the time window
+        ibegin = find(ref_time_info_block == ichunk,1,'first');
+        iend = find(ref_time_info_block == ichunk,1,'last');
+        if isempty(ibegin) || isempty(iend), continue; end
+        
+        fprintf('\nwstats: loading %s and calculating block %s/%s ...\n', ...
+            datestr(iDATE,'yyyymmdd'),num2str(ichunk), ...
+            num2str(numel(unique(ref_time_block_indices))))
+        
+        % Extract data
+        istarts = [0,ibegin-1];
+        icounts = [range_len,iend-ibegin];
+        ncid = netcdf.open([dir_to_folder_in halo_files{1}],'NC_NOWRITE');
+        varid = netcdf.inqVarID(ncid,'v_raw');
+        tmp.v_raw = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
+        varid = netcdf.inqVarID(ncid,'v_error');
+        tmp.v_error = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
+        varid = netcdf.inqVarID(ncid,'signal');
+        tmp.signal = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
+        varid = netcdf.inqVarID(ncid,'beta_raw');
+        tmp.beta_raw = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
+        varid = netcdf.inqVarID(ncid,'beta_error');
+        tmp.beta_error = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
+        varid = netcdf.inqVarID(ncid,'time');
+        tmp.time = double(netcdf.getVar(ncid,varid,istarts(2),icounts(2))); tmp.time = tmp.time(:);
+        varid = netcdf.inqVarID(ncid,'range');
+        tmp.range = double(netcdf.getVar(ncid,varid,istarts(1),icounts(1))); tmp.range = tmp.range(:);
+        netcdf.close(ncid)
+        
+        % Grid into 1 sec resolution
+        ref_time_sec = ref_time_info(ref_time_block_indices==ichunk);
+        [~,ib] = look4nearest(tmp.time,ref_time_sec);
+        ref_v_raw = nan(length(ref_time_sec),length(tmp.range));
+        ref_v_error = nan(length(ref_time_sec),length(tmp.range));
+        ref_snr = nan(length(ref_time_sec),length(tmp.range));
+        ref_beta = nan(length(ref_time_sec),length(tmp.range));
+        ref_beta_error = nan(length(ref_time_sec),length(tmp.range));
+        ref_v_raw(ib,:) = tmp.v_raw;
+        ref_v_error(ib,:) = tmp.v_error;
+        ref_snr(ib,:) = tmp.signal;
+        ref_beta(ib,:) = tmp.beta_raw;
+        ref_beta_error(ib,:) = tmp.beta_error;
+        
+        % Clean
+        ref_v_error(isnan(ref_v_raw)|ref_v_error>19|ref_v_error==0) = nan;
+        ref_v_raw(isnan(ref_v_error)) = nan;
+        
+        % Set up the little-bag-of-bootstraps.
+        lbob.subsample_size = .67;
+        lbob.n_subsamples = 10;
+        lbob.n_trials = 3; % Integer
+        lbob.score_func = []; % set up later, separately for each calculation
+        lbob.agg_func = @nanmean;
+        lbob.x = [];
+        lbob.y = [];
+        lbob.scores = []; % Estimates generated on each iteration of the outer loop.
+        lbob.mean = []; % Final value calculated in the outer loop
+        lbob.lo_bound = []; % lower confidence bound
+        lbob.hi_bound = []; % higher confidence bound
+        lbob.std = []; % standard error
+        
+        % Iterate over the selected temporal resolutions
+        for idt = 1:length(dt)
+            
+            tres = num2str(dt(idt)*60); % time reso in string
+            bn = 'radial_velocity'; % base for the name
+            
+            % Create time steps
+            atime = transpose(dt(idt)/2:dt(idt):24 - dt(idt)/2);
+            
+            % Create chunkt time refence vector.
+            chunktime = sort(repmat(1:length(1:timeStep/60:24),1,24/dt(idt)/length(1:timeStep/60:24)));
+            
+            fprintf('\nwstats: %s min resolution.', num2str(dt(idt).*60))
+            % Vectorize indices
+            iv = reshape(1:numel(ref_v_raw),(dt(idt)*3600),size(ref_v_raw,1)/(dt(idt)*3600)*size(ref_v_raw,2));
+            data.(['nsamples_' tres 'min']){ichunk} = reshape(sum(~isnan(ref_v_raw(iv))),size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            
+            if dt(idt)*60>=30
+                % Vectorize indices separately for higher moments, inlcude range below and above as well
+                ref_v_raw_4himoments = [nan(size(ref_v_raw,1),1) ref_v_raw nan(size(ref_v_raw,1),1)];
+                ref_v_error_4himoments = [nan(size(ref_v_error,1),1) ref_v_error nan(size(ref_v_error,1),1)];
+                iv_himoments = [iv; iv+size(ref_v_raw_4himoments,1); iv+size(ref_v_raw_4himoments,1)*2];
+            end
+            %%--- UNWEIGHTED STATISTICS ---%%
+            fprintf('\n  radial velocity unweighted mean, std.dev. and variance ...')
+            X = []; % assign X as empty
+            Y = ref_v_raw(iv); % assign Y as vertical velocity
+            Y_errors = ref_v_error(iv); % assign Y_errors  (only as dummivs)
+            lbob.score_func = 'wstats'; % re-assign scoring function
+            lbob_wstats = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  radial velocity unweighted skewness ...')
+            if dt(idt)*60<30
+                fprintf('\n ... is calculated when dt >= 30, skipping ...')
+            else
+                X = []; % assign X as empty
+                Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedSkewness; % re-assign scoring function
+                lbob_skewn = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            end
+            fprintf('done.')
+            fprintf('\n  radial velocity unweighted kurtosis ...')
+            if dt(idt)*60<30
+                fprintf('\n ... is calculated when dt >= 30, skipping ...')
+            else
+                X = []; % assign X as empty
+                Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedKurtosis; % re-assign scoring function
+                lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            end
+            fprintf('done.')
+            fprintf('\n  snr unweighted mean...')
+            X = []; % assign X as empty
+            Y = ref_snr(iv); % re-assign Y as snr
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedMean;
+            lbob_snr_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  snr unweighted variance...')
+            X = []; % assign X as empty
+            Y = ref_snr(iv); % re-assign Y as snr
+            Y_errors = ref_beta_error(iv); % assign Y_errors  (only as dummivs)
+            lbob.score_func = @weightedVariance;
+            lbob_snr_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  beta unweighted mean...')
+            X = []; % assign X as empty
+            Y = ref_beta(iv); % re-assign Y as beta
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedMean;
+            lbob_beta_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  beta unweighted variance...')
+            X = []; % assign X as empty
+            Y = ref_beta(iv); % re-assign Y as beta
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedVariance;
+            lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  velocity instrumental error unweighted mean...')
+            X = []; % assign X as empty
+            Y = ref_v_error(iv); % re-assign Y as beta
+            Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedMean;
+            lbob_velo_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  velocity instrumental error unweighted variance...')
+            X = []; % assign X as empty
+            Y = ref_v_error(iv); % re-assign Y as beta
+            Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedVariance;
+            lbob_velo_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  beta instrumental error unweighted mean...')
+            X = []; % assign X as empty
+            Y = ref_beta_error(iv); % re-assign Y as beta
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedMean;
+            lbob_beta_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.')
+            fprintf('\n  beta instrumental error unweighted variance...')
+            X = []; % assign X as empty
+            Y = ref_beta_error(iv); % re-assign Y as beta
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedVariance;
+            lbob_beta_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            fprintf('done.\n')
+            
+            %%--- WEIGHTED STATISTICS ---%%
+            if weighting
+                fprintf('\n  radial velocity weighted mean, std.dev. and variance ...')
+                X = []; % assign X as empty
+                Y = ref_v_raw(iv); % assign Y as vertical velocity
+                Y_errors = ref_v_error(iv); % assign Y_errors as w meas. errors
+                lbob.score_func = 'wstats-weighted'; % re-assign scoring function
+                lbob_wstats_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  radial velocity weighted skewness ...')
+                if dt(idt)*60<30
+                    fprintf('\n ... is calculated when dt >= 30, skipping ...')
+                else
+                    X = []; % assign X as empty
+                    Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+                    Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                    lbob.score_func = @weightedSkewness; % re-assign scoring function
+                    lbob_skewn_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                end
+                fprintf('done.')
+                fprintf('\n  radial velocity weighted kurtosis ...')
+                if dt(idt)*60<30
+                    fprintf('\n ... is calculated when dt >= 30, skipping ...')
+                else
+                    X = []; % assign X as empty
+                    Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+                    Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                    lbob.score_func = @weightedKurtosis; % re-assign scoring function
+                    lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                end
+                fprintf('done.')
+                fprintf('\n  snr weighted mean...')
+                X = []; % assign X as empty
+                Y = ref_snr(iv); % re-assign Y as snr
+                Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
+                lbob.score_func = @weightedMean; % re-assign scoring function
+                lbob_snr_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  snr weighted variance...')
+                X = []; % assign X as empty
+                Y = ref_snr(iv); % re-assign Y as snr
+                Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
+                lbob.score_func = @weightedVariance; % re-assign scoring function
+                lbob_snr_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  beta weighted mean...')
+                X = []; % assign X as empty
+                Y = ref_beta(iv); % re-assign Y as snr
+                Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
+                lbob.score_func = @weightedMean; % re-assign scoring function
+                lbob_beta_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  beta weighted variance...')
+                X = []; % assign X as empty
+                Y = ref_beta(iv); % re-assign Y as snr
+                Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
+                lbob.score_func = @weightedVariance; % re-assign scoring function
+                lbob_beta_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  velocity instrumental error unweighted mean...')
+                X = []; % assign X as empty
+                Y = ref_v_error(iv); % re-assign Y as beta
+                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedMean;
+                lbob_velo_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  velocity instrumental error unweighted variance...')
+                X = []; % assign X as empty
+                Y = ref_v_error(iv); % re-assign Y as beta
+                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedVariance;
+                lbob_velo_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  beta instrumental error unweighted mean...')
+                X = []; % assign X as empty
+                Y = ref_beta_error(iv); % re-assign Y as beta
+                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedMean;
+                lbob_beta_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.')
+                fprintf('\n  beta instrumental error unweighted variance...')
+                X = []; % assign X as empty
+                Y = ref_beta_error(iv); % re-assign Y as beta
+                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedVariance;
+                lbob_beta_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                fprintf('done.\n\n')
+                
+            end
+            
+            % wstats
+            lbob_wstats.mean_best_estimate(lbob_wstats.mean_best_estimate == 0) = nan;
+            lbob_wstats.std_best_estimate(lbob_wstats.std_best_estimate == 0) = nan;
+            lbob_wstats.var_best_estimate(lbob_wstats.var_best_estimate == 0) = nan;
+            if dt(idt)*60>=30
+                lbob_skewn.best_estimate(lbob_skewn.best_estimate == 0) = nan;
+                lbob_kurto.best_estimate(lbob_kurto.best_estimate == 0) = nan;
+            end
+            % wstats standard errors
+            lbob_wstats.mean_standard_error(lbob_wstats.mean_standard_error == 0) = nan;
+            lbob_wstats.std_standard_error(lbob_wstats.std_standard_error == 0) = nan;
+            lbob_wstats.var_standard_error(lbob_wstats.var_standard_error == 0) = nan;
+            if dt(idt)*60>=30
+                lbob_skewn.standard_error(lbob_skewn.standard_error == 0) = nan;
+                lbob_kurto.standard_error(lbob_kurto.standard_error == 0) = nan;
+            end
+            % snr
+            lbob_snr_mean.best_estimate(lbob_snr_mean.best_estimate == 0) = nan;
+            lbob_snr_var.best_estimate(lbob_snr_var.best_estimate == 0) = nan;
+            lbob_snr_mean.standard_error(lbob_snr_mean.standard_error == 0) = nan;
+            lbob_snr_var.standard_error(lbob_snr_var.standard_error == 0) = nan;
+            % beta
+            lbob_beta_mean.best_estimate(lbob_beta_mean.best_estimate == 0) = nan;
+            lbob_beta_var.best_estimate(lbob_beta_var.best_estimate == 0) = nan;
+            lbob_beta_mean.standard_error(lbob_beta_mean.standard_error == 0) = nan;
+            lbob_beta_var.standard_error(lbob_beta_var.standard_error == 0) = nan;
+            % velo noise
+            lbob_velo_instrumental_error_mean.best_estimate(lbob_velo_instrumental_error_mean.best_estimate == 0) = nan;
+            lbob_velo_instrumental_error_var.best_estimate(lbob_velo_instrumental_error_var.best_estimate == 0) = nan;
+            lbob_velo_instrumental_error_mean.standard_error(lbob_velo_instrumental_error_mean.standard_error == 0) = nan;
+            lbob_velo_instrumental_error_var.standard_error(lbob_velo_instrumental_error_var.standard_error == 0) = nan;
+            % beta noise
+            lbob_beta_instrumental_error_mean.best_estimate(lbob_beta_instrumental_error_mean.best_estimate == 0) = nan;
+            lbob_beta_instrumental_error_var.best_estimate(lbob_beta_instrumental_error_var.best_estimate == 0) = nan;
+            lbob_beta_instrumental_error_mean.standard_error(lbob_beta_instrumental_error_mean.standard_error == 0) = nan;
+            lbob_beta_instrumental_error_var.standard_error(lbob_beta_instrumental_error_var.standard_error == 0) = nan;
+            
+            if weighting
+                % wstats weighted
+                lbob_wstats_weighted.mean_best_estimate(lbob_wstats_weighted.mean_best_estimate == 0) = nan;
+                lbob_wstats_weighted.std_best_estimate(lbob_wstats_weighted.std_best_estimate == 0) = nan;
+                lbob_wstats_weighted.var_best_estimate(lbob_wstats_weighted.var_best_estimate == 0) = nan;
+                if dt(idt)*60>=30
+                    lbob_skewn_weighted.best_estimate(lbob_skewn_weighted.best_estimate == 0) = nan;
+                    lbob_kurto_weighted.best_estimate(lbob_kurto_weighted.best_estimate == 0) = nan;
+                end
+                % wstats weighted standard errors
+                lbob_wstats_weighted.mean_standard_error(lbob_wstats_weighted.mean_standard_error == 0) = nan;
+                lbob_wstats_weighted.std_standard_error(lbob_wstats_weighted.std_standard_error == 0) = nan;
+                lbob_wstats_weighted.var_standard_error(lbob_wstats_weighted.var_standard_error == 0) = nan;
+                if dt(idt)*60>=30
+                    lbob_skewn_weighted.standard_error(lbob_skewn_weighted.standard_error == 0) = nan;
+                    lbob_kurto_weighted.standard_error(lbob_kurto_weighted.standard_error == 0) = nan;
+                end
+                % snr weighted
+                lbob_snr_wmean.best_estimate(lbob_snr_wmean.best_estimate == 0) = nan;
+                lbob_snr_wvar.best_estimate(lbob_snr_wvar.best_estimate == 0) = nan;
+                lbob_snr_wmean.standard_error(lbob_snr_wmean.standard_error == 0) = nan;
+                lbob_snr_wvar.standard_error(lbob_snr_wvar.standard_error == 0) = nan;
+                % beta weighted
+                lbob_beta_wmean.best_estimate(lbob_beta_wmean.best_estimate == 0) = nan;
+                lbob_beta_wvar.best_estimate(lbob_beta_wvar.best_estimate == 0) = nan;
+                lbob_beta_wmean.standard_error(lbob_beta_wmean.standard_error == 0) = nan;
+                lbob_beta_wvar.standard_error(lbob_beta_wvar.standard_error == 0) = nan;
+                % velo noise
+                lbob_velo_instrumental_error_wmean.best_estimate(lbob_velo_instrumental_error_wmean.best_estimate == 0) = nan;
+                lbob_velo_instrumental_error_wvar.best_estimate(lbob_velo_instrumental_error_wvar.best_estimate == 0) = nan;
+                lbob_velo_instrumental_error_wmean.standard_error(lbob_velo_instrumental_error_wmean.standard_error == 0) = nan;
+                lbob_velo_instrumental_error_wvar.standard_error(lbob_velo_instrumental_error_wvar.standard_error == 0) = nan;
+                % beta noise
+                lbob_beta_instrumental_error_wmean.best_estimate(lbob_beta_instrumental_error_wmean.best_estimate == 0) = nan;
+                lbob_beta_instrumental_error_wvar.best_estimate(lbob_beta_instrumental_error_wvar.best_estimate == 0) = nan;
+                lbob_beta_instrumental_error_wmean.standard_error(lbob_beta_instrumental_error_wmean.standard_error == 0) = nan;
+                lbob_beta_instrumental_error_wvar.standard_error(lbob_beta_instrumental_error_wvar.standard_error == 0) = nan;
+                                
+                data.([bn '_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.mean_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_weighted_stddev_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.std_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.var_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                if dt(idt)*60>=30
+                    data.([bn '_weighted_skewness_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                    data.([bn '_weighted_kurtosis_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                end
+                data.([bn '_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.mean_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_weighted_stddev_error_' ,tres 'min']){ichunk} = reshape(lbob_wstats_weighted.std_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.var_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                if dt(idt)*60>=30
+                    data.([bn '_weighted_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                    data.([bn '_weighted_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                end
+                data.(['signal_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_snr_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_snr_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['beta_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_beta_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['beta_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_beta_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                
+                data.(['signal_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_snr_wmean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_snr_wvar.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['beta_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_wmean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['beta_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_wvar.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                
+                data.([bn '_instrumental_error_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_error_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_instrumental_error_weighted_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_error_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['beta_instrumental_error_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_beta_instrumental_error_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['beta_instrumental_error_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_beta_instrumental_error_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            end
+            
+            tres = num2str(dt(idt)*60); % time reso in string
+            bn = 'radial_velocity'; % base for the name
+            
+            % Collect
+            data.(['time_' tres 'min']){ichunk} = atime(chunktime == ichunk);
+            dim.(['time_' tres 'min']){ichunk} = length(atime(chunktime == ichunk));
+            
+            data.([bn '_mean_' tres 'min']){ichunk,1} = reshape(lbob_wstats.mean_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_stddev_' tres 'min']){ichunk} = reshape(lbob_wstats.std_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_variance_' tres 'min']){ichunk} = reshape(lbob_wstats.var_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            if dt(idt)*60>=30
+                data.([bn '_skewness_' tres 'min']){ichunk} = reshape(lbob_skewn.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_kurtosis_' tres 'min']){ichunk} = reshape(lbob_kurto.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            end
+            data.([bn '_mean_error_' tres 'min']){ichunk} = reshape(lbob_wstats.mean_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_stddev_error_' ,tres 'min']){ichunk} = reshape(lbob_wstats.std_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_variance_error_' tres 'min']){ichunk} = reshape(lbob_wstats.var_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            if dt(idt)*60>=30
+                data.([bn '_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            end
+            data.(['signal_mean_' tres 'min']){ichunk} = reshape(lbob_snr_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_variance_' tres 'min']){ichunk} = reshape(lbob_snr_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['beta_mean_' tres 'min']){ichunk} = reshape(lbob_beta_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['beta_variance_' tres 'min']){ichunk} = reshape(lbob_beta_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            
+            data.(['signal_mean_error_' tres 'min']){ichunk} = reshape(lbob_snr_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_variance_error_' tres 'min']){ichunk} = reshape(lbob_snr_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['beta_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['beta_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            
+            data.([bn '_instrumental_error_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_error_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_instrumental_error_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_error_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['beta_instrumental_error_mean_' tres 'min']){ichunk} = reshape(lbob_beta_instrumental_error_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['beta_instrumental_error_variance_' tres 'min']){ichunk} = reshape(lbob_beta_instrumental_error_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            
+        end
+    end
+    
+    % Convert from cell to mat
+    fnames = fieldnames(data);
+    for ifn = 1:length(fnames)
+        if iscell(data.(fnames{ifn}))
+            data.(fnames{ifn}) = cell2mat(data.(fnames{ifn}));
+            if strcmp(fnames{ifn},['time_' num2str(dt*60) 'min'])
+                data.(fnames{ifn}) = data.(fnames{ifn})(:);
+            end
+        end
+    end
+    fnames = fieldnames(dim);
+    for ifn = 1:length(fnames)
+        if iscell(dim.(fnames{ifn}))
+            dim.(fnames{ifn}) = sum(cell2mat(dim.(fnames{ifn})));
+        end
+    end
+    %%-- Add variables --%%
+    data.height = tmp.range;
+    
+    % latitude, longitude, altitude, elevation
+    if isfield(tmp,'latitude')
+        data.latitude = tmp.latitude;
+        data.longitude = tmp.longitude;
+        data.altitude = tmp.altitude;
+    elseif isfield(C,'latitude')
+        data.latitude = C.latitude;
+        data.longitude = C.longitude;
+        data.altitude = C.altitude_in_meters;
+    else
+        data.latitude = 0;
+        data.longitude = 0;
+        data.altitude = 0;
+    end
+    
+    % latitude
+    att.latitude = create_attributes(...
+        {},...
+        'Latitude of lidar', ...
+        'degrees_north');
+    att.latitude.standard_name = 'latitude';
+    % longitude
+    att.longitude = create_attributes(...
+        {},...
+        'Longitude of lidar', ...
+        'degrees_east');
+    att.longitude.standard_name = 'longitude';
+    % altitude
+    att.altitude = create_attributes(...
+        {},...
+        'Height of instrument above mean sea level', ...
+        'm');
+    
+    % height
+    att.height = create_attributes(...
+        {'height'},...
+        'Height above ground', ...
+        'm',...
+        [],...
+        ['Range*sin(elevation), assumes that the instrument is at ground level! If'...
+        ' not, add the height of the instrument from the ground to the height variable.']);
+    
+    % Add height dim
+    dim.height = length(data.height);
+    
+    % Create global attributs
+    att.global.Conventions = 'CF-1.0';
+    att.global.system = C.system;
+    att.global.location = C.location;
+    att.global.source = C.source;
+    att.global.institution = C.institution;
+    att.global.title = C.title;
+    att.global.day   = str2double(thedate(7:8));
+    att.global.month = str2double(thedate(5:6));
+    att.global.year  = str2double(thedate(1:4));
+    current_date = datestr(now,'yyyy-mm-dd HH:MM:SS');
+    att.global.history = [current_date ' - Created by ' C.user ];
+    
+    % Order fivlds
+    data = orderfields(data);
+    att  = orderfields(att);
+    
+    % Write into new netcdf
+    write_nc_struct(fullfile([dir_to_folder_out '/' thedate ...
+        '_' site '_halo-doppler-lidar_wstats.nc']), dim, data, att)
+end
+
+    function [att] = addAttributes(C,tres,bn,weighting,att,dt)
+        
+        %%-- ATTRIBUTES --%%
+        % time
+        att.(['time_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min']},...
+            'Decimal hours UTC', ...
+            'Hours UTC',...
+            [],...
+            ['Discrete time steps, in ' tres ' min temporal resolution.']);
+        att.(['time_' tres 'min']).axis = 'T';
+        
+        % Variables
+        % nsamples
+        att.(['nsamples_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Number of samples (' tres ' min)'],...
+            {'count','count'},...
+            C.missing_value,...
+            'Number of non-nans');
+
+        % velo mean
+        att.([bn '_mean_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Radial velocity mean (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps',...
+            {[-3 3], 'linear'});
+        % velo stddev
+        att.([bn '_stddev_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Radial velocity standard deviation (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps, unbiased by random noise and sample size.',...
+            {[0.01 10], 'logarithmic'});
+        % velo variance
+        att.([bn '_variance_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Radial velocity variance (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps, unbiased by random noise and sample size.',...
+            {[0.01 10], 'logarithmic'});
+        if dt*60>=30
+            % velo skewness
+            att.([bn '_skewness_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity skewness (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+                {[-3 3], 'linear'});
+            % velo kurtosis
+            att.([bn '_kurtosis_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity kurtosis (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+                {[-1 5], 'linear'});
+        end
+        % Standard errors
+        % velo mean error
+        att.([bn '_mean_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in radial velocity mean (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps',...
+            {[0.01 10], 'logarithmic'});
+        % velo stddev error
+        att.([bn '_stddev_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in radial velocity standard deviaton (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps',...
+            {[0.01 10], 'logarithmic'});
+        % velo variance error
+        att.([bn '_variance_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in radial velocity variance (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps',...
+            {[0.01 10], 'logarithmic'});
+        if dt*60>=30
+            % velo skewness error
+            att.([bn '_skewness_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity skewness (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps',...
+                {[0.01 10], 'logarithmic'});
+            % velo kurtosis error
+            att.([bn '_kurtosis_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity kurtosis (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps',...
+                {[0.01 10], 'logarithmic'});
+        end
+        % signal mean
+        att.(['signal_mean_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            'Signal (raw) mean', ...
+            'arbitrary units', ...
+            C.missing_value, ...
+            '');
+        % signal variance
+        att.(['signal_variance_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            'Signal (raw) variance', ...
+            'arbitrary units', ...
+            C.missing_value, ...
+            '');
+        % beta mean
+        att.(['beta_mean_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            'Raw attenuated backscatter coefficivnt mean',...
+            {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+            C.missing_value,...
+            [],...
+            {[1e-7 1e-4],'logarithmic'});
+        % beta variance
+        att.(['beta_variance_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            'Raw attenuated backscatter coefficivnt variance',...
+            {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+            C.missing_value,...
+            [],...
+            {[1e-7 1e-4],'logarithmic'});
+        % signal mean error
+        att.(['signal_mean_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in mean of signal (' tres ' min)'],...
+            'arbitrary units',...
+            C.missing_value,...
+            '',...
+            {[0.01 10], 'logarithmic'});
+        % signal var error
+        att.(['signal_variance_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in variance of signal (' tres ' min)'],...
+            'arbitrary units',...
+            C.missing_value,...
+            '',...
+            {[0.01 10], 'logarithmic'});
+        % beta mean error
+        att.(['beta_mean_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in mean of beta (' tres ' min)'],...
+            {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+            C.missing_value,...
+            '',...
+            {[0.01 10], 'logarithmic'});
+        % beta var error
+        att.(['beta_variance_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in variance of beta (' tres ' min)'],...
+            {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+            C.missing_value,...
+            '',...
+            {[0.01 10], 'logarithmic'});
+        % velo instrumental error mean
+        att.([bn '_instrumental_error_mean_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Mean of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'See Rye and Hardesty (1993).',...
+            {[0 1], 'linear'});
+        % velo instrumental error variance
+        att.([bn '_instrumental_error_variance_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Variance of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'See Rye and Hardesty (1993).',...
+            {[0 1], 'log'});
+        % beta instrumental error mean
+        att.(['beta_instrumental_error_mean_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Mean of fractional instrumental error in beta (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Mean of fractional error in beta.',...
+            {[0 1], 'linear'});
+        % beta instrumental error variance
+        att.(['beta_instrumental_error_variance_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Variance of fractional instrumental error in beta (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Variance of fractional error in beta.',...
+            {[0 1], 'log'});
+        
+        if weighting
+            % velo wmean
+            att.([bn '_weighted_mean_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity weighted mean (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps',...
+                {[-3 3], 'linear'});
+            % velo wstddev
+            att.([bn '_weighted_stddev_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity weighted standard deviation (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps, unbiased by random noise and sample size.',...
+                {[0.01 10], 'logarithmic'});
+            % velo wvariance
+            att.([bn '_weighted_variance_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity weighted variance (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps, unbiased by random noise and sample size.',...
+                {[0.01 10], 'logarithmic'});
+            if dt*60>=30
+                % velo wskewness
+                att.([bn '_weighted_skewness_' tres 'min']) = create_attributes(...
+                    {['time_' tres 'min'],'height'},...
+                    ['Radial velocity weighted skewness (' tres ' min)'],...
+                    {'m s-1','m s<sup>-1</sup>'},...
+                    C.missing_value,...
+                    'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+                    {[-3 3], 'linear'});
+                % velo wkurtosis
+                att.([bn '_weighted_kurtosis_' tres 'min']) = create_attributes(...
+                    {['time_' tres 'min'],'height'},...
+                    ['Radial velocity weighted kurtosis (' tres ' min)'],...
+                    {'m s-1','m s<sup>-1</sup>'},...
+                    C.missing_value,...
+                    'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+                    {[-1 5], 'linear'});
+            end
+            % velo wmean error
+            att.([bn '_weighted_mean_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity weighted mean (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps',...
+                {[0.01 10], 'logarithmic'});
+            % velo wstddev error
+            att.([bn '_weighted_stddev_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity weighted standard deviaton (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps',...
+                {[0.01 10], 'logarithmic'});
+            % velo wvariance error
+            att.([bn '_weighted_variance_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity weighted variance (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps',...
+                {[0.01 10], 'logarithmic'});
+            if dt*60>=30
+                % velo wskewness error
+                att.([bn '_weighted_skewness_error_' tres 'min']) = create_attributes(...
+                    {['time_' tres 'min'],'height'},...
+                    ['Standard error in radial velocity weighted skewness (' tres ' min)'],...
+                    {'m s-1','m s<sup>-1</sup>'},...
+                    C.missing_value,...
+                    '',...
+                    {[0.01 10], 'logarithmic'});
+                % velo wkurtosis error
+                att.([bn '_weighted_kurtosis_error_' tres 'min']) = create_attributes(...
+                    {['time_' tres 'min'],'height'},...
+                    ['Standard error in radial velocity weighted kurtosis (' tres ' min)'],...
+                    {'m s-1','m s<sup>-1</sup>'},...
+                    C.missing_value,...
+                    '',...
+                    {[0.01 10], 'logarithmic'});
+            end
+            % signal wmean
+            att.(['signal_weighted_mean_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                'Signal (raw) weighted mean', ...
+                'arbitrary units', ...
+                C.missing_value, ...
+                'Weighted with beta errror');
+            % signal wvariance
+            att.(['signal_weighted_variance_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                'Signal (raw) weighted variance', ...
+                'arbitrary units', ...
+                C.missing_value, ...
+                'Weighted with beta errror');
+            % beta wmean
+            att.(['beta_weighted_mean_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                'Raw attenuated backscatter coefficivnt weighted mean',...
+                {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+                C.missing_value,...
+                'Weighted with beta errror',...
+                {[1e-7 1e-4],'logarithmic'});
+            % beta wvariance
+            att.(['beta_weighted_variance_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                'Raw attenuated backscatter coefficivnt weighted variance',...
+                {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+                C.missing_value,...
+                'Weighted with beta errror',...
+                {[1e-7 1e-4],'logarithmic'});
+            % signal wmean error
+            att.(['signal_weighted_mean_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in weighted mean of signal (' tres ' min)'],...
+                'arbitrary units',...
+                C.missing_value,...
+                '',...
+                {[0.01 10], 'logarithmic'});
+            % signal wvar error
+            att.(['signal_weighted_variance_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in weighted variance of signal (' tres ' min)'],...
+                'arbitrary units',...
+                C.missing_value,...
+                '',...
+                {[0.01 10], 'logarithmic'});
+            % beta wmean error
+            att.(['beta_weighted_mean_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in weighted mean of beta (' tres ' min)'],...
+                {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+                C.missing_value,...
+                '',...
+                {[0.01 10], 'logarithmic'});
+            % beta wvar error
+            att.(['beta_weighted_variance_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in weighted variance of beta (' tres ' min)'],...
+                {'sr-1 m-1','sr<sup>-1</sup> m<sup>-1</sup>'},...
+                C.missing_value,...
+                '',...
+                {[0.01 10], 'logarithmic'});
+            % velo instrumental error wmean
+            att.([bn '_instrumental_error_weighted_mean_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Weighted mean of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'See Rye and Hardesty (1993). Weighted with itself.',...
+                {[0 1], 'linear'});
+            % velo instrumental error variance
+            att.([bn '_instrumental_error_weighted_variance_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Weighted variance of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'See Rye and Hardesty (1993). Weighted with itself.',...
+                {[0 1], 'log'});
+            % beta instrumental error mean
+            att.(['beta_instrumental_error_weighted_mean_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Mean of fractional instrumental error in beta (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Weighted mean of fractional error in beta. Weighted with itself.',...
+                {[0 1], 'linear'});
+            % beta instrumental error variance
+            att.(['beta_instrumental_error_weighted_variance_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Weighted variance of fractional instrumental error in beta (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Weighted variance of fractional error in beta. Weighted with itself.',...
+                {[0 1], 'log'});
+        end
+    end
+end
+
+

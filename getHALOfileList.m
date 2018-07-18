@@ -1,47 +1,84 @@
-function file_list = getHALOfileList(site,DATE,processlev,measmode)
+function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measmode,typeof)
 %getHALOfileList generates a list of HALO file names measured with a given
-% measurement mode and with a given processing level. 
+% measurement mode and with a given processing level. Also outputs full path to files.
+%
+% Usage:
+% [~, file_list] = getHALOfilelist(site,DATE,processlev,measmode)
+% [dir_to_folder,~] = getHALOfileList(site,DATE,processlev,measmode)
+% [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measmode)
+% [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measmode,typeof)
 %
 % Inputs:
 % - site            string, name of the site, e.g. 'kuopio'
 % - DATE            scalar, numerical date, e.g. 20171231
-% - measmode        string, 'stare', 'ppi', 'rhi', 'vertical', or 'wind'
-% - processlev      string, 'uncalibrated', or 'calibrated'
-% 
+% - processlev      string, 'corrected','uncalibrated','calibrated','background','product'
+% - measmode        string, 'stare','vad','rhi','co','custom','windvad','winddbs','txt','wstats',
+%                   'TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'
+% - typeof          string, 'co', 'eleXX', 'aziXXX'
+%
 % Outputs:
-% - file_list       cell array of string,  file names for the site, 
+% - dir_to_folder   full path to the folder 
+% - fille_list      cell array of string,  file names for the site,
 %                   measurement mode and processing level
-
-% version 20171020
+%
+% Created 2017-10-20
 % Antti Manninen
 % antti.j.manninen(at)helsinki.fi
 % University of Helsinki, Finland
 
 % Check inputs
 if nargin < 4
-    error(['''site'', ''DATE'', ''processlev'', and ''measmode'' are' ...
-        ' required inputs!'])
+    error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
+        ' are required for the products: \n''TKE'', ''wstats'', ''sigma2vad''',...
+        '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if ~ischar(site)
-    error('The first input ''site'' must be a string.')
+if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',...
+        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
+        strcmp(processlev,'background'))
+    if ~ischar(site)
+        error('The 1st input ''site'' must be a string.')
+    end
+    if ~isnumeric(DATE) || length(num2str(DATE))~=8
+        error(['The 2nd input ''DATE'' must be a numerical date in' ...
+            ' YYYYMMDD format.'])
+    end
+    if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
+        error(['The 3rd input ''processlev'' must be a string and can be:'...
+            ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
+    end
+    if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','windvad','winddbs',...
+            'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+        error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
+            '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
+            '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+    end
 end
-if ~isnumeric(DATE) || length(num2str(DATE))~=8
-    error(['The second input ''DATE'' must be a numerical date in' ...
-        ' YYYYMMDD format.'])
+if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
+        ~strcmp(processlev,'background'))
+        error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
+            ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''sigma2vad'','...
+            ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if ~ischar(processlev) || (~strcmp(processlev,'original') && ...
-        ~strcmp(processlev,'corrected') &&  ...
-        ~strcmp(processlev,'calibrated'))
-    error(['The third input ''processlev'' must be a string and can be:'...
-        ' ''original'', ''corrected'', or ''calibrated''.'])
+if nargin == 5
+        if ~ischar(site)
+            error('The 1st input ''site'' must be a string.')
+        end
+        if ~isnumeric(DATE) || length(num2str(DATE))~=8
+            error(['The 2nd input ''DATE'' must be a numerical date in' ...
+                ' YYYYMMDD format.'])
+        end
+        if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
+            error(['The 3rd input ''processlev'' must be a string and can be:'...
+                ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
+        end
+        if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
+                'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
+                '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
+                '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+        end        
 end
-if ~ischar(measmode) || (~strcmp(measmode,'stare') && ...
-        ~strcmp(measmode,'ppi') && ~strcmp(measmode,'rhi') && ...
-        ~strcmp(measmode,'vertical') && ~strcmp(measmode,'wind'))
-    error(['The third input ''measmode'' must be a string and can be:'...
-         ' ''stare'', ''ppi'', ''rhi'' ,''vertical'', or ''wind''.'])
-end
-
 % Get default and site/unit specific parameters
 C = getconfig(site,DATE);
 
@@ -52,45 +89,113 @@ file_list = {};
 thedate = num2str(DATE);
 
 % check if path for given combination of 'processlev' and 'measmode' exist
-cpmfield = ['dir_' processlev '_' measmode]; % C.processlev_measmode field
-if ~isfield(C,cpmfield)
+switch nargin
+    case 5
+        cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+    case 4
+        cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+end
+if ~isfield(C,cpmt)
     error(['Can''t find parameter ''%s'' for the site ''%s'' \nand'...
         ' which would be valid for the date ''%s'' from halo_config.txt'...
-        ' file.'], cpmfield,site,num2str(DATE))
+        ' file.'], cpmt,site,num2str(DATE))
 end
 
 % Generate path
 switch processlev
-    case {'original','corrected'}
-        % correction keeps the file format and naming the same
-        fileformatfield = C.(['file_format_original_' measmode]);
-        filenamingfield = C.(['file_naming_original_' measmode]);
+    case 'original'
+        fileformatfield = C.file_format_after_hpl2netcdf;
+        filenamingfield = C.(['file_naming_original_' measmode '_' typeof]);
+    case 'background'
+        fileformatfield = '.txt';       
     otherwise
-        % Assume calibrated files follow Cloundet naming scheme
-        % and have format *.nc
+        % blindly assume that there are no other type of files
+        % with the same naming in the same directory --> default cloudnet 
         fileformatfield = '.nc';
 end
-        
-dir_to_folder = [C.(cpmfield), thedate(1:4) '/'];
-file_names_2look4 = ['*' thedate '*' fileformatfield];
+
+% Get directory to the folder
+dir_to_folder = C.(cpmt);
+
+% Replace/expand dates subdirectories as required
+% find year, month, day wildcards
+dir_to_folder = strrep(dir_to_folder,'+YYYY+',thedate(1:4));
+dir_to_folder = strrep(dir_to_folder,'+MM+',thedate(5:6));
+dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
+
+% Handle background files, which have different naming scheme
+switch processlev
+ case 'background'
+  file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' fileformatfield];
+ otherwise
+  file_names_2look4 = ['*' thedate '*' fileformatfield];
+end
+
 direc = dir([dir_to_folder,file_names_2look4]);
 if isempty(direc)
-    error(sprintf(['No *%s files for the date %s in\n%s\nCheck paths' ...
-        ' in halo_config.txt file.'],fileformatfield,...
-        thedate,dir_to_folder));
+  file_list = [];
+  if nargin < 5 && nargout == 1
+      warning(['Can''t find ' processlev ' ' measmode ' Halo files for site ' site ' and date ' num2str(DATE) '!'])
+  elseif nargout == 1
+      warning(['Can''t find ' processlev ' ' measmode ' ' typeof ' Halo files for site ' site ' and date ' num2str(DATE) '!'])
+  end      
 else
     % Get list of files
     [file_list{1:length(direc),1}] = deal(direc.name);
     switch processlev
-        case {'original','corrected'}
-            % Look for specific files based on the naming 
-            i_file = ~cellfun('isempty',strfind(file_list,...
-                filenamingfield));
-            file_list = file_list(i_file);
-            file_list = sort(file_list);
+        case 'original'
+            % More complex for AMR naming scheme..
+            if strcmp(site(1:4),'arm-')
+                % assume ARM file naming scheme, find data level indicator from the name
+                b = cellfun(@(x) strfind(x,'.'),file_list,'UniformOutput',false);
+                b1sts = cellfun(@(x) x(1),b)+2; % location of 1st dot plus 2 is data level
+                fnids = nan(length(b1sts),1); % initialize
+                for i = 1:length(b1sts),fnids(i) = str2double(file_list{i}(b1sts(i))); end
+                % Select the files with lowest data level, i.e. original
+                theuniqs = unique(fnids);
+                if numel(theuniqs)>1
+                    [~,imin] = min(theuniqs);
+                    file_list = file_list(fnids == theuniqs(imin));
+                end
+                i_file = ~cellfun('isempty',strfind(file_list,...
+                    C.(['file_naming_original_' measmode '_' typeof])));
+                file_list = file_list(i_file);
+                file_list = sort(file_list);
+            else
+                %Look for specific files based on the naming
+                i_file = ~cellfun('isempty',strfind(file_list,...
+                    filenamingfield));
+                file_list = file_list(i_file);
+                file_list = sort(file_list);
+            end
+        case 'corrected'
+            % More complex for AMR naming scheme..
+            if strcmp(site(1:4),'arm-')
+                % assume ARM file naming scheme, find data level indicator from the name
+                b = cellfun(@(x) strfind(x,'.'),file_list,'UniformOutput',false);
+                b1sts = cellfun(@(x) x(1),b)+2; % location of 1st dot plus 2 is data level
+                fnids = nan(length(b1sts),1); % initialize
+                for i = 1:length(b1sts), fnids(i) = str2double(file_list{i}(b1sts(i))); end
+                % Select the files with highest data level, i.e. latest
+                theuniqs = unique(fnids);
+                if numel(theuniqs)>1
+                    [~,imax] = max(theuniqs);
+                    file_list = file_list(fnids == theuniqs(imax));
+                end
+                i_file = ~cellfun('isempty',strfind(file_list,...
+                    C.(['file_naming_original_' measmode '_' typeof])));
+                file_list = file_list(i_file);
+                file_list = sort(file_list);
+            else
+                %Look for specific files based on the naming
+                i_file = ~cellfun('isempty',strfind(file_list,...
+                    filenamingfield));
+                file_list = file_list(i_file);
+                file_list = sort(file_list);
+            end
         otherwise
-            % If calibrated, assume Cloudnet naming schmeme and that there 
-            % are no other measurement in the same folder
+            % blindly assume that there are no other type of files
+            % with the same naming in the same directory
             file_list = sort(file_list);
     end
 end
