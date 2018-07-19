@@ -44,8 +44,8 @@ else
 end
 if nargin < 3
     % Temporal resolutions, min/60 = hrs
-    dt = [3 30 60]; dt = dt./60;
-    weighting = false;
+    dt = [3 10 30 60]; dt = dt./60;
+    weighting = true;
     timeStep = 60;
 elseif nargin == 3
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
@@ -59,7 +59,7 @@ elseif nargin == 3
 end
 if nargin < 4
     timeStep = 60;
-    weighting = false;
+    weighting = true;
 end
 if nargin == 4
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
