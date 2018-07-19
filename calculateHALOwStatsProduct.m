@@ -191,17 +191,13 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.([bn '_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.([bn '_weighted_stddev_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.([bn '_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            if dt(idt1)*60>=30
-                data.([bn '_weighted_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-                data.([bn '_weighted_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            end
+            data.([bn '_weighted_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_weighted_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.([bn '_weighted_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.([bn '_weighted_stddev_error_' ,tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.([bn '_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            if dt(idt1)*60>=30
-                data.([bn '_weighted_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-                data.([bn '_weighted_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            end
+            data.([bn '_weighted_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_weighted_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['signal_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['signal_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['beta_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
@@ -263,9 +259,9 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         ref_beta(ib,:) = tmp.beta_raw;
         ref_beta_error(ib,:) = tmp.beta_error;
         
-        % Clean
-        ref_v_error(isnan(ref_v_raw)|ref_v_error>19|ref_v_error==0) = nan;
-        ref_v_raw(isnan(ref_v_error)) = nan;
+%         % Clean
+%         ref_v_error(isnan(ref_v_raw)|ref_v_error>19|ref_v_error==0) = nan;
+%         ref_v_raw(isnan(ref_v_error)) = nan;
         
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
@@ -298,12 +294,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             iv = reshape(1:numel(ref_v_raw),(dt(idt)*3600),size(ref_v_raw,1)/(dt(idt)*3600)*size(ref_v_raw,2));
             data.(['nsamples_' tres 'min']){ichunk} = reshape(sum(~isnan(ref_v_raw(iv))),size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
-            if dt(idt)*60>=30
-                % Vectorize indices separately for higher moments, inlcude range below and above as well
-                ref_v_raw_4himoments = [nan(size(ref_v_raw,1),1) ref_v_raw nan(size(ref_v_raw,1),1)];
-                ref_v_error_4himoments = [nan(size(ref_v_error,1),1) ref_v_error nan(size(ref_v_error,1),1)];
-                iv_himoments = [iv; iv+size(ref_v_raw_4himoments,1); iv+size(ref_v_raw_4himoments,1)*2];
-            end
+            % Vectorize indices separately for higher moments, inlcude range below and above as well
+            ref_v_raw_4himoments = [nan(size(ref_v_raw,1),1) ref_v_raw nan(size(ref_v_raw,1),1)];
+            ref_v_error_4himoments = [nan(size(ref_v_error,1),1) ref_v_error nan(size(ref_v_error,1),1)];
+            iv_himoments = [iv; iv+size(ref_v_raw_4himoments,1); iv+size(ref_v_raw_4himoments,1)*2];
             %%--- UNWEIGHTED STATISTICS ---%%
             fprintf('\n  radial velocity unweighted mean, std.dev. and variance ...')
             X = []; % assign X as empty
@@ -312,28 +306,23 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = 'wstats'; % re-assign scoring function
             lbob_wstats = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  radial velocity unweighted skewness ...')
-            if dt(idt)*60<30
-                fprintf('\n ... is calculated when dt >= 30, skipping ...')
-            else
-                X = []; % assign X as empty
-                Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
-                lbob.score_func = @weightedSkewness; % re-assign scoring function
-                lbob_skewn = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
-            end
+            X = []; % assign X as empty
+            Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedSkewness; % re-assign scoring function
+            lbob_skewn = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  radial velocity unweighted kurtosis ...')
-            if dt(idt)*60<30
-                fprintf('\n ... is calculated when dt >= 30, skipping ...')
-            else
-                X = []; % assign X as empty
-                Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
-                lbob.score_func = @weightedKurtosis; % re-assign scoring function
-                lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
-            end
+            X = []; % assign X as empty
+            Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+            lbob.score_func = @weightedKurtosis; % re-assign scoring function
+            lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  snr unweighted mean...')
             X = []; % assign X as empty
             Y = ref_snr(iv); % re-assign Y as snr
@@ -341,6 +330,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedMean;
             lbob_snr_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  snr unweighted variance...')
             X = []; % assign X as empty
             Y = ref_snr(iv); % re-assign Y as snr
@@ -348,6 +338,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedVariance;
             lbob_snr_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  beta unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta(iv); % re-assign Y as beta
@@ -355,6 +346,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedMean;
             lbob_beta_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  beta unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta(iv); % re-assign Y as beta
@@ -362,6 +354,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedVariance;
             lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  velocity instrumental error unweighted mean...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
@@ -369,6 +362,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedMean;
             lbob_velo_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  velocity instrumental error unweighted variance...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
@@ -376,6 +370,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedVariance;
             lbob_velo_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  beta instrumental error unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
@@ -383,6 +378,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob.score_func = @weightedMean;
             lbob_beta_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
             fprintf('done.')
+            
             fprintf('\n  beta instrumental error unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
@@ -400,28 +396,23 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = 'wstats-weighted'; % re-assign scoring function
                 lbob_wstats_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  radial velocity weighted skewness ...')
-                if dt(idt)*60<30
-                    fprintf('\n ... is calculated when dt >= 30, skipping ...')
-                else
-                    X = []; % assign X as empty
-                    Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                    Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
-                    lbob.score_func = @weightedSkewness; % re-assign scoring function
-                    lbob_skewn_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
-                end
+                X = []; % assign X as empty
+                Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedSkewness; % re-assign scoring function
+                lbob_skewn_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  radial velocity weighted kurtosis ...')
-                if dt(idt)*60<30
-                    fprintf('\n ... is calculated when dt >= 30, skipping ...')
-                else
-                    X = []; % assign X as empty
-                    Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                    Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
-                    lbob.score_func = @weightedKurtosis; % re-assign scoring function
-                    lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
-                end
+                X = []; % assign X as empty
+                Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                lbob.score_func = @weightedKurtosis; % re-assign scoring function
+                lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  snr weighted mean...')
                 X = []; % assign X as empty
                 Y = ref_snr(iv); % re-assign Y as snr
@@ -429,6 +420,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedMean; % re-assign scoring function
                 lbob_snr_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  snr weighted variance...')
                 X = []; % assign X as empty
                 Y = ref_snr(iv); % re-assign Y as snr
@@ -436,6 +428,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedVariance; % re-assign scoring function
                 lbob_snr_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  beta weighted mean...')
                 X = []; % assign X as empty
                 Y = ref_beta(iv); % re-assign Y as snr
@@ -443,6 +436,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedMean; % re-assign scoring function
                 lbob_beta_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  beta weighted variance...')
                 X = []; % assign X as empty
                 Y = ref_beta(iv); % re-assign Y as snr
@@ -450,6 +444,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedVariance; % re-assign scoring function
                 lbob_beta_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  velocity instrumental error unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
@@ -457,6 +452,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedMean;
                 lbob_velo_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  velocity instrumental error unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
@@ -464,6 +460,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedVariance;
                 lbob_velo_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  beta instrumental error unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
@@ -471,6 +468,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob.score_func = @weightedMean;
                 lbob_beta_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
                 fprintf('done.')
+                
                 fprintf('\n  beta instrumental error unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
@@ -485,18 +483,14 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_wstats.mean_best_estimate(lbob_wstats.mean_best_estimate == 0) = nan;
             lbob_wstats.std_best_estimate(lbob_wstats.std_best_estimate == 0) = nan;
             lbob_wstats.var_best_estimate(lbob_wstats.var_best_estimate == 0) = nan;
-            if dt(idt)*60>=30
-                lbob_skewn.best_estimate(lbob_skewn.best_estimate == 0) = nan;
-                lbob_kurto.best_estimate(lbob_kurto.best_estimate == 0) = nan;
-            end
+            lbob_skewn.best_estimate(lbob_skewn.best_estimate == 0) = nan;
+            lbob_kurto.best_estimate(lbob_kurto.best_estimate == 0) = nan;
             % wstats standard errors
             lbob_wstats.mean_standard_error(lbob_wstats.mean_standard_error == 0) = nan;
             lbob_wstats.std_standard_error(lbob_wstats.std_standard_error == 0) = nan;
             lbob_wstats.var_standard_error(lbob_wstats.var_standard_error == 0) = nan;
-            if dt(idt)*60>=30
-                lbob_skewn.standard_error(lbob_skewn.standard_error == 0) = nan;
-                lbob_kurto.standard_error(lbob_kurto.standard_error == 0) = nan;
-            end
+            lbob_skewn.standard_error(lbob_skewn.standard_error == 0) = nan;
+            lbob_kurto.standard_error(lbob_kurto.standard_error == 0) = nan;
             % snr
             lbob_snr_mean.best_estimate(lbob_snr_mean.best_estimate == 0) = nan;
             lbob_snr_var.best_estimate(lbob_snr_var.best_estimate == 0) = nan;
@@ -523,18 +517,14 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_wstats_weighted.mean_best_estimate(lbob_wstats_weighted.mean_best_estimate == 0) = nan;
                 lbob_wstats_weighted.std_best_estimate(lbob_wstats_weighted.std_best_estimate == 0) = nan;
                 lbob_wstats_weighted.var_best_estimate(lbob_wstats_weighted.var_best_estimate == 0) = nan;
-                if dt(idt)*60>=30
-                    lbob_skewn_weighted.best_estimate(lbob_skewn_weighted.best_estimate == 0) = nan;
-                    lbob_kurto_weighted.best_estimate(lbob_kurto_weighted.best_estimate == 0) = nan;
-                end
+                lbob_skewn_weighted.best_estimate(lbob_skewn_weighted.best_estimate == 0) = nan;
+                lbob_kurto_weighted.best_estimate(lbob_kurto_weighted.best_estimate == 0) = nan;
                 % wstats weighted standard errors
                 lbob_wstats_weighted.mean_standard_error(lbob_wstats_weighted.mean_standard_error == 0) = nan;
                 lbob_wstats_weighted.std_standard_error(lbob_wstats_weighted.std_standard_error == 0) = nan;
                 lbob_wstats_weighted.var_standard_error(lbob_wstats_weighted.var_standard_error == 0) = nan;
-                if dt(idt)*60>=30
-                    lbob_skewn_weighted.standard_error(lbob_skewn_weighted.standard_error == 0) = nan;
-                    lbob_kurto_weighted.standard_error(lbob_kurto_weighted.standard_error == 0) = nan;
-                end
+                lbob_skewn_weighted.standard_error(lbob_skewn_weighted.standard_error == 0) = nan;
+                lbob_kurto_weighted.standard_error(lbob_kurto_weighted.standard_error == 0) = nan;
                 % snr weighted
                 lbob_snr_wmean.best_estimate(lbob_snr_wmean.best_estimate == 0) = nan;
                 lbob_snr_wvar.best_estimate(lbob_snr_wvar.best_estimate == 0) = nan;
@@ -555,21 +545,17 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_beta_instrumental_error_wvar.best_estimate(lbob_beta_instrumental_error_wvar.best_estimate == 0) = nan;
                 lbob_beta_instrumental_error_wmean.standard_error(lbob_beta_instrumental_error_wmean.standard_error == 0) = nan;
                 lbob_beta_instrumental_error_wvar.standard_error(lbob_beta_instrumental_error_wvar.standard_error == 0) = nan;
-                                
+                
                 data.([bn '_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.mean_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_stddev_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.std_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.var_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                if dt(idt)*60>=30
-                    data.([bn '_weighted_skewness_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                    data.([bn '_weighted_kurtosis_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                end
+                data.([bn '_weighted_skewness_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_weighted_kurtosis_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.mean_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_stddev_error_' ,tres 'min']){ichunk} = reshape(lbob_wstats_weighted.std_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.var_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                if dt(idt)*60>=30
-                    data.([bn '_weighted_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                    data.([bn '_weighted_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                end
+                data.([bn '_weighted_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_weighted_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['signal_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_snr_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['signal_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_snr_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['beta_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_beta_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
@@ -596,17 +582,13 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.([bn '_mean_' tres 'min']){ichunk,1} = reshape(lbob_wstats.mean_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_stddev_' tres 'min']){ichunk} = reshape(lbob_wstats.std_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_variance_' tres 'min']){ichunk} = reshape(lbob_wstats.var_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            if dt(idt)*60>=30
-                data.([bn '_skewness_' tres 'min']){ichunk} = reshape(lbob_skewn.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.([bn '_kurtosis_' tres 'min']){ichunk} = reshape(lbob_kurto.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            end
+            data.([bn '_skewness_' tres 'min']){ichunk} = reshape(lbob_skewn.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_kurtosis_' tres 'min']){ichunk} = reshape(lbob_kurto.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_mean_error_' tres 'min']){ichunk} = reshape(lbob_wstats.mean_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_stddev_error_' ,tres 'min']){ichunk} = reshape(lbob_wstats.std_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_variance_error_' tres 'min']){ichunk} = reshape(lbob_wstats.var_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            if dt(idt)*60>=30
-                data.([bn '_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.([bn '_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            end
+            data.([bn '_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['signal_mean_' tres 'min']){ichunk} = reshape(lbob_snr_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['signal_variance_' tres 'min']){ichunk} = reshape(lbob_snr_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_mean_' tres 'min']){ichunk} = reshape(lbob_beta_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
@@ -731,7 +713,7 @@ end
             {'count','count'},...
             C.missing_value,...
             'Number of non-nans');
-
+        
         % velo mean
         att.([bn '_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
@@ -756,24 +738,22 @@ end
             C.missing_value,...
             'Discrete time steps, unbiased by random noise and sample size.',...
             {[0.01 10], 'logarithmic'});
-        if dt*60>=30
-            % velo skewness
-            att.([bn '_skewness_' tres 'min']) = create_attributes(...
-                {['time_' tres 'min'],'height'},...
-                ['Radial velocity skewness (' tres ' min)'],...
-                {'m s-1','m s<sup>-1</sup>'},...
-                C.missing_value,...
-                'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
-                {[-3 3], 'linear'});
-            % velo kurtosis
-            att.([bn '_kurtosis_' tres 'min']) = create_attributes(...
-                {['time_' tres 'min'],'height'},...
-                ['Radial velocity kurtosis (' tres ' min)'],...
-                {'m s-1','m s<sup>-1</sup>'},...
-                C.missing_value,...
-                'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
-                {[-1 5], 'linear'});
-        end
+        % velo skewness
+        att.([bn '_skewness_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Radial velocity skewness (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+            {[-3 3], 'linear'});
+        % velo kurtosis
+        att.([bn '_kurtosis_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Radial velocity kurtosis (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+            {[-1 5], 'linear'});
         % Standard errors
         % velo mean error
         att.([bn '_mean_error_' tres 'min']) = create_attributes(...
@@ -799,24 +779,22 @@ end
             C.missing_value,...
             'Discrete time steps',...
             {[0.01 10], 'logarithmic'});
-        if dt*60>=30
-            % velo skewness error
-            att.([bn '_skewness_error_' tres 'min']) = create_attributes(...
-                {['time_' tres 'min'],'height'},...
-                ['Standard error in radial velocity skewness (' tres ' min)'],...
-                {'m s-1','m s<sup>-1</sup>'},...
-                C.missing_value,...
-                'Discrete time steps',...
-                {[0.01 10], 'logarithmic'});
-            % velo kurtosis error
-            att.([bn '_kurtosis_error_' tres 'min']) = create_attributes(...
-                {['time_' tres 'min'],'height'},...
-                ['Standard error in radial velocity kurtosis (' tres ' min)'],...
-                {'m s-1','m s<sup>-1</sup>'},...
-                C.missing_value,...
-                'Discrete time steps',...
-                {[0.01 10], 'logarithmic'});
-        end
+        % velo skewness error
+        att.([bn '_skewness_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in radial velocity skewness (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps',...
+            {[0.01 10], 'logarithmic'});
+        % velo kurtosis error
+        att.([bn '_kurtosis_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            ['Standard error in radial velocity kurtosis (' tres ' min)'],...
+            {'m s-1','m s<sup>-1</sup>'},...
+            C.missing_value,...
+            'Discrete time steps',...
+            {[0.01 10], 'logarithmic'});
         % signal mean
         att.(['signal_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
@@ -937,24 +915,22 @@ end
                 C.missing_value,...
                 'Discrete time steps, unbiased by random noise and sample size.',...
                 {[0.01 10], 'logarithmic'});
-            if dt*60>=30
-                % velo wskewness
-                att.([bn '_weighted_skewness_' tres 'min']) = create_attributes(...
-                    {['time_' tres 'min'],'height'},...
-                    ['Radial velocity weighted skewness (' tres ' min)'],...
-                    {'m s-1','m s<sup>-1</sup>'},...
-                    C.missing_value,...
-                    'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
-                    {[-3 3], 'linear'});
-                % velo wkurtosis
-                att.([bn '_weighted_kurtosis_' tres 'min']) = create_attributes(...
-                    {['time_' tres 'min'],'height'},...
-                    ['Radial velocity weighted kurtosis (' tres ' min)'],...
-                    {'m s-1','m s<sup>-1</sup>'},...
-                    C.missing_value,...
-                    'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
-                    {[-1 5], 'linear'});
-            end
+            % velo wskewness
+            att.([bn '_weighted_skewness_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity weighted skewness (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+                {[-3 3], 'linear'});
+            % velo wkurtosis
+            att.([bn '_weighted_kurtosis_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Radial velocity weighted kurtosis (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                'Discrete time steps, unbiased by random noise and sample size, calculated over 3 range gates.',...
+                {[-1 5], 'linear'});
             % velo wmean error
             att.([bn '_weighted_mean_error_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
@@ -979,24 +955,22 @@ end
                 C.missing_value,...
                 'Discrete time steps',...
                 {[0.01 10], 'logarithmic'});
-            if dt*60>=30
-                % velo wskewness error
-                att.([bn '_weighted_skewness_error_' tres 'min']) = create_attributes(...
-                    {['time_' tres 'min'],'height'},...
-                    ['Standard error in radial velocity weighted skewness (' tres ' min)'],...
-                    {'m s-1','m s<sup>-1</sup>'},...
-                    C.missing_value,...
-                    '',...
-                    {[0.01 10], 'logarithmic'});
-                % velo wkurtosis error
-                att.([bn '_weighted_kurtosis_error_' tres 'min']) = create_attributes(...
-                    {['time_' tres 'min'],'height'},...
-                    ['Standard error in radial velocity weighted kurtosis (' tres ' min)'],...
-                    {'m s-1','m s<sup>-1</sup>'},...
-                    C.missing_value,...
-                    '',...
-                    {[0.01 10], 'logarithmic'});
-            end
+            % velo wskewness error
+            att.([bn '_weighted_skewness_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity weighted skewness (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                '',...
+                {[0.01 10], 'logarithmic'});
+            % velo wkurtosis error
+            att.([bn '_weighted_kurtosis_error_' tres 'min']) = create_attributes(...
+                {['time_' tres 'min'],'height'},...
+                ['Standard error in radial velocity weighted kurtosis (' tres ' min)'],...
+                {'m s-1','m s<sup>-1</sup>'},...
+                C.missing_value,...
+                '',...
+                {[0.01 10], 'logarithmic'});
             % signal wmean
             att.(['signal_weighted_mean_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
