@@ -162,17 +162,13 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         data.([bn '_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_stddev_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        if dt(idt1)*60>=30
-            data.([bn '_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.([bn '_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        end
+        data.([bn '_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_stddev_error_' ,tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        if dt(idt1)*60>=30
-            data.([bn '_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.([bn '_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        end
+        data.([bn '_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['signal_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['signal_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['beta_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
@@ -258,11 +254,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         ref_snr(ib,:) = tmp.signal;
         ref_beta(ib,:) = tmp.beta_raw;
         ref_beta_error(ib,:) = tmp.beta_error;
-        
-%         % Clean
-%         ref_v_error(isnan(ref_v_raw)|ref_v_error>19|ref_v_error==0) = nan;
-%         ref_v_raw(isnan(ref_v_error)) = nan;
-        
+                
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
         lbob.n_subsamples = 10;
