@@ -44,7 +44,7 @@ else
 end
 if nargin < 3
     % Temporal resolutions, min/60 = hrs
-    dt = [3 10 30 60]; dt = dt./60;
+    dt = [3 5 30 60]; dt = dt./60;
     weighting = true;
     timeStep = 60;
 elseif nargin == 3
@@ -242,7 +242,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         netcdf.close(ncid)
         
         % Check and equalize nans
-        cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | tmp.v_raw;
+        cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | isnan(tmp.v_raw);
         tmp.v_raw(cond_nan) = nan;
         tmp.v_error(cond_nan) = nan;
         tmp.signal(cond_nan) = nan;
@@ -265,8 +265,8 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
-        lbob.n_subsamples = 15;
-        lbob.n_trials = 5; % Integer
+        lbob.n_subsamples = 10;
+        lbob.n_trials = 3; % Integer
         lbob.score_func = []; % set up later, separately for each calculation
         lbob.agg_func = @nanmean;
         lbob.x = [];
