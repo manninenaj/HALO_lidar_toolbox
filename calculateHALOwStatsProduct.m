@@ -241,6 +241,14 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         tmp.range = double(netcdf.getVar(ncid,varid,istarts(1),icounts(1))); tmp.range = tmp.range(:);
         netcdf.close(ncid)
         
+        % Check and equalize nans
+        cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | tmp.v_raw;
+        tmp.v_raw(cond_nan) = nan;
+        tmp.v_error(cond_nan) = nan;
+        tmp.signal(cond_nan) = nan;
+        tmp.beta_raw(cond_nan) = nan;
+        tmp.beta_error(cond_nan) = nan;
+            
         % Grid into 1 sec resolution
         ref_time_sec = ref_time_info(ref_time_block_indices==ichunk);
         [~,ib] = look4nearest(tmp.time,ref_time_sec);
@@ -257,8 +265,8 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
-        lbob.n_subsamples = 10;
-        lbob.n_trials = 3; % Integer
+        lbob.n_subsamples = 15;
+        lbob.n_trials = 5; % Integer
         lbob.score_func = []; % set up later, separately for each calculation
         lbob.agg_func = @nanmean;
         lbob.x = [];
