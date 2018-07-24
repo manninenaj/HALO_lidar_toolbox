@@ -302,89 +302,89 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  radial velocity unweighted mean, std.dev. and variance ...')
             X = []; % assign X as empty
             Y = ref_v_raw(iv); % assign Y as vertical velocity
-            Y_errors = ref_v_error(iv); % assign Y_errors  (only as dummivs)
+            Y_errors = ref_v_error(iv); % assign Y_errors  (only as dummies)
             lbob.score_func = 'wstats'; % re-assign scoring function
-            lbob_wstats = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_wstats = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  radial velocity unweighted skewness ...')
             X = []; % assign X as empty
             Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedSkewness; % re-assign scoring function
-            lbob_skewn = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_skewn = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  radial velocity unweighted kurtosis ...')
             X = []; % assign X as empty
             Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedKurtosis; % re-assign scoring function
-            lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  snr unweighted mean...')
             X = []; % assign X as empty
             Y = ref_snr(iv); % re-assign Y as snr
-            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_snr_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_snr_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  snr unweighted variance...')
             X = []; % assign X as empty
             Y = ref_snr(iv); % re-assign Y as snr
-            Y_errors = ref_beta_error(iv); % assign Y_errors  (only as dummivs)
+            Y_errors = ref_beta_error(iv); % assign Y_errors  (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_snr_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_snr_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  beta unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta(iv); % re-assign Y as beta
-            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_beta_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_beta_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  beta unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta(iv); % re-assign Y as beta
-            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  velocity instrumental error unweighted mean...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
-            Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_velo_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_velo_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  velocity instrumental error unweighted variance...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
-            Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_velo_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_velo_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  beta instrumental error unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
-            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_beta_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_beta_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  beta instrumental error unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
-            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+            Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_beta_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted');
+            lbob_beta_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.\n')
             
             %%--- WEIGHTED STATISTICS ---%%
@@ -394,23 +394,23 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 Y = ref_v_raw(iv); % assign Y as vertical velocity
                 Y_errors = ref_v_error(iv); % assign Y_errors as w meas. errors
                 lbob.score_func = 'wstats-weighted'; % re-assign scoring function
-                lbob_wstats_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_wstats_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  radial velocity weighted skewness ...')
                 X = []; % assign X as empty
                 Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedSkewness; % re-assign scoring function
-                lbob_skewn_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_skewn_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  radial velocity weighted kurtosis ...')
                 X = []; % assign X as empty
                 Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummivs)
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedKurtosis; % re-assign scoring function
-                lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  snr weighted mean...')
@@ -418,7 +418,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 Y = ref_snr(iv); % re-assign Y as snr
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedMean; % re-assign scoring function
-                lbob_snr_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_snr_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  snr weighted variance...')
@@ -426,7 +426,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 Y = ref_snr(iv); % re-assign Y as snr
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedVariance; % re-assign scoring function
-                lbob_snr_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_snr_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  beta weighted mean...')
@@ -434,7 +434,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 Y = ref_beta(iv); % re-assign Y as snr
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedMean; % re-assign scoring function
-                lbob_beta_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_beta_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  beta weighted variance...')
@@ -442,39 +442,39 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 Y = ref_beta(iv); % re-assign Y as snr
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedVariance; % re-assign scoring function
-                lbob_beta_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_beta_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  velocity instrumental error unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
-                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedMean;
-                lbob_velo_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_velo_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  velocity instrumental error unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
-                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummivs)
+                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedVariance;
-                lbob_velo_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_velo_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  beta instrumental error unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
-                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedMean;
-                lbob_beta_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_beta_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  beta instrumental error unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
-                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummivs)
+                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedVariance;
-                lbob_beta_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted');
+                lbob_beta_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.\n\n')
                 
             end
