@@ -44,9 +44,9 @@ else
 end
 if nargin < 3
     % Temporal resolutions, min/60 = hrs
-    dt = [3 5 30 60]; dt = dt./60;
+    dt = [3 5 60]; dt = dt./60;
     weighting = true;
-    timeStep = 60;
+    timeStep = 120;
 elseif nargin == 3
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
         error(['The 3rd input must a numerical scalar or vector'...
@@ -58,7 +58,7 @@ elseif nargin == 3
     end
 end
 if nargin < 4
-    timeStep = 60;
+    timeStep = 120;
     weighting = true;
 end
 if nargin == 4
@@ -243,11 +243,11 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         
         % Check and equalize nans
         cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | isnan(tmp.v_raw);
-        tmp.v_raw(cond_nan) = nan;
-        tmp.v_error(cond_nan) = nan;
-        tmp.signal(cond_nan) = nan;
-        tmp.beta_raw(cond_nan) = nan;
-        tmp.beta_error(cond_nan) = nan;
+        tmp.v_raw(cond_nan | tmp.v_raw == C.missing_value) = nan;
+        tmp.v_error(cond_nan | tmp.v_error == C.missing_value) = nan;
+        tmp.signal(cond_nan | tmp.signal == C.missing_value) = nan;
+        tmp.beta_raw(cond_nan | tmp.beta_raw == C.missing_value) = nan;
+        tmp.beta_error(cond_nan | tmp.beta_error == C.missing_value) = nan;
             
         % Grid into 1 sec resolution
         ref_time_sec = ref_time_info(ref_time_block_indices==ichunk);
