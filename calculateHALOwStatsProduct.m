@@ -242,7 +242,9 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         netcdf.close(ncid)
         
         % Check and equalize nans
-        cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | isnan(tmp.v_raw);
+        cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | isnan(tmp.v_raw) | ...
+            tmp.signal == C.missing_value | tmp.beta_raw == C.missing_value | ...
+            tmp.v_raw == C.missing_value;
         tmp.v_raw(cond_nan | tmp.v_raw == C.missing_value) = nan;
         tmp.v_error(cond_nan | tmp.v_error == C.missing_value) = nan;
         tmp.signal(cond_nan | tmp.signal == C.missing_value) = nan;
@@ -254,12 +256,12 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         [~,ib] = look4nearest(tmp.time,ref_time_sec);
         ref_v_raw = nan(length(ref_time_sec),length(tmp.range));
         ref_v_error = nan(length(ref_time_sec),length(tmp.range));
-        ref_snr = nan(length(ref_time_sec),length(tmp.range));
+        ref_signal = nan(length(ref_time_sec),length(tmp.range));
         ref_beta = nan(length(ref_time_sec),length(tmp.range));
         ref_beta_error = nan(length(ref_time_sec),length(tmp.range));
         ref_v_raw(ib,:) = tmp.v_raw;
         ref_v_error(ib,:) = tmp.v_error;
-        ref_snr(ib,:) = tmp.signal;
+        ref_signal(ib,:) = tmp.signal;
         ref_beta(ib,:) = tmp.beta_raw;
         ref_beta_error(ib,:) = tmp.beta_error;
                 
@@ -323,20 +325,20 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  snr unweighted mean...')
+            fprintf('\n  signal unweighted mean...')
             X = []; % assign X as empty
-            Y = ref_snr(iv); % re-assign Y as snr
+            Y = ref_signal(iv); % re-assign Y as signal
             Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_snr_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
+            lbob_signal_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  snr unweighted variance...')
+            fprintf('\n  signal unweighted variance...')
             X = []; % assign X as empty
-            Y = ref_snr(iv); % re-assign Y as snr
+            Y = ref_signal(iv); % re-assign Y as signal
             Y_errors = ref_beta_error(iv); % assign Y_errors  (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_snr_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
+            lbob_signal_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  beta unweighted mean...')
@@ -371,7 +373,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_velo_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  beta instrumental error unweighted mean...')
+            fprintf('\n  signal instrumental error unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
             Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
@@ -379,7 +381,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_signal_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  beta instrumental error unweighted variance...')
+            fprintf('\n  signal instrumental error unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
             Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
@@ -413,25 +415,25 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  snr weighted mean...')
+                fprintf('\n  signal weighted mean...')
                 X = []; % assign X as empty
-                Y = ref_snr(iv); % re-assign Y as snr
+                Y = ref_signal(iv); % re-assign Y as signal
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedMean; % re-assign scoring function
-                lbob_snr_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
+                lbob_signal_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  snr weighted variance...')
+                fprintf('\n  signal weighted variance...')
                 X = []; % assign X as empty
-                Y = ref_snr(iv); % re-assign Y as snr
+                Y = ref_signal(iv); % re-assign Y as signal
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedVariance; % re-assign scoring function
-                lbob_snr_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
+                lbob_signal_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
                 fprintf('\n  beta weighted mean...')
                 X = []; % assign X as empty
-                Y = ref_beta(iv); % re-assign Y as snr
+                Y = ref_beta(iv); % re-assign Y as signal
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedMean; % re-assign scoring function
                 lbob_beta_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
@@ -439,7 +441,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
                 fprintf('\n  beta weighted variance...')
                 X = []; % assign X as empty
-                Y = ref_beta(iv); % re-assign Y as snr
+                Y = ref_beta(iv); % re-assign Y as signal
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedVariance; % re-assign scoring function
                 lbob_beta_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
@@ -461,7 +463,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_velo_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  beta instrumental error unweighted mean...')
+                fprintf('\n  signal instrumental error unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
                 Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
@@ -469,7 +471,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_signal_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  beta instrumental error unweighted variance...')
+                fprintf('\n  signal instrumental error unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
                 Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
@@ -491,11 +493,11 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_wstats.var_standard_error(lbob_wstats.var_standard_error == 0) = nan;
             lbob_skewn.standard_error(lbob_skewn.standard_error == 0) = nan;
             lbob_kurto.standard_error(lbob_kurto.standard_error == 0) = nan;
-            % snr
-            lbob_snr_mean.best_estimate(lbob_snr_mean.best_estimate == 0) = nan;
-            lbob_snr_var.best_estimate(lbob_snr_var.best_estimate == 0) = nan;
-            lbob_snr_mean.standard_error(lbob_snr_mean.standard_error == 0) = nan;
-            lbob_snr_var.standard_error(lbob_snr_var.standard_error == 0) = nan;
+            % signal
+            lbob_signal_mean.best_estimate(lbob_signal_mean.best_estimate == 0) = nan;
+            lbob_signal_var.best_estimate(lbob_signal_var.best_estimate == 0) = nan;
+            lbob_signal_mean.standard_error(lbob_signal_mean.standard_error == 0) = nan;
+            lbob_signal_var.standard_error(lbob_signal_var.standard_error == 0) = nan;
             % beta
             lbob_beta_mean.best_estimate(lbob_beta_mean.best_estimate == 0) = nan;
             lbob_beta_var.best_estimate(lbob_beta_var.best_estimate == 0) = nan;
@@ -525,11 +527,11 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_wstats_weighted.var_standard_error(lbob_wstats_weighted.var_standard_error == 0) = nan;
                 lbob_skewn_weighted.standard_error(lbob_skewn_weighted.standard_error == 0) = nan;
                 lbob_kurto_weighted.standard_error(lbob_kurto_weighted.standard_error == 0) = nan;
-                % snr weighted
-                lbob_snr_wmean.best_estimate(lbob_snr_wmean.best_estimate == 0) = nan;
-                lbob_snr_wvar.best_estimate(lbob_snr_wvar.best_estimate == 0) = nan;
-                lbob_snr_wmean.standard_error(lbob_snr_wmean.standard_error == 0) = nan;
-                lbob_snr_wvar.standard_error(lbob_snr_wvar.standard_error == 0) = nan;
+                % signal weighted
+                lbob_signal_wmean.best_estimate(lbob_signal_wmean.best_estimate == 0) = nan;
+                lbob_signal_wvar.best_estimate(lbob_signal_wvar.best_estimate == 0) = nan;
+                lbob_signal_wmean.standard_error(lbob_signal_wmean.standard_error == 0) = nan;
+                lbob_signal_wvar.standard_error(lbob_signal_wvar.standard_error == 0) = nan;
                 % beta weighted
                 lbob_beta_wmean.best_estimate(lbob_beta_wmean.best_estimate == 0) = nan;
                 lbob_beta_wvar.best_estimate(lbob_beta_wvar.best_estimate == 0) = nan;
@@ -556,13 +558,13 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 data.([bn '_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.var_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto_weighted.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.(['signal_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_snr_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.(['signal_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_snr_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_signal_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_signal_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['beta_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_beta_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['beta_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_beta_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 
-                data.(['signal_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_snr_wmean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.(['signal_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_snr_wvar.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_signal_wmean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_signal_wvar.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['beta_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_wmean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['beta_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_wvar.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 
@@ -589,13 +591,13 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.([bn '_variance_error_' tres 'min']){ichunk} = reshape(lbob_wstats.var_standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_skewness_error_' tres 'min']){ichunk} = reshape(lbob_skewn.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.([bn '_kurtosis_error_' tres 'min']){ichunk} = reshape(lbob_kurto.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_mean_' tres 'min']){ichunk} = reshape(lbob_snr_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_variance_' tres 'min']){ichunk} = reshape(lbob_snr_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_mean_' tres 'min']){ichunk} = reshape(lbob_signal_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_variance_' tres 'min']){ichunk} = reshape(lbob_signal_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_mean_' tres 'min']){ichunk} = reshape(lbob_beta_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_variance_' tres 'min']){ichunk} = reshape(lbob_beta_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
-            data.(['signal_mean_error_' tres 'min']){ichunk} = reshape(lbob_snr_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_variance_error_' tres 'min']){ichunk} = reshape(lbob_snr_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_mean_error_' tres 'min']){ichunk} = reshape(lbob_signal_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_variance_error_' tres 'min']){ichunk} = reshape(lbob_signal_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
@@ -873,7 +875,7 @@ end
             C.missing_value,...
             'See Rye and Hardesty (1993).',...
             {[0 1], 'log'});
-        % beta instrumental error mean
+        % signal instrumental error mean
         att.(['signal_instrumental_error_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
             ['Mean of fractional instrumental error in beta (' tres ' min)'],...
@@ -881,7 +883,7 @@ end
             C.missing_value,...
             'Mean of fractional error in beta.',...
             {[0 1], 'linear'});
-        % beta instrumental error variance
+        % signal instrumental error variance
         att.(['signal_instrumental_error_variance_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
             ['Variance of fractional instrumental error in beta (' tres ' min)'],...
@@ -1049,7 +1051,7 @@ end
                 C.missing_value,...
                 'See Rye and Hardesty (1993). Weighted with itself.',...
                 {[0 1], 'log'});
-            % beta instrumental error mean
+            % signal instrumental error mean
             att.(['signal_instrumental_error_weighted_mean_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
                 ['Mean of fractional instrumental error in beta (' tres ' min)'],...
@@ -1057,7 +1059,7 @@ end
                 C.missing_value,...
                 'Weighted mean of fractional error in beta. Weighted with itself.',...
                 {[0 1], 'linear'});
-            % beta instrumental error variance
+            % signal instrumental error variance
             att.(['signal_instrumental_error_weighted_variance_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
                 ['Weighted variance of fractional instrumental error in beta (' tres ' min)'],...

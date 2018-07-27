@@ -163,7 +163,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     fnames_var_e = fnames(ifs_e_var);
 
     ifs_nsamples = strmatch('nsamples', fnames);
-    fnames_nsamples = fnames(ifs_nsamples)
+    fnames_nsamples = fnames(ifs_nsamples);
     
     if weighting
         ifs_w = strmatch('radial_velocity_weighted_variance', fnames);
@@ -204,11 +204,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             end
         end
 
-        % Filter by using number of samples
-        true_variance( wstats.( fnames_nsamples{ii} ) < round( max( ...
-            wstats.(fnames_nsamples{ii})(:) )*.75 ) ) = nan;
-        true_wvariance( wstats.( fnames_nsamples{ii}) < round( max( ...
-            wstats.(fnames_nsamples{ii})(:) )*.75 ) ) = nan;
+%         % Filter by using number of samples
+%         true_variance( wstats.( fnames_nsamples{ii} ) < round( max( ...
+%             wstats.(fnames_nsamples{ii})(:) )*.75 ) ) = nan;
+%         true_wvariance( wstats.( fnames_nsamples{ii}) < round( max( ...
+%             wstats.(fnames_nsamples{ii})(:) )*.75 ) ) = nan;
         
         % Re-grid the winds
         [Xr,Yr] = meshgrid(wstats.height, wstats.(fnames_time{ii}));

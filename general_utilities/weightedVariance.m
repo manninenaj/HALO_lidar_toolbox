@@ -39,35 +39,33 @@ elseif nargin > 3
     error('Too many inputs!')
 end
 
-y_var = weightedStddev(y,y_error,method).^2;
-
-%% % NOTE: quantity and equation numbers refer to the Rimoldini (2014).
-%% if all(isnan(y(:)))
-%%     y_var = nan;
-%% else    
-%%     % Number of samples
-%%     nsamples = sum(~isnan(y));
-%%     nsamples(nsamples==0) = nan;
-%%     switch method
-%%         case 'unweighted'
-%%             y_mean = nanmean(y);
-%%             y_mean = repmat(y_mean,size(y,1),1);
-%%             % quantity (iv), w = 1 and V_p = nsamples
-%%             m_2 = nansum((y-y_mean).^2)./ nsamples;
-%%             % Eq. (9), unweighted
-%%             M_2 = nsamples ./ (nsamples-1) .* m_2;
-%%             % Eq.(28)
-%%             y_var = M_2 - 1./nsamples .* nansum(y_error.^2);
-%%         case 'weighted'
-%%             y_wmean = weightedMean(y,y_error,'weighted');
-%%             y_wmean = repmat(y_wmean,size(y,1),1);
-%%             % weights: uncertainties
-%%             w = 1./y_error.^2;
-%%             % quantity (ii), V_p
-%%             V_1 = nansum(w);% w^p, p = 1
-%%             % weighted variance, Eq. (32)
-%%             y_var = nansum(w.*(y-y_wmean).^2./repmat(V_1,size(y,1),1)) - (nsamples-1)./V_1;
-%%     end
-%% end
+% NOTE: quantity and equation numbers refer to the Rimoldini (2014).
+if all(isnan(y(:)))
+    y_var = nan;
+else    
+    % Number of samples
+    nsamples = sum(~isnan(y));
+    nsamples(nsamples==0) = nan;
+    switch method
+        case 'unweighted'
+            y_mean = nanmean(y);
+            y_mean = repmat(y_mean,size(y,1),1);
+            % quantity (iv), w = 1 and V_p = nsamples
+            m_2 = nansum((y-y_mean).^2)./ nsamples;
+            % Eq. (9), unweighted
+            M_2 = nsamples ./ (nsamples-1) .* m_2;
+            % Eq.(28)
+            y_var = abs(M_2 - 1./nsamples .* nansum(y_error.^2));
+        case 'weighted'
+            y_wmean = weightedMean(y,y_error,'weighted');
+            y_wmean = repmat(y_wmean,size(y,1),1);
+            % weights: uncertainties
+            w = 1./y_error.^2;
+            % quantity (ii), V_p
+            V_1 = nansum(w);% w^p, p = 1
+            % weighted variance, Eq. (32)
+            y_var = abs(nansum(w.*(y-y_wmean).^2./repmat(V_1,size(y,1),1)) - (nsamples-1)./V_1);
+    end
+end
 end
 

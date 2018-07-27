@@ -47,7 +47,7 @@ else
     % Number of samples
     nsamples = sum(~isnan(y));
     nsamples(nsamples==0) = nan;
-%     nsamples = repmat(nsamples,size(y,1),1);
+    nsamples = repmat(nsamples,size(y,1),1);
     switch method
         case 'unweighted'
             y_mean = nanmean(y);
@@ -57,7 +57,7 @@ else
             % Eq. (9), unweighted
             M_2 = nsamples ./ (nsamples-1) .* m_2;
             % sqrt of Eq.(28)
-            y_stddev = real(sqrt((M_2 - nansum(y_error.^2)./nsamples)));
+            y_stddev = real(sqrt(M_2 - nansum(y_error.^2)./nsamples));
         case 'weighted'
             % weights: uncertainties
             y_wmean = weightedMean(y,y_error,'weighted');
@@ -66,7 +66,7 @@ else
             % quantity (ii), V_p
             V_1 = nansum(w);% w^p, p = 1
             % weighted standard deviation, sqrt of Eq. (32)
-            y_stddev = real(sqrt((nansum(w.*(y-y_wmean).^2./repmat(V_1,size(y,1),1)) - (nsamples-1)./V_1)));
+            y_stddev = real(sqrt(nansum(w.*(y-y_wmean).^2./repmat(V_1,size(y,1),1)) - (nsamples-1)./V_1));
     end
 end
 end
