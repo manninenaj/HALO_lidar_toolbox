@@ -44,9 +44,9 @@ else
 end
 if nargin < 3
     % Temporal resolutions, min/60 = hrs
-    dt = [3 5 60]; dt = dt./60;
+    dt = [3 30 60]; dt = dt./60;
     weighting = true;
-    timeStep = 120;
+    timeStep = 60;
 elseif nargin == 3
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
         error(['The 3rd input must a numerical scalar or vector'...
@@ -58,7 +58,7 @@ elseif nargin == 3
     end
 end
 if nargin < 4
-    timeStep = 120;
+    timeStep = 60;
     weighting = true;
 end
 if nargin == 4
@@ -265,7 +265,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
-        lbob.n_subsamples = 10;
+        lbob.n_subsamples = 12;
         lbob.n_trials = 3; % Integer
         lbob.score_func = []; % set up later, separately for each calculation
         lbob.agg_func = @nanmean;
