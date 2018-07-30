@@ -45,8 +45,8 @@ end
 if nargin < 3
     % Temporal resolutions, min/60 = hrs
     dt = [3 30 60]; dt = dt./60;
-    weighting = true;
-    timeStep = 60;
+    weighting = false;
+    timeStep = 120;
 elseif nargin == 3
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
         error(['The 3rd input must a numerical scalar or vector'...
@@ -58,8 +58,8 @@ elseif nargin == 3
     end
 end
 if nargin < 4
-    timeStep = 60;
-    weighting = true;
+    timeStep = 120;
+    weighting = false;
 end
 if nargin == 4
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
@@ -79,7 +79,7 @@ if nargin == 4
     end
 end
 if nargin < 5
-    weighting = true;
+    weighting = false;
 end
 if nargin == 5
     if ~isnumeric(dt) | int16(dt)~=dt | dt > 60
