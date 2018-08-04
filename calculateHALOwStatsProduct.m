@@ -177,10 +177,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         data.(['signal_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['beta_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['beta_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        data.([bn '_instrumental_error_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        data.([bn '_instrumental_error_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        data.(['signal_instrumental_error_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-        data.(['signal_instrumental_error_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_instrumental_precision_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_instrumental_precision_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['signal_instrumental_precision_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.(['signal_instrumental_precision_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['nsamples_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         
         if weighting
@@ -202,10 +202,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.(['signal_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['beta_weighted_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['beta_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.([bn '_instrumental_error_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.([bn '_instrumental_error_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.(['signal_instrumental_error_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.(['signal_instrumental_error_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_instrumental_precision_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.([bn '_instrumental_precision_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['signal_instrumental_precision_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+            data.(['signal_instrumental_precision_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         end
     end
     
@@ -357,36 +357,36 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  velocity instrumental error unweighted mean...')
+            fprintf('\n  velocity instrumental precision unweighted mean...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
             Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_velo_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
+            lbob_velo_instrumental_precision_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  velocity instrumental error unweighted variance...')
+            fprintf('\n  velocity instrumental precision unweighted variance...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
             Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_velo_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
+            lbob_velo_instrumental_precision_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  signal instrumental error unweighted mean...')
+            fprintf('\n  signal instrumental precision unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
             Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedMean;
-            lbob_signal_instrumental_error_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
+            lbob_signal_instrumental_precision_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  signal instrumental error unweighted variance...')
+            fprintf('\n  signal instrumental precision unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
             Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
             lbob.score_func = @weightedVariance;
-            lbob_signal_instrumental_error_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
+            lbob_signal_instrumental_precision_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.\n')
             
             %%--- WEIGHTED STATISTICS ---%%
@@ -447,36 +447,36 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_beta_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  velocity instrumental error unweighted mean...')
+                fprintf('\n  velocity instrumental precision unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
                 Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedMean;
-                lbob_velo_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
+                lbob_velo_instrumental_precision_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  velocity instrumental error unweighted variance...')
+                fprintf('\n  velocity instrumental precision unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
                 Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedVariance;
-                lbob_velo_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
+                lbob_velo_instrumental_precision_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  signal instrumental error unweighted mean...')
+                fprintf('\n  signal instrumental precision unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
                 Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedMean;
-                lbob_signal_instrumental_error_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
+                lbob_signal_instrumental_precision_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
                 
-                fprintf('\n  signal instrumental error unweighted variance...')
+                fprintf('\n  signal instrumental precision unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
                 Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
                 lbob.score_func = @weightedVariance;
-                lbob_signal_instrumental_error_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
+                lbob_signal_instrumental_precision_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.\n\n')
                 
             end
@@ -504,15 +504,15 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_beta_mean.standard_error(lbob_beta_mean.standard_error == 0) = nan;
             lbob_beta_var.standard_error(lbob_beta_var.standard_error == 0) = nan;
             % velo noise
-            lbob_velo_instrumental_error_mean.best_estimate(lbob_velo_instrumental_error_mean.best_estimate == 0) = nan;
-            lbob_velo_instrumental_error_var.best_estimate(lbob_velo_instrumental_error_var.best_estimate == 0) = nan;
-            lbob_velo_instrumental_error_mean.standard_error(lbob_velo_instrumental_error_mean.standard_error == 0) = nan;
-            lbob_velo_instrumental_error_var.standard_error(lbob_velo_instrumental_error_var.standard_error == 0) = nan;
+            lbob_velo_instrumental_precision_mean.best_estimate(lbob_velo_instrumental_precision_mean.best_estimate == 0) = nan;
+            lbob_velo_instrumental_precision_var.best_estimate(lbob_velo_instrumental_precision_var.best_estimate == 0) = nan;
+            lbob_velo_instrumental_precision_mean.standard_error(lbob_velo_instrumental_precision_mean.standard_error == 0) = nan;
+            lbob_velo_instrumental_precision_var.standard_error(lbob_velo_instrumental_precision_var.standard_error == 0) = nan;
             % beta noise
-            lbob_signal_instrumental_error_mean.best_estimate(lbob_signal_instrumental_error_mean.best_estimate == 0) = nan;
-            lbob_signal_instrumental_error_var.best_estimate(lbob_signal_instrumental_error_var.best_estimate == 0) = nan;
-            lbob_signal_instrumental_error_mean.standard_error(lbob_signal_instrumental_error_mean.standard_error == 0) = nan;
-            lbob_signal_instrumental_error_var.standard_error(lbob_signal_instrumental_error_var.standard_error == 0) = nan;
+            lbob_signal_instrumental_precision_mean.best_estimate(lbob_signal_instrumental_precision_mean.best_estimate == 0) = nan;
+            lbob_signal_instrumental_precision_var.best_estimate(lbob_signal_instrumental_precision_var.best_estimate == 0) = nan;
+            lbob_signal_instrumental_precision_mean.standard_error(lbob_signal_instrumental_precision_mean.standard_error == 0) = nan;
+            lbob_signal_instrumental_precision_var.standard_error(lbob_signal_instrumental_precision_var.standard_error == 0) = nan;
             
             if weighting
                 % wstats weighted
@@ -538,15 +538,15 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 lbob_beta_wmean.standard_error(lbob_beta_wmean.standard_error == 0) = nan;
                 lbob_beta_wvar.standard_error(lbob_beta_wvar.standard_error == 0) = nan;
                 % velo noise
-                lbob_velo_instrumental_error_wmean.best_estimate(lbob_velo_instrumental_error_wmean.best_estimate == 0) = nan;
-                lbob_velo_instrumental_error_wvar.best_estimate(lbob_velo_instrumental_error_wvar.best_estimate == 0) = nan;
-                lbob_velo_instrumental_error_wmean.standard_error(lbob_velo_instrumental_error_wmean.standard_error == 0) = nan;
-                lbob_velo_instrumental_error_wvar.standard_error(lbob_velo_instrumental_error_wvar.standard_error == 0) = nan;
+                lbob_velo_instrumental_precision_wmean.best_estimate(lbob_velo_instrumental_precision_wmean.best_estimate == 0) = nan;
+                lbob_velo_instrumental_precision_wvar.best_estimate(lbob_velo_instrumental_precision_wvar.best_estimate == 0) = nan;
+                lbob_velo_instrumental_precision_wmean.standard_error(lbob_velo_instrumental_precision_wmean.standard_error == 0) = nan;
+                lbob_velo_instrumental_precision_wvar.standard_error(lbob_velo_instrumental_precision_wvar.standard_error == 0) = nan;
                 % beta noise
-                lbob_signal_instrumental_error_wmean.best_estimate(lbob_signal_instrumental_error_wmean.best_estimate == 0) = nan;
-                lbob_signal_instrumental_error_wvar.best_estimate(lbob_signal_instrumental_error_wvar.best_estimate == 0) = nan;
-                lbob_signal_instrumental_error_wmean.standard_error(lbob_signal_instrumental_error_wmean.standard_error == 0) = nan;
-                lbob_signal_instrumental_error_wvar.standard_error(lbob_signal_instrumental_error_wvar.standard_error == 0) = nan;
+                lbob_signal_instrumental_precision_wmean.best_estimate(lbob_signal_instrumental_precision_wmean.best_estimate == 0) = nan;
+                lbob_signal_instrumental_precision_wvar.best_estimate(lbob_signal_instrumental_precision_wvar.best_estimate == 0) = nan;
+                lbob_signal_instrumental_precision_wmean.standard_error(lbob_signal_instrumental_precision_wmean.standard_error == 0) = nan;
+                lbob_signal_instrumental_precision_wvar.standard_error(lbob_signal_instrumental_precision_wvar.standard_error == 0) = nan;
                 
                 data.([bn '_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.mean_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.([bn '_weighted_stddev_' tres 'min']){ichunk} = reshape(lbob_wstats_weighted.std_best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
@@ -568,10 +568,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 data.(['beta_weighted_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_wmean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 data.(['beta_weighted_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_wvar.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
                 
-                data.([bn '_instrumental_error_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_error_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.([bn '_instrumental_error_weighted_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_error_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.(['signal_instrumental_error_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_error_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-                data.(['signal_instrumental_error_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_error_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_instrumental_precision_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_precision_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.([bn '_instrumental_precision_weighted_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_precision_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_instrumental_precision_weighted_mean_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_precision_wmean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+                data.(['signal_instrumental_precision_weighted_variance_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_precision_wvar.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             end
             
             tres = num2str(dt(idt)*60); % time reso in string
@@ -601,10 +601,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.(['beta_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
-            data.([bn '_instrumental_error_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_error_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.([bn '_instrumental_error_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_error_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_instrumental_error_mean_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_error_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_instrumental_error_variance_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_error_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_instrumental_precision_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_precision_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_instrumental_precision_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_precision_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_instrumental_precision_mean_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_precision_mean.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_instrumental_precision_variance_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_precision_var.best_estimate,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
         end
     end
@@ -859,34 +859,34 @@ end
             C.missing_value,...
             '',...
             {[0.01 10], 'logarithmic'});
-        % velo instrumental error mean
-        att.([bn '_instrumental_error_mean_' tres 'min']) = create_attributes(...
+        % velo instrumental precision mean
+        att.([bn '_instrumental_precision_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
-            ['Mean of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+            ['Mean of the Doppler velocity instrumental precision estimate(' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'See Rye and Hardesty (1993).',...
             {[0 1], 'linear'});
-        % velo instrumental error variance
-        att.([bn '_instrumental_error_variance_' tres 'min']) = create_attributes(...
+        % velo instrumental precision variance
+        att.([bn '_instrumental_precision_variance_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
-            ['Variance of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+            ['Variance of the Doppler velocity instrumental precision estimate(' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'See Rye and Hardesty (1993).',...
             {[0 1], 'log'});
-        % signal instrumental error mean
-        att.(['signal_instrumental_error_mean_' tres 'min']) = create_attributes(...
+        % signal instrumental precision mean
+        att.(['signal_instrumental_precision_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
-            ['Mean of fractional instrumental error in beta (' tres ' min)'],...
+            ['Mean of fractional instrumental precision in beta (' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'Mean of fractional error in beta.',...
             {[0 1], 'linear'});
-        % signal instrumental error variance
-        att.(['signal_instrumental_error_variance_' tres 'min']) = create_attributes(...
+        % signal instrumental precision variance
+        att.(['signal_instrumental_precision_variance_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
-            ['Variance of fractional instrumental error in beta (' tres ' min)'],...
+            ['Variance of fractional instrumental precision in beta (' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'Variance of fractional error in beta.',...
@@ -1035,34 +1035,34 @@ end
                 C.missing_value,...
                 '',...
                 {[0.01 10], 'logarithmic'});
-            % velo instrumental error wmean
-            att.([bn '_instrumental_error_weighted_mean_' tres 'min']) = create_attributes(...
+            % velo instrumental precision wmean
+            att.([bn '_instrumental_precision_weighted_mean_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
-                ['Weighted mean of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+                ['Weighted mean of the Doppler velocity instrumental precision estimate(' tres ' min)'],...
                 {'m s-1','m s<sup>-1</sup>'},...
                 C.missing_value,...
                 'See Rye and Hardesty (1993). Weighted with itself.',...
                 {[0 1], 'linear'});
-            % velo instrumental error variance
-            att.([bn '_instrumental_error_weighted_variance_' tres 'min']) = create_attributes(...
+            % velo instrumental precision variance
+            att.([bn '_instrumental_precision_weighted_variance_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
-                ['Weighted variance of the Doppler velocity instrumental error estimate(' tres ' min)'],...
+                ['Weighted variance of the Doppler velocity instrumental precision estimate(' tres ' min)'],...
                 {'m s-1','m s<sup>-1</sup>'},...
                 C.missing_value,...
                 'See Rye and Hardesty (1993). Weighted with itself.',...
                 {[0 1], 'log'});
-            % signal instrumental error mean
-            att.(['signal_instrumental_error_weighted_mean_' tres 'min']) = create_attributes(...
+            % signal instrumental precision mean
+            att.(['signal_instrumental_precision_weighted_mean_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
-                ['Mean of fractional instrumental error in beta (' tres ' min)'],...
+                ['Mean of fractional instrumental precision in beta (' tres ' min)'],...
                 {'m s-1','m s<sup>-1</sup>'},...
                 C.missing_value,...
                 'Weighted mean of fractional error in beta. Weighted with itself.',...
                 {[0 1], 'linear'});
-            % signal instrumental error variance
-            att.(['signal_instrumental_error_weighted_variance_' tres 'min']) = create_attributes(...
+            % signal instrumental precision variance
+            att.(['signal_instrumental_precision_weighted_variance_' tres 'min']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
-                ['Weighted variance of fractional instrumental error in beta (' tres ' min)'],...
+                ['Weighted variance of fractional instrumental precision in beta (' tres ' min)'],...
                 {'m s-1','m s<sup>-1</sup>'},...
                 C.missing_value,...
                 'Weighted variance of fractional error in beta. Weighted with itself.',...
