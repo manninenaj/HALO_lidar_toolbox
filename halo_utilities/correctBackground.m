@@ -253,7 +253,7 @@ else
         % Shift the locations based on the haar wavelet level impulse
         % distances
         step_locations = max_peaks_final_level(:, 1) + ...
-            ((2^parameters.wavelet_level)/2) -1;
+            ((2^parameters.wavelet_level)/2)-1;
         step_locations(step_locations >= length(time) - 10) = [];
         step_locations([false; diff(step_locations)<10]) = [];
         %% CORRECT THE STEP-CHANGES AND THE SHAPE OF THE BACKGROUND
@@ -437,9 +437,14 @@ else
                     
                     % Calculate robust bisquare linear fit
                     b_remn = my_robustfit(x_r_val(:),y_r_val(:));
-                    p_c_remn = [b_remn(2) b_remn(1)];
-                    y_f_r = polyval(p_c_remn,range);
-                    signal_remn(i_remn,:) = signal_shape_corrtd(i_remn,:)-transpose(y_f_r(:))+1;
+                    if isempty(b_remn)
+                        % No fit, no correction
+                        signal_remn(i_remn,:) = signal_shape_corrtd(i_remn,:);
+                    else
+                        p_c_remn = [b_remn(2) b_remn(1)];
+                        y_f_r = polyval(p_c_remn,range);
+                        signal_remn(i_remn,:) = signal_shape_corrtd(i_remn,:)-transpose(y_f_r(:))+1;
+                    end
                 end
             end
             
