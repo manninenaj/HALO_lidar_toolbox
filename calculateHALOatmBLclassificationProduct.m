@@ -52,17 +52,17 @@ end
 if nargin < 4
     % Temporal resolutions, min/60 = hrs
     dtskewn = 30; %dtskewn = dtskewn./60;
-    if ~isnumeric(dt) | int16(dt)~=(dt)
+    if ~isnumeric(dt) || int16(dt)~=(dt)
         error(['The 3rd input must a numerical scalar or vector'...
             ' specifying the temporal resolution in full minutes.'])
     end
     weighting = true;
 elseif nargin == 4
-    if ~isnumeric(dt) | int16(dt)~=(dt)
+    if ~isnumeric(dt) || int16(dt)~=(dt)
         error(['The 3rd input must a numerical scalar or vector'...
             ' specifying the temporal resolution in full minutes.'])
     end
-    if ~isnumeric(dtskewn) | int16(dtskewn)~=(dtskewn)
+    if ~isnumeric(dtskewn) || int16(dtskewn)~=(dtskewn)
         error(['The 4th input must a numerical scalar or vector'...
             ' specifying the temporal resolution for skewness in full minutes.'])
     end
@@ -153,6 +153,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         
         % Filter out noise
         beta_it(10*real(log10(signal_it-1))<-20 | isnan(signal_it)) = nan;
+        beta_top = beta_it; beta_top(beta_top > th.cloud) = nan;
         
         
         % search for the aerosol layer top
@@ -162,13 +163,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         for ip = 1:size(beta_it,1)
             if all(isnan(beta_it(ip,:)),2), continue; end
             for jp = 4:size(beta_it,2)-2
-                itop_beta_it(ip,jp) = not((isnan(beta_it(ip,jp)) | beta_it(ip,jp) == 0) &...
-                    (all(isnan(beta_it(ip,jp:jp+2))) | all(beta_it(ip,jp:jp+2)==0)));
+                itop_beta_it(ip,jp) = not((isnan(beta_top(ip,jp)) | beta_top(ip,jp) == 0) &...
+                    (all(isnan(beta_top(ip,jp:jp+2))) | all(beta_top(ip,jp:jp+2)==0)));
             end
-            itop_beta_it(ip,[1:3,find(itop_beta_it(ip,:) == 0,1,'first'):end]) = 0;
+            itop_beta_it(ip,[1:3,find(itop_beta_it(ip,:) == 0,1,'last'):end]) = 0;
             tmp = itop_beta_it(ip,:); tmp(1:3) = 1;
-            if not(isempty(find(tmp == 0,1,'first')))
-                aero_top_beta_it(ip) = find(tmp == 0,1,'first')-1;
+            if not(isempty(find(tmp == 1,1,'last')))
+                aero_top_beta_it(ip) = find(tmp == 1,1,'last')-1;
             end
             if not(isnan(aero_top_beta_it(ip)))
                 aero_layer_mask_it(ip,1:aero_top_beta_it(ip)-2) = 1;
@@ -217,7 +218,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         for i = 1:size(cloudmask,1)
             ibit = find(cloudbit(i),1,'first');
             imask = find(cloudmask(i),1,'first');
-            if not(ibit == 0 | imask == 0) & imask < ibit
+            if not(isempty(ibit) | isempty(imask)) && not(ibit == 0 | imask == 0) && imask < ibit
                 cloudmask(i,1:ibit) = 0;
             end
         end
@@ -227,7 +228,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         shift_p1 = [zeros(size(cloudmask,1),1) cloudmask(:,1:end-1)];
         cloudmask_dilated = cloudmask + shift_m1 + shift_p1;
         cloudmask_dilated(cloudmask_dilated<0) = 1;
-        cloudmask_dilated(BLclass.(['aerosol_layer_mask_' dt_i]) == 0) = 0;
+        cloudmask_dilated(:,1:3) = 0;
+%         cloudmask_dilated(BLclass.(['aerosol_layer_mask_' dt_i]) == 0) = 0;
         cloudmask = logical(cloudmask_dilated);
         
         %% Mask for precipitation
