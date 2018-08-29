@@ -55,7 +55,7 @@ else
             % Eq. (9), unweighted
             M_2 = nsamples ./ (nsamples-1) .* m_2;
             % Eq.(28)
-            y_var = abs(M_2 - 1./nsamples .* nansum(y_error.^2));
+            y_var = M_2 - 1./nsamples .* nansum(y_error.^2);
         case 'weighted'
             y_wmean = weightedMean(y,y_error,'weighted');
             y_wmean = repmat(y_wmean,size(y,1),1);

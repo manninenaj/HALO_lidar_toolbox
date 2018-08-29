@@ -95,58 +95,58 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                             hf.Color = 'white'; hf.Visible = 'off';
                             sp1 = subplot(321);
-                            imagesc(data.time,data.range/1000,data.signal0'); axis([0 24 0 3])
-                            set(gca,'YDir','normal','Ytick',0:3,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[1 7.3 11 2.2]); caxis([.995 1.01]); colormap(sp1,chilljet);
-                            cb = colorbar; cb.Label.String = 'SNR+1'; text(0,3.3,'uncorrected signal');
+                            imagesc(data.time,data.range/1000,data.signal0'); axis([0 24 0 11])
+                            set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
+                                'centimeters','Position',[1 7.3 11 2.2]); caxis([.995 1.01]); colormap(sp1,cmap_darkviolet_to_brickred);
+                            cb = colorbar; cb.Label.String = 'SNR+1'; text(0,12,'uncorrected signal');
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
-                            cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                            cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
                             sp2 = subplot(322);
-                            imagesc(data.time,data.range/1000,data.signal'); axis([0 24 0 3])
-                            set(gca,'YDir','normal','Ytick',0:3,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[13.5 7.3 11 2.2]); caxis([.995 1.01]); colormap(sp2,chilljet);
-                            cb = colorbar; cb.Label.String = 'SNR+1'; text(0,3.3,'corrected signal')
+                            imagesc(data.time,data.range/1000,data.signal'); axis([0 24 0 11])
+                            set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
+                                'centimeters','Position',[13.5 7.3 11 2.2]); caxis([.995 1.01]); colormap(sp2,cmap_darkviolet_to_brickred);
+                            cb = colorbar; cb.Label.String = 'SNR+1'; text(0,12,'corrected signal')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
-                            cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                            cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
                             sp3 = subplot(323);
-                            imagesc(data.time,data.range/1000,real(log10(data.beta_raw))'); axis([0 24 0 3])
-                            set(gca,'YDir','normal','Ytick',0:3,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[1 4.2 11 2.2]); caxis([-7 -4]); colormap(sp3,chilljet);
-                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,3.3,'beta');
+                            imagesc(data.time,data.range/1000,real(log10(data.beta_raw))'); axis([0 24 0 11])
+                            set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
+                                'centimeters','Position',[1 4.2 11 2.2]); caxis([-7 -4]); colormap(sp3,cmap_darkviolet_to_brickred);
+                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'beta');
                             cb.Ticks = -7:-4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                                 num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
-                            cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                            cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
                             sp4 = subplot(324);
-                            imagesc(data.time,data.range/1000,data.beta_error'); axis([0 24 0 3])
-                            set(gca,'YDir','normal','Ytick',0:3,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[13.5 4.2 11 2.2]); caxis([0 1]); colormap(sp4,chilljet);
-                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,3.3,'beta error')
+                            imagesc(data.time,data.range/1000,data.beta_error'); axis([0 24 0 11])
+                            set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
+                                'centimeters','Position',[13.5 4.2 11 2.2]); caxis([0 1]); colormap(sp4,cmap_darkviolet_to_brickred);
+                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'beta error')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
-                            cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                            cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
                             sp5 = subplot(325);
-                            imagesc(data.time,data.range/1000,data.v_raw'); axis([0 24 0 3])
-                            set(gca,'YDir','normal','Ytick',0:3,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[1 1.1 11 2.2]); caxis([-2 2]); colormap(sp5,cmocean('balance'));
-                            cb = colorbar; cb.Label.String = 'm s-1'; text(0,3.3,'vertical velocity')
-                            ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
-                            cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                            imagesc(data.time,data.range/1000,data.v_raw'); axis([0 24 0 11])
+                            set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
+                                'centimeters','Position',[1 1.1 11 2.2]); caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
+                            cb = colorbar; cb.Label.String = 'm s-1'; text(0,12,'vertical velocity')
+                            ax1 = get(gca,'Position'); cb.Ticks = -1.5:.5:1.5; cb.Units = 'centimeters'; cb.Position(3) = .25;
+                            cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
                             sp6 = subplot(326);
-                            imagesc(data.time,data.range/1000,data.v_error'); axis([0 24 0 3])
-                            set(gca,'YDir','normal','Ytick',0:3,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[13.5 1.1 11 2.2]); caxis([0 .5]); colormap(sp6,chilljet);
-                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,3.3,'vertical velocity error')
+                            imagesc(data.time,data.range/1000,data.v_error'); axis([0 24 0 11])
+                            set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
+                                'centimeters','Position',[13.5 1.1 11 2.2]); caxis([0 .5]); colormap(sp6,cmap_darkviolet_to_brickred);
+                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'vertical velocity error')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
-                            cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                            cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
                             [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
                             
-                            export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
+                            export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
                                 '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof))
                              close(hf)
                         otherwise
@@ -158,68 +158,56 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         case 'product'
             switch measmode
                 case 'wstats'
-                    if isfield(data,'radial_velocity_weighted_mean_3min')
-                        beta_mean = data.beta_weighted_mean_3min;
-                        beta_var = data.beta_weighted_variance_3min;
-                        velo_mean = data.radial_velocity_weighted_mean_3min;
-                        velo_var = data.radial_velocity_weighted_variance_3min;
-                        velo_skewn = data.radial_velocity_weighted_skewness_60min;
-                        velo_kurto = data.radial_velocity_weighted_kurtosis_60min;
-                        condnan = 10*real(log10(data.signal_mean_3min-1))<-23 | isnan(data.signal_mean_3min);
-                        beta_mean(condnan) = nan;
-                        beta_var(condnan) = nan;
-                        velo_mean(condnan) = nan;
-                        velo_var(condnan) = nan;
-                        condnan = 10*real(log10(data.signal_mean_60min-1))<-23 | isnan(data.signal_mean_60min);
-                        velo_skewn(condnan) = nan;
-                        velo_kurto(condnan) = nan;
-                    else
-                        beta_mean = data.beta_mean_3min;
-                        beta_var = data.beta_variance_3min;
-                        velo_mean = data.radial_velocity_mean_3min;
-                        velo_var = data.radial_velocity_variance_3min;
-                        velo_skewn = data.radial_velocity_skewness_60min;
-                        velo_kurto = data.radial_velocity_kurtosis_60min;
-                        condnan = 10*real(log10(data.signal_mean_3min-1))<-23 | isnan(data.signal_mean_3min);
-                        beta_mean(condnan) = nan;
-                        beta_var(condnan) = nan;
-                        velo_mean(condnan) = nan;
-                        velo_var(condnan) = nan;
-                        condnan = 10*real(log10(data.signal_mean_60min-1))<-23 | isnan(data.signal_mean_60min);
-                        velo_skewn(condnan) = nan;
-                        velo_kurto(condnan) = nan;
-                    end
+                    beta_mean = data.beta_mean_3min;
+                    snr_var = data.signal_variance_3min;
+                    velo_mean = data.radial_velocity_mean_3min;
+                    velo_var = data.radial_velocity_variance_3min;
+                    velo_skewn = data.radial_velocity_skewness_60min;
+                    velo_kurto = data.radial_velocity_kurtosis_60min;
+                    condnan = 10*real(log10(data.signal_mean_3min-1))<-20 | ...
+                        isnan(data.signal_mean_3min) | ...
+                        data.radial_velocity_mean_error_3min > .33;
+                    beta_mean(condnan) = nan;
+                    snr_var(condnan) = nan;
+                    velo_mean(condnan) = nan;
+                    velo_var(condnan) = nan;
+                    condnan = 10*real(log10(data.signal_mean_60min-1))<-20 | ...
+                        isnan(data.signal_mean_60min) | ...
+                        data.radial_velocity_mean_error_60min > .33;
+                    velo_skewn(condnan) = nan;
+                    velo_kurto(condnan) = nan;
+                    
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
                     sp1 = subplot(321);
                     pcolor(data.time_3min,data.height/1000,real(log10(beta_mean))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
-                    caxis([-7 -4]); colormap(sp1,chilljet); text(0,3.35,'beta mean');
+                    caxis([-7 -4]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,3.35,'beta mean');
                     cb = colorbar; cb.Label.String = 'm-1 sr-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = -7:-4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
                     sp2 = subplot(322);
-                    pcolor(data.time_3min,data.height/1000,real(log10(beta_var./beta_mean))'); axis([0 24 0 3]); shading flat
+                    pcolor(data.time_3min,data.height/1000,real(log10(snr_var))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2]);
-                    caxis([0 8]); colormap(sp2,chilljet); text(0,3.35,'beta variance')
+                    caxis([-4 4]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,3.35,'signal variance')
                     cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = 0:2:8; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+                    cb.Ticks = -4:2:4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                     ylabel('Height (km)')
                     sp3 = subplot(323);
                     pcolor(data.time_3min,data.height/1000,velo_mean'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2]);
-                    caxis([-2 2]); colormap(sp3,cmocean('balance')); text(0,3.35,'velocity mean');
-                    cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
+                    caxis([-1.5 1.5]); colormap(sp3,cmocean('balance')); text(0,3.35,'velocity mean');
+                    cb = colorbar; cb.Label.String = 'm s-1'; cb.Ticks = -1.5:.5:1.5; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
                     sp4 = subplot(324);
                     pcolor(data.time_3min,data.height/1000,real(log10(velo_var))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2]);
-                    caxis([-3 1]); colormap(sp4,chilljet); text(0,3.35,'velocity variance')
+                    caxis([-3 1]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,3.35,'velocity variance')
                     cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -235,7 +223,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp6 = subplot(326);
                     pcolor(data.time_60min,data.height/1000,velo_kurto'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2]);
-                    caxis([-4 6]); colormap(sp6,chilljet); text(0,3.35,'velocity kurtosis')
+                    caxis([-4 6]); colormap(sp6,cmap_darkviolet_to_brickred); text(0,3.35,'velocity kurtosis')
                     cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25;   cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)'); xlabel('Time UTC')
@@ -293,14 +281,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp2 = subplot(322);
                     pcolor(data.time_3min,data.height/1000,epsilon_error'*100); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 300]); colormap(sp2,chilljet); text(0,3.35,'epsilon error')
+                    caxis([0 300]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,3.35,'epsilon error')
                     cb = colorbar; cb.Label.String = '%'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
                     sp3 = subplot(323);
                     pcolor(data.time_3min,data.height/1000,real(log10(L))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([2 4]); colormap(sp3,chilljet); text(0,3.35,'L');
+                    caxis([2 4]); colormap(sp3,cmap_darkviolet_to_brickred); text(0,3.35,'L');
                     cb = colorbar; cb.Label.String = 'm'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 2:4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -309,7 +297,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp4 = subplot(324);
                     pcolor(data.time_3min,data.height/1000,real(log10(L1))'); axis([0 24 0 3]); shading flat
                      set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([1 3]); colormap(sp4,chilljet); text(0,3.35,'L1')
+                    caxis([1 3]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,3.35,'L1')
                     cb = colorbar; cb.Label.String = 'm'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 1:3; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -318,7 +306,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp5 = subplot(325);
                     pcolor(data.time_3min,data.height/1000,real(log10(velo_var))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([-4 1]); colormap(sp5,chilljet); text(0,3.35,'velocity variance')
+                    caxis([-4 1]); colormap(sp5,cmap_darkviolet_to_brickred); text(0,3.35,'velocity variance')
                     cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -4:1; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -327,7 +315,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp6 = subplot(326);
                     pcolor(wstats.time_3min,wstats.height/1000,real(log10(velovar_error))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([-3 0]); colormap(sp6,chilljet); text(0,3.35,'velocity variance error')
+                    caxis([-3 0]); colormap(sp6,cmap_darkviolet_to_brickred); text(0,3.35,'velocity variance error')
                     cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25;   cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)'); xlabel('Time UTC')
@@ -348,7 +336,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp1 = subplot(321);
                     pcolor(data.time_3min,data.height/1000,real(log10(windhsear))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
-                    caxis([-3 -1]); colormap(sp1,chilljet); text(0,3.35,'vector wind shear');
+                    caxis([-3 -1]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,3.35,'vector wind shear');
                     cb = colorbar; cb.Label.String = 's-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = -3:0; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
@@ -429,7 +417,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp2 = subplot(322);
                     pcolor(vad.time,vad.height/1000,ws_e'); axis([0 24 0 2]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 1]); colormap(sp2,chilljet); text(0,2.25,'Wind speed error')
+                    caxis([0 1]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,2.25,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.25:2; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
@@ -446,7 +434,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp4 = subplot(324);
                     pcolor(vad.time,vad.height/1000,wd_e'); axis([0 24 0 3]); shading flat
                      set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 .5]); colormap(sp4,chilljet); text(0,3.35,'Wind direction error')
+                    caxis([0 .5]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,3.35,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.125:1;        
