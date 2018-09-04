@@ -191,17 +191,16 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp2 = subplot(322);
                     pcolor(data.time_3min,data.height/1000,real(log10(snr_var))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2]);
-                    caxis([-4 4]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,3.35,'signal variance')
+                    caxis([-6 2]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,3.35,'signal variance')
                     cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = -4:2:4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+                    cb.Ticks = -6:2:2; ylabel('Height (km)'); cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
-                    ylabel('Height (km)')
                     sp3 = subplot(323);
                     pcolor(data.time_3min,data.height/1000,velo_mean'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2]);
-                    caxis([-1.5 1.5]); colormap(sp3,cmocean('balance')); text(0,3.35,'velocity mean');
-                    cb = colorbar; cb.Label.String = 'm s-1'; cb.Ticks = -1.5:.5:1.5; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
+                    caxis([-3 3]); colormap(sp3,cmocean('balance')); text(0,3.35,'velocity mean');
+                    cb = colorbar; cb.Label.String = 'm s-1'; cb.Ticks = -3:1:3; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
                     sp4 = subplot(324);
@@ -242,24 +241,16 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     [dirsnr,filessnr] = getHALOfileList(site,DATE,'product' ,'wstats');
                     wstats = load_nc_struct(fullfile([dirsnr filessnr{1}]));
                     
-                    
-                    if isfield(data,'epsilon_w_3min')
-                        epsilon = data.epsilon_w_3min;
-                        epsilon_error = data.epsilon_w_error_3min;
-                        L = data.L_3min;
-                        L1 = data.L1_3min;
-                        velovar_error = wstats.radial_velocity_weighted_variance_error_3min;
-                        velo_var = wstats.radial_velocity_weighted_variance_3min;                        
-                    else
-                        epsilon = data.epsilon_3min;
-                        epsilon_error = data.epsilon_error_3min;
-                        L = data.L_3min;
-                        L1 = data.L1_3min;
-                        velovar_error = wstats.radial_velocity_variance_error_3min;
-                        velo_var = wstats.radial_velocity_variance_3min;
-                    end
+                    epsilon = data.epsilon_3min;
+                    epsilon_error = data.epsilon_error_3min;
+                    L = data.L_3min;
+                    L1 = data.L1_3min;
+                    velovar_error = wstats.radial_velocity_variance_error_3min;
+                    velo_var = wstats.radial_velocity_variance_3min;
+
                     cond = 10*real(log10(wstats.signal_mean_3min-1))<-20 | ...
-                        isnan(wstats.signal_mean_3min) | real(log10(velovar_error)) > 0;
+                        isnan(wstats.signal_mean_3min) | ...
+                        data.radial_velocity_mean_error_60min > .33;
                     epsilon(cond) = nan;
                     epsilon_error(cond) = nan;
                     L(cond) = nan;

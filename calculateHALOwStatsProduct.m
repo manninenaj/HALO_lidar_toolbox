@@ -267,7 +267,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
-        lbob.n_subsamples = 12;
+        lbob.n_subsamples = 20;
         lbob.n_trials = 3; % Integer
         lbob.score_func = []; % set up later, separately for each calculation
         lbob.agg_func = @nanmean;
@@ -305,7 +305,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  radial velocity unweighted mean, std.dev. and variance ...')
             X = []; % assign X as empty
             Y = ref_v_raw(iv); % assign Y as vertical velocity
-            Y_errors = zeros(size(ref_v_error(iv))); % assign Y_errors  (only as dummies)
+            Y_errors = ref_v_error(iv); % assign Y_errors 
             lbob.score_func = 'wstats'; % re-assign scoring function
             lbob_wstats = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -313,7 +313,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  radial velocity unweighted skewness ...')
             X = []; % assign X as empty
             Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-            Y_errors = zeros(size(ref_v_error_4himoments(iv_himoments))); % assign Y_errors (only as dummies)
+            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors
             lbob.score_func = @weightedSkewness; % re-assign scoring function
             lbob_skewn = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -321,7 +321,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  radial velocity unweighted kurtosis ...')
             X = []; % assign X as empty
             Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-            Y_errors = zeros(size(ref_v_error_4himoments(iv_himoments))); % assign Y_errors (only as dummies)
+            Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors
             lbob.score_func = @weightedKurtosis; % re-assign scoring function
             lbob_kurto = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -329,15 +329,15 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  signal unweighted mean...')
             X = []; % assign X as empty
             Y = ref_signal(iv); % re-assign Y as signal
-            Y_errors = zeros(size(ref_beta_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_beta_error(iv); % assign Y_errors
             lbob.score_func = @weightedMean;
             lbob_signal_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
             fprintf('\n  signal unweighted variance...')
             X = []; % assign X as empty
-            Y = ref_signal(iv); % re-assign Y as signal
-            Y_errors = zeros(size(ref_beta_error(iv))); % assign Y_errors  (only as dummies)
+            Y = ref_signal(iv)-1; % re-assign Y as signal
+            Y_errors = ref_beta_error(iv); % assign Y_errors 
             lbob.score_func = @weightedVariance;
             lbob_signal_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -345,7 +345,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  beta unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta(iv); % re-assign Y as beta
-            Y_errors = zeros(size(ref_beta_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_beta_error(iv); % assign Y_errors
             lbob.score_func = @weightedMean;
             lbob_beta_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -353,7 +353,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  beta unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta(iv); % re-assign Y as beta
-            Y_errors = zeros(size(ref_beta_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_beta_error(iv); % assign Y_errors
             lbob.score_func = @weightedVariance;
             lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -361,7 +361,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  velocity instrumental precision unweighted mean...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
-            Y_errors = zeros(size(ref_v_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_v_error(iv); % assign Y_errors
             lbob.score_func = @weightedMean;
             lbob_velo_instrumental_precision_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -369,7 +369,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  velocity instrumental precision unweighted variance...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
-            Y_errors = zeros(size(ref_v_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_v_error(iv); % assign Y_errors
             lbob.score_func = @weightedVariance;
             lbob_velo_instrumental_precision_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -377,7 +377,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  signal instrumental precision unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
-            Y_errors = zeros(size(ref_beta_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_beta_error(iv); % assign Y_errors
             lbob.score_func = @weightedMean;
             lbob_signal_instrumental_precision_mean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
@@ -385,7 +385,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             fprintf('\n  signal instrumental precision unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
-            Y_errors = zeros(size(ref_beta_error(iv))); % assign Y_errors (only as dummies)
+            Y_errors = ref_beta_error(iv); % assign Y_errors
             lbob.score_func = @weightedVariance;
             lbob_signal_instrumental_precision_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.\n')
@@ -403,7 +403,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 fprintf('\n  radial velocity weighted skewness ...')
                 X = []; % assign X as empty
                 Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummies)
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors
                 lbob.score_func = @weightedSkewness; % re-assign scoring function
                 lbob_skewn_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
@@ -411,7 +411,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 fprintf('\n  radial velocity weighted kurtosis ...')
                 X = []; % assign X as empty
                 Y = ref_v_raw_4himoments(iv_himoments); % assign Y as vertical velocity
-                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors (only as dummies)
+                Y_errors = ref_v_error_4himoments(iv_himoments); % assign Y_errors
                 lbob.score_func = @weightedKurtosis; % re-assign scoring function
                 lbob_kurto_weighted = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
@@ -426,7 +426,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
                 fprintf('\n  signal weighted variance...')
                 X = []; % assign X as empty
-                Y = ref_signal(iv); % re-assign Y as signal
+                Y = ref_signal(iv)-1; % re-assign Y as signal
                 Y_errors = ref_beta_error(iv); % assign Y_errors as beta errors
                 lbob.score_func = @weightedVariance; % re-assign scoring function
                 lbob_signal_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
@@ -451,7 +451,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 fprintf('\n  velocity instrumental precision unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
-                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
+                Y_errors = ref_v_error(iv); % assign Y_errors
                 lbob.score_func = @weightedMean;
                 lbob_velo_instrumental_precision_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
@@ -459,7 +459,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 fprintf('\n  velocity instrumental precision unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_v_error(iv); % re-assign Y as beta
-                Y_errors = ref_v_error(iv); % assign Y_errors (only as dummies)
+                Y_errors = ref_v_error(iv); % assign Y_errors
                 lbob.score_func = @weightedVariance;
                 lbob_velo_instrumental_precision_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
@@ -467,7 +467,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 fprintf('\n  signal instrumental precision unweighted mean...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
-                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
+                Y_errors = ref_beta_error(iv); % assign Y_errors
                 lbob.score_func = @weightedMean;
                 lbob_signal_instrumental_precision_wmean = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.')
@@ -475,7 +475,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 fprintf('\n  signal instrumental precision unweighted variance...')
                 X = []; % assign X as empty
                 Y = ref_beta_error(iv); % re-assign Y as beta
-                Y_errors = ref_beta_error(iv); % assign Y_errors (only as dummies)
+                Y_errors = ref_beta_error(iv); % assign Y_errors
                 lbob.score_func = @weightedVariance;
                 lbob_signal_instrumental_precision_wvar = littleBagOfBootstraps(lbob,X,Y,Y_errors,'weighted',false);
                 fprintf('done.\n\n')
