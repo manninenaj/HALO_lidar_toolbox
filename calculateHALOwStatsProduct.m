@@ -314,7 +314,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             X = []; % assign X as empty
             Y = ref_v_raw(iv); % assign Y as vertical velocity
             Y_errors = zeros(size(ref_v_error(iv))); % assign Y_errors 
-            lbob.score_func = @weigthedVariance; % re-assign scoring function
+            lbob.score_func = @weightedVariance; % re-assign scoring function
             lbob_var_simple = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
