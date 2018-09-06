@@ -162,11 +162,13 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         data.([bn '_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_stddev_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_simple_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_skewness_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_kurtosis_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_stddev_error_' ,tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+        data.([bn '_simple_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_skewness_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.([bn '_kurtosis_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         data.(['signal_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
@@ -267,7 +269,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
-        lbob.n_subsamples = 15;
+        lbob.n_subsamples = 20;
         lbob.n_trials = 2; % Integer
         lbob.score_func = []; % set up later, separately for each calculation
         lbob.agg_func = @nanmean;
