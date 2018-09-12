@@ -63,53 +63,56 @@ else
                 [C.(['dir_original_' measmode]) ...
                 date_dir])
         end
-        % time
-        time_tmp{i} = data.(C.field_name_original_time)(:);
         
-        % range
-        if i==1 % on the first loop
+        % Check number of range gates
+        if C.num_range_gates ~= length(data.(C.field_name_original_range)(:))
+            warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
+                num2str(length(data.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
+        else
+            % time
+            time_tmp{i} = data.(C.field_name_original_time)(:);
+            
+            % range
             switch C.range_units_original
                 case 'm'
                     range = data.(C.field_name_original_range)(:);
                 case 'km'
                     range = data.(C.field_name_original_range)(:)/1000;
             end
+            
+            % snr
+            % Check dimensions
+            [lrow,lcol] = size(data.(C.field_name_original_snr));
+            if lrow == length(data.(C.field_name_original_time))
+                snr_tmp{i} = data.(C.field_name_original_snr);
+            elseif lcol == length(data.(C.field_name_original_time))
+                snr_tmp{i} = transpose(data.(C.field_name_original_snr));
+            else
+                error(sprintf(['Length of the field ''time''' ...
+                    ' doesn''t match either dimensions of the' ...
+                    ' field ''%s'' in\n%s'], C.field_name_original_snr,...
+                    [directory date_dir halo_files{i}]))
+            end
+            
+            % Organize the datasets into one
+            time_n = cell2mat(time_tmp);
+            snr = cell2mat(snr_tmp);
+            
+            % Check format and convert into decimal hours
+            switch C.time_format_original
+                case 'julian'
+                    [~,~,~,hh,mm,sss] = jd2date(time_n(:));
+                    time = hh(:)+mm(:)/60+sss(:)/3600;
+                case 'hours'
+                    time = time_n(:);
+                case 'seconds'
+                    time = time_n(:)/3600;
+            end
+            
+            % Outut in a struct
+            data_4bkgcorr.time = time;
+            data_4bkgcorr.range = range;
+            data_4bkgcorr.snr = snr;
         end
-        
-        % snr
-        % Check dimensions
-        [lrow,lcol] = size(data.(C.field_name_original_snr));
-        if lrow == length(data.(C.field_name_original_time))
-            snr_tmp{i} = data.(C.field_name_original_snr);
-        elseif lcol == length(data.(C.field_name_original_time))
-            snr_tmp{i} = transpose(data.(C.field_name_original_snr));
-        else
-            error(sprintf(['Length of the field ''time''' ...
-                ' doesn''t match either dimensions of the' ...
-                ' field ''%s'' in\n%s'], C.field_name_original_snr,...
-                [directory date_dir halo_files{i}]))
-        end
-        
     end
-    
-    % Organize the datasets into one
-    time_n = cell2mat(time_tmp);
-    snr = cell2mat(snr_tmp);
-    
-    % Check format and convert into decimal hours
-    switch C.time_format_original
-        case 'julian'
-            [~,~,~,hh,mm,sss] = jd2date(time_n(:));
-            time = hh(:)+mm(:)/60+sss(:)/3600;
-        case 'hours'
-            time = time_n(:);
-        case 'seconds'
-            time = time_n(:)/3600;
-    end
-    
-    % Outut in a struct
-    data_4bkgcorr.time = time;
-    data_4bkgcorr.range = range;
-    data_4bkgcorr.snr = snr;
-end
 end
