@@ -29,11 +29,11 @@ function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measm
 % Check inputs
 if nargin < 4
     error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
-        ' are required for the products: \n''TKE'', ''wstats'', ''sigma2vad''',...
+        ' are required for the products: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
         '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
 if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',...
-        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
+        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
         strcmp(processlev,'background'))
     if ~ischar(site)
         error('The 1st input ''site'' must be a string.')
@@ -47,17 +47,17 @@ if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',..
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','windvad','winddbs',...
-            'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
 if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
-        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
+        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
         ~strcmp(processlev,'background'))
         error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-            ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''sigma2vad'','...
+            ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
             ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
 if nargin == 5
@@ -73,10 +73,10 @@ if nargin == 5
                 ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
         end
         if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
-                'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+                'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
             error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
                 '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-                '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+                '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
         end        
 end
 % Get default and site/unit specific parameters
@@ -145,7 +145,7 @@ else
     switch processlev
         case 'original'
             % More complex for AMR naming scheme..
-            if strcmp(site(1:4),'arm-')
+            if length(site)>3 && strcmp(site(1:4),'arm-')
                 % assume ARM file naming scheme, find data level indicator from the name
                 b = cellfun(@(x) strfind(x,'.'),file_list,'UniformOutput',false);
                 b1sts = cellfun(@(x) x(1),b)+2; % location of 1st dot plus 2 is data level
@@ -170,7 +170,7 @@ else
             end
         case 'corrected'
             % More complex for AMR naming scheme..
-            if strcmp(site(1:4),'arm-')
+            if length(site)>3 && strcmp(site(1:4),'arm-')
                 % assume ARM file naming scheme, find data level indicator from the name
                 b = cellfun(@(x) strfind(x,'.'),file_list,'UniformOutput',false);
                 b1sts = cellfun(@(x) x(1),b)+2; % location of 1st dot plus 2 is data level

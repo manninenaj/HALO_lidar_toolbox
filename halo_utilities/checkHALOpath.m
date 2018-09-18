@@ -22,10 +22,10 @@ function status = checkHALOpath(site,DATE,processlev,measmode,typeof)
 
 % Check inputs
 if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
-        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})))
+        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})))
     error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for any other products than: \n''TKE'', ''wstats'', ''sigma2vad'','...
-        ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
+        ' are required for any other products than: \n''TKE'', ''wstats'', ''wstats4precipfilter''', ...
+        ' ''sigma2vad'',''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
     if ~ischar(site)
         error('The 1st input ''site'' must be a string.')
     end
@@ -38,15 +38,15 @@ if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',.
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','windvad','winddbs',...
-            'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''rhi'',''dbs'',''co'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'', ''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 else
     if nargin < 4
         error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'''...
-            ' are required for the products: \n''TKE'', ''wstats'', ''sigma2vad''',...
+            ' are required for the products: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
             '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
     end
     if ~ischar(site)
@@ -61,10 +61,10 @@ else
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
-            'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
 

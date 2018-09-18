@@ -132,8 +132,8 @@ else
     % By default, ignore three of the lowest range gates due to
     % incontamination by the emitted pulse.
 %     signal(:,1:4) = nan;
-    signal(signal == 0) = nan;
-    
+    signal(signal_orig == 0 | signal == 0) = nan;
+    signal_orig(signal_orig == 0 | signal == 0) = nan;
     fprintf('\nStarting HALO background correction. This might take a while.\n')
 
     %% SCREENING AND FILLING
@@ -170,46 +170,50 @@ else
     detail_coeff_all  = [];
     i_switch_end   = 1; % for the zero padding
     
+     % Initialize
+%      zero_padded = signal_filled(:, end - i_bin);
+     zero_padded = signal_filled;
+        
+    
+    % The length of the zeropadded array ('zero_padded') has to be
+    % divisible by (wavelet decomposition level)^2
+    while round(size(zero_padded, 1) / 2^w_level) ~=...
+            size(zero_padded,1 ) / 2^w_level
+        
+        % Pad signal with zeros to adjust its length
+        zero_padded = [zeros(1,size(signal,2)); zero_padded; zeros(1,size(signal,2))];
+        
+        % Remove one zero from the end and from the beginning turn-by-turn
+        if bitget(i_switch_end,1) % switch: odd or even
+            
+            % Remove zero from the end
+            zero_padded(end,:) = [];
+        else
+            
+            % Remove zero from the beginning
+            zero_padded(1,:) = [];
+        end
+        
+        % Add for iteration
+        i_switch_end = i_switch_end + 1;
+    end
+    
     % A range bin at a time
     for i_bin = 1:size(signal_filled, 2) * .75
         
-        % Initialize
-        zero_padded = signal_filled(:, end - i_bin);
-        
-        % The length of the zeropadded array ('zero_padded') has to be
-        % divisible by (wavelet decomposition level)^2
-        while round(size(zero_padded, 1) / 2^w_level) ~=...
-                size(zero_padded,1 ) / 2^w_level
-            
-            % Pad signal with zeros to adjust its length
-            zero_padded = [0; zero_padded; 0];
-            
-            % Remove one zero from the end and from the beginning
-            % turn-by-turn
-            if bitget(i_switch_end,1) % switch: odd or even
-                
-                % Remove zero from the end
-                zero_padded(end) = [];
-            else
-                
-                % Remove zero from the beginning
-                zero_padded(1) = [];
-            end
-            
-            % Add for iteration
-            i_switch_end = i_switch_end + 1;
-        end
+        zero_padded_tmp = [];
+        zero_padded_tmp = zero_padded(:,end-i_bin);
         
         % Mark the locations of the added zeros
-        cond_zeros = zero_padded == 0;
+        cond_zeros = zero_padded_tmp == 0;
         
         % Convert zeros to nans for the wavelet function
-        zero_padded(zero_padded == 0) = nan;
+        zero_padded_tmp(zero_padded_tmp == 0) = nan;
         
         % Call 'mySWT' function to calculate the stationary wavelet
         % decomposition up to the level indicated by 'w_level',
         % using the haar function for the convolution
-        [~, detail_coeff] = mySWT(zero_padded, w_level, 'haar');
+        [~, detail_coeff] = mySWT(zero_padded_tmp, w_level, 'haar');
         
         % Leave only the highest level coefficients
         detail_coeff = detail_coeff(end,:);
@@ -221,7 +225,7 @@ else
         detail_coeff(cond_zeros) = [];
         
         % Concatenate arrays
-        detail_coeff_all = horzcat(detail_coeff_all, detail_coeff);
+        detail_coeff_all = [detail_coeff_all, detail_coeff];
     end
     
     % Sum up the coefficients along the bins

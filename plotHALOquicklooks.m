@@ -4,11 +4,11 @@ function plotHALOquicklooks(site,DATES,processlev,measmode,typeof)
 
 if nargin < 4
     error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
-        ' are required for the products: \n''TKE'', ''wstats'', ''sigma2vad''',...
+        ' are required for the products: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
         '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
 if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',...
-        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
+        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
         strcmp(processlev,'background'))
     if ~ischar(site)
         error('The 1st input ''site'' must be a string.')
@@ -29,20 +29,26 @@ if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',..
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','windvad','winddbs',...
-            'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
 if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
-        'wstats','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
+        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
         ~strcmp(processlev,'background'))
     error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''sigma2vad'','...
+        ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
         ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if nargin == 5
+if nargin == 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
+        ~strcmp(processlev,'background'))
+    error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
+        ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
+        ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
+else
     if ~ischar(site)
         error('The 1st input ''site'' must be a string.')
     end
@@ -62,10 +68,10 @@ if nargin == 5
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
-            'txt','wstats','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
 % Use datenum to accommodate leap years etc.
@@ -95,52 +101,69 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                             hf.Color = 'white'; hf.Visible = 'off';
                             sp1 = subplot(321);
-                            imagesc(data.time,data.range/1000,data.signal0'); axis([0 24 0 11])
+                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.signal0);
+                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[1 7.3 11 2.2]); caxis([.995 1.01]); colormap(sp1,cmap_darkviolet_to_brickred);
+                                'centimeters','Position',[1 7.3 11 2.2],'Color',[.75 .75 .75]);
+                            caxis([.995 1.01]); colormap(sp1,chilljet);
                             cb = colorbar; cb.Label.String = 'SNR+1'; text(0,12,'uncorrected signal');
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            
                             sp2 = subplot(322);
-                            imagesc(data.time,data.range/1000,data.signal'); axis([0 24 0 11])
+                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.signal);
+                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[13.5 7.3 11 2.2]); caxis([.995 1.01]); colormap(sp2,cmap_darkviolet_to_brickred);
+                                'centimeters','Position',[13.5 7.3 11 2.2],'Color',[.75 .75 .75]);
+                            caxis([.995 1.01]); colormap(sp2,chilljet);
                             cb = colorbar; cb.Label.String = 'SNR+1'; text(0,12,'corrected signal')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            
                             sp3 = subplot(323);
-                            imagesc(data.time,data.range/1000,real(log10(data.beta_raw))'); axis([0 24 0 11])
+                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_raw);
+                            pcolor(t_out,data.range/1000,real(log10(X_out))'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[1 4.2 11 2.2]); caxis([-7 -4]); colormap(sp3,cmap_darkviolet_to_brickred);
+                                'centimeters','Position',[1 4.2 11 2.2],'Color',[.75 .75 .75]);
+                            caxis([-7 -4]); colormap(sp3,chilljet);
                             cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'beta');
                             cb.Ticks = -7:-4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                                 num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            
                             sp4 = subplot(324);
-                            imagesc(data.time,data.range/1000,data.beta_error'); axis([0 24 0 11])
+                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_error);
+                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[13.5 4.2 11 2.2]); caxis([0 1]); colormap(sp4,cmap_darkviolet_to_brickred);
-                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'beta error')
+                                'centimeters','Position',[13.5 4.2 11 2.2],'Color',[.75 .75 .75]);
+                            caxis([0 1]); colormap(sp4,chilljet);
+                            cb = colorbar; cb.Label.String = 'Fraction'; text(0,12,'beta error')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            
                             sp5 = subplot(325);
-                            imagesc(data.time,data.range/1000,data.v_raw'); axis([0 24 0 11])
+                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_raw);
+                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[1 1.1 11 2.2]); caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
+                                'centimeters','Position',[1 1.1 11 2.2],'Color',[.75 .75 .75]);
+                            caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
                             cb = colorbar; cb.Label.String = 'm s-1'; text(0,12,'vertical velocity')
                             ax1 = get(gca,'Position'); cb.Ticks = -1.5:.5:1.5; cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
+                            
                             sp6 = subplot(326);
-                            imagesc(data.time,data.range/1000,data.v_error'); axis([0 24 0 11])
+                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_error);
+                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
-                                'centimeters','Position',[13.5 1.1 11 2.2]); caxis([0 .5]); colormap(sp6,cmap_darkviolet_to_brickred);
-                            cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'vertical velocity error')
+                                'centimeters','Position',[13.5 1.1 11 2.2],'Color',[.75 .75 .75]);
+                            caxis([0 .5]); colormap(sp6,chilljet);
+                            cb = colorbar; cb.Label.String = 'm s-1'; text(0,12,'vertical velocity error')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
@@ -396,8 +419,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
-                    close(hf)
-                    
+                    close(hf)              
                     
                 case 'windvad'
                     [dir_vad,files_vad] = getHALOfileList(site,DATE,'product','windvad',typeof);
@@ -454,6 +476,111 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
                     close(hf)
                     
+                case 'wstats4precipfilter'
+                    beta_mean = data.beta_mean_3min;
+                    beta_var = data.beta_variance_3min;
+                    snr_mean = data.signal_mean_3min;
+                    snr_var = data.signal_variance_3min;
+                    snr_instr_var = data.signal_instrumental_precision_variance_3min;
+                    velo_mean = data.radial_velocity_mean_3min;
+                    % Create a cleaning filter based what field are available
+                    fnames = fieldnames(data);
+                    switch ~isempty(strmatch('signal_instrumental_precision_variance_',fnames))
+                        case 1
+                            condnan = ...
+                                10*real(log10(data.signal_mean_3min-1)) < -23 | ...
+                                isnan(data.signal_mean_3min) | ...
+                                data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);% real(log10(data.signal_instrumental_precision_variance_3min)) > 0 | ...
+                        case 0
+                            condnan = ...
+                                10*real(log10(data.signal_mean_3min-1)) < -23 | ...
+                                isnan(data.signal_mean_3min) | ...
+                                data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
+                    end
+                    condnan(:,1:3) = true;
+                    beta_mean(condnan) = nan;
+                    beta_var(condnan) = nan;
+                    snr_mean(condnan) = nan;
+                    snr_var(condnan) = nan;
+                    velo_mean(condnan) = nan;
+                    snr_instr_var(condnan) = nan;
+
+                    
+                    hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
+                    hf.Color = 'white'; hf.Visible = 'off';
+                    
+                    sp1 = subplot(321);
+                    pcolor(data.time_3min,data.height/1000,real(log10(beta_mean))'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
+                    caxis([-7 -3]); colormap(sp1,chilljet); text(0,3.35,'Beta mean');
+                    cb1 = colorbar; cb1.Label.String = 'm-1 sr-1'; ax1 = get(gca,'Position'); cb1.Units = 'centimeters';
+                    cb1.Ticks = -7:-3; cb1.TickLabels = [repmat('10^{',length(cb1.Ticks(:)),1), ...
+                        num2str(cb1.Ticks(:)) repmat('}',length(cb1.Ticks(:)),1)];
+                    cb1.Position(3) = .25; cb1.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    ylabel('Height (km)');
+                    set(gca,'Color',[.5 .5 .5])
+                    
+                    sp2 = subplot(322);
+                    pcolor(data.time_3min,data.height/1000,real(log10(beta_var))'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2]);
+                    caxis([-16 -8]); colormap(sp2,chilljet); text(0,3.35,'Beta variance')
+                    cb2 = colorbar; cb2.Label.String = '-'; ax1 = get(gca,'Position'); cb2.Units = 'centimeters';
+                    cb2.Position(3) = .25; cb2.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb2.Ticks = -16:2:8; ylabel('Height (km)'); cb2.TickLabels = [repmat('10^{',length(cb2.Ticks(:)),1), ...
+                        num2str(cb2.Ticks(:)) repmat('}',length(cb2.Ticks(:)),1)];
+                    set(gca,'Color',[.5 .5 .5])
+                    
+                    sp3 = subplot(323);
+                    pcolor(data.time_3min,data.height/1000,10*real(log10(snr_mean-1))'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2]);
+                    caxis([-30 10]); colormap(sp3,chilljet); text(0,3.35,'Signal mean');
+                    cb3 = colorbar; cb3.Label.String = 'dB'; cb3.Ticks = -30:10:10; ax1 = get(gca,'Position'); cb3.Units = 'centimeters';
+                    cb3.Position(3) = .25; cb3.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    ylabel('Height (km)')
+                    set(gca,'Color',[.5 .5 .5])
+                    
+                    sp4 = subplot(324);
+                    pcolor(data.time_3min,data.height/1000,real(log10(snr_var))'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2]);
+                    caxis([-7 1]); colormap(sp4,chilljet); text(0,3.35,'Signal variance')
+                    cb4 = colorbar; cb4.Label.String = '-'; ax1 = get(gca,'Position'); cb4.Units = 'centimeters';
+                    cb4.Position(3) = .25; cb4.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb4.Ticks = -7:2:1; cb4.TickLabels = [repmat('10^{',length(cb4.Ticks(:)),1), ...
+                        num2str(cb4.Ticks(:)) repmat('}',length(cb4.Ticks(:)),1)];
+                    ylabel('Height (km)')
+                    set(gca,'Color',[.5 .5 .5])
+                    
+                    sp5 = subplot(325);
+                    pcolor(data.time_3min,data.height/1000,velo_mean'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2]);
+                    caxis([-2 2]); colormap(sp5,cmocean('balance')); text(0,3.35,'Velocity mean')
+                    cb5 = colorbar; cb5.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb5.Units = 'centimeters';
+                    cb5.Position(3) = .25; cb5.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb5.Ticks = -2:.5:2;
+                    ylabel('Height (km)'); xlabel('Time UTC')
+                    set(gca,'Color',[.5 .5 .5])
+                    
+                    sp6 = subplot(326);
+                    pcolor(data.time_3min,data.height/1000,real(log10(snr_instr_var))'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2]);
+                    caxis([-7 1]); colormap(sp6,chilljet); text(0,3.35,'Signal instrumental precision variance')
+                    cb6 = colorbar; cb6.Label.String = '-'; ax1 = get(gca,'Position'); cb6.Units = 'centimeters';
+                    cb6.Position(3) = .25;   cb6.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    ylabel('Height (km)'); xlabel('Time UTC'); cb6.Ticks = -7:2:1;
+                    cb6.TickLabels = [repmat('10^{',length(cb6.Ticks(:)),1), ...
+                        num2str(cb6.Ticks(:)) repmat('}',length(cb6.Ticks(:)),1)];
+                    set(gca,'Color',[.5 .5 .5])
+                    
+                    if exist('typeof','var') == 1
+                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                        export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
+                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof))
+                    else
+                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
+                        export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
+                            '-%s.png'], dir_out,num2str(DATE),site,measmode))
+                    end
+                    close(hf)
                 otherwise
                     continue
             end

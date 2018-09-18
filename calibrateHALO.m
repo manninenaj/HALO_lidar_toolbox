@@ -200,8 +200,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                     % stack on the first files fields that are not scalars AND not 'range'
                                     fnamesdata1 = fieldnames(tmpdata1);
                                     for i2 = 1:length(fnamesdata1)
-                                        if (~isscalar(tmpdata1.(fnamesdata1{i2})) || ...
-                                                isscalar(tmpdata1.(fnamesdata1{i2})) && ...
+                                        if ~isscalar(tmpdata1.(fnamesdata1{i2})) || ...
+                                                (isscalar(tmpdata1.(fnamesdata1{i2})) && ...
                                                 any(strcmp(fnamesdata1{i2},{'elevation','azimuth','time'}))) && ...
                                                 ~strcmp(fnamesdata1{i2},'range')
                                             data1.(fnamesdata1{i2}) = [data1.(fnamesdata1{i2}); tmpdata1.(fnamesdata1{i2})];
@@ -218,10 +218,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         
                         dim1 = struct('time',length(data1.time),'range',length(data1.range));
                         % If more than one file per day
-                        fndate = thedate;
+                        fndate = thedate;                        
                         
                         % correct focus TBD
                         data1 = correctHALOfocus(site,DATE,abc,data1);
+                        
+                        % Check order of time stamps and reorder if needed
+                        data1 = checkHALOcalibratedDatatimeStamps(data1);
                         
                         % write new file
                         write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
@@ -277,7 +280,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             % correct focus TBS
                             data1 = correctHALOfocus(site,DATE,abc,data1);
                             
+                            % Dimensions
                             dim1 = struct('time',length(data1.time),'range',length(data1.range));
+                            
+                            % Check order of time stamps and reorder if needed
+                            data1 = checkHALOcalibratedDatatimeStamps(data1);
                             
                             % write new file
                             write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
