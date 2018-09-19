@@ -74,6 +74,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
         else
             % Check data and data fields, then load time, range, and snr
             data_tmp = loadHALO4bkgCorr(site,DATE,fnames{i_in,1},fnames{i_in,2});
+            
+            % Check order of time stamps and reorder if needed
+            data_tmp = checkHALOtimeStamps(data_tmp);
+            
             if isempty(data_tmp)
                 continue
             else
@@ -135,6 +139,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                     % load first
                     if isempty(loadinfo.(abc).files), continue; end
                     data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{1}));
+                     
+                    % Check order of time stamps and reorder if needed
+                    data0 = checkHALOtimeStamps(data0);
+                    
                     % Check number of range gates
                     if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
                         warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
@@ -195,6 +203,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                     end
                                     
                                     % Convert into cloudnet naming scheme, implement the corrected signal
+                                    disp(loadinfo.(abc).files{i})
                                     tmpdata1 = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
                                     
                                     % stack on the first files fields that are not scalars AND not 'range'
@@ -223,9 +232,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         % correct focus TBD
                         data1 = correctHALOfocus(site,DATE,abc,data1);
                         
-                        % Check order of time stamps and reorder if needed
-                        data1 = checkHALOcalibratedDatatimeStamps(data1);
-                        
                         % write new file
                         write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
                     end
@@ -234,6 +240,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         %-- load --%
                         if isempty(loadinfo.(abc).files), continue; end
                         data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{i}));
+
+                        % Check order of time stamps and reorder if needed
+                        data0 = checkHALOtimeStamps(data0);
+                        
                         % Check number of range gates
                         if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
                             warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
@@ -282,9 +292,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             
                             % Dimensions
                             dim1 = struct('time',length(data1.time),'range',length(data1.range));
-                            
-                            % Check order of time stamps and reorder if needed
-                            data1 = checkHALOcalibratedDatatimeStamps(data1);
                             
                             % write new file
                             write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);

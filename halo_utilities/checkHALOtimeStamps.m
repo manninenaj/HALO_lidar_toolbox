@@ -1,6 +1,6 @@
-function [data] = checkHALOcalibratedDatatimeStamps(data)
-%checkHALOcalibratedDatatimeStamps sort time stamps and sorts all the
-%related fields according to the sorted order.
+function [data] = checkHALOtimeStamps(data)
+%checkHALOtimeStamps sorts time stamps and reorders all the related fields 
+% according to the new time stamp order.
 %
 % Usage: data = checkHALOcalibratedDatatimeStamps(data)
 %
@@ -29,7 +29,7 @@ for ifn = 1:length(fnames)
     % Sort those fields in which time is one dimension
     if ~any(size(data.(fnames{ifn}))==size(data.time(:),1)), continue; end
     % Check the orientation, and sort
-    [lrow,lcol] = size(data.signal);
+    [lrow,lcol] = size(data.(fnames{ifn}));
     if lrow == length(data.time)
         data.(fnames{ifn}) = data.(fnames{ifn})(iorder,:);
     elseif lcol == length(data.time)
