@@ -201,20 +201,19 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                     elseif lcol == length(data0.(C.field_name_original_time))
                                         data0.(fname) = transpose(snr_corr_2(time_orig_measmode==i_out & ismember(time_hrs,original_time_in_hrs),:));
                                     end
-                                    
+                                                                
                                     % Convert into cloudnet naming scheme, implement the corrected signal
-                                    disp(loadinfo.(abc).files{i})
                                     tmpdata1 = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
                                     
-                                    % stack on the first files fields that are not scalars AND not 'range'
+                                    % Stack on the first files fields that are not scalars AND not 'range'
                                     fnamesdata1 = fieldnames(tmpdata1);
                                     for i2 = 1:length(fnamesdata1)
-                                        if ~isscalar(tmpdata1.(fnamesdata1{i2})) || ...
-                                                (isscalar(tmpdata1.(fnamesdata1{i2})) && ...
-                                                any(strcmp(fnamesdata1{i2},{'elevation','azimuth','time'}))) && ...
-                                                ~strcmp(fnamesdata1{i2},'range')
-                                            data1.(fnamesdata1{i2}) = [data1.(fnamesdata1{i2}); tmpdata1.(fnamesdata1{i2})];
-                                        end
+                                        % Stack only those fields where time is one dimension
+                                        if ~any(size(tmpdata1.(fnamesdata1{i2}))==size(tmpdata1.time(:),1)), continue; end
+                                        % Don't stack range
+                                        if strcmp(fnamesdata1{i2},'range'), continue; end
+                                        % Stack the rest...
+                                        data1.(fnamesdata1{i2}) = [data1.(fnamesdata1{i2}); tmpdata1.(fnamesdata1{i2})];
                                     end
                                 end
                             end
