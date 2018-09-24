@@ -88,7 +88,7 @@ dtskewn = [num2str(dtskewn) 'min'];
 for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         datenum(num2str(DATEend),'yyyymmdd')
 
-    %% Check input and ouput files
+    % Check input and ouput files
     thedate = datestr(DATEi,'yyyymmdd');
     DATE = str2double(thedate);
     
