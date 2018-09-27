@@ -48,6 +48,7 @@ if isempty(halo_files)
     data_4bkgcorr = [];
 else
     % initialize
+    data_4bkgcorr = [];
     time_tmp = cell(length(halo_files),1);
     snr_tmp  = cell(length(halo_files),1);
     
