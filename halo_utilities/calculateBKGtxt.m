@@ -1,6 +1,6 @@
 function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,daten,n_range_gates)
 
-%% find co and cross background files
+% find co and cross background files
 
 dates=datestr(daten,'ddmmyy');
 

@@ -42,7 +42,7 @@ if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',.
         ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
         ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if nargin == 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+if nargin == 4 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
         ~strcmp(processlev,'background'))
     error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
@@ -112,8 +112,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ylabel('Height (km)')
                             
                             sp2 = subplot(322);
-                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.signal);
-                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
+%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.signal);
+                            X_out1 = nan(size(X_out));
+                            X_out1(~isnan(X_out)) = data.signal;
+                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([.995 1.01]); colormap(sp2,chilljet);
@@ -121,10 +123,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            X_out1 = [];
                             
                             sp3 = subplot(323);
-                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_raw);
-                            pcolor(t_out,data.range/1000,real(log10(X_out))'); axis([0 24 0 11]); shading flat;
+%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_raw);
+                            X_out1 = nan(size(X_out));
+                            X_out1(~isnan(X_out)) = data.beta_raw;
+                            pcolor(t_out,data.range/1000,real(log10(X_out1))'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-7 -4]); colormap(sp3,chilljet);
@@ -134,10 +139,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            X_out1 = [];
                             
                             sp4 = subplot(324);
-                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_error);
-                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
+%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_error);
+                            X_out1 = nan(size(X_out));
+                            X_out1(~isnan(X_out)) = data.beta_error;
+                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 1]); colormap(sp4,chilljet);
@@ -145,10 +153,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
+                            X_out1 = [];
                             
                             sp5 = subplot(325);
-                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_raw);
-                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
+%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_raw);
+                            X_out1 = nan(size(X_out));
+                            X_out1(~isnan(X_out)) = data.v_raw;
+                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
@@ -156,10 +167,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Ticks = -1.5:.5:1.5; cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
+                            X_out1 = [];
                             
                             sp6 = subplot(326);
-                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_error);
-                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
+%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_error);
+                            X_out1 = nan(size(X_out));
+                            X_out1(~isnan(X_out)) = data.v_error;
+                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 .5]); colormap(sp6,chilljet);
@@ -168,6 +182,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
                             [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                            X_out1 = [];
                             
                             export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
                                 '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof))
