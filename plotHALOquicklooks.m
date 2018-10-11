@@ -453,34 +453,34 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ws_e(ws_e>2)=nan;
                     
                     sp1 = subplot(321);
-                    pcolor(vad.time,vad.height/1000,ws'); axis([0 24 0 2]); shading flat
-                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,2.25,'Wind speed');
+                    pcolor(vad.time,vad.height/1000,ws'); axis([0 24 0 4]); shading flat
+                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,4.45,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)');
                     
                     sp2 = subplot(322);
-                    pcolor(vad.time,vad.height/1000,ws_e'); axis([0 24 0 2]); shading flat
-                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 1]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,2.25,'Wind speed error')
+                    pcolor(vad.time,vad.height/1000,ws_e'); axis([0 24 0 4]); shading flat
+                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 2]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,4.45,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.25:2; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
                     
                     sp3 = subplot(323);
-                    pcolor(vad.time,vad.height/1000,wd'); axis([0 24 0 2]); shading flat
-                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,2.25,'Wind direction');
+                    pcolor(vad.time,vad.height/1000,wd'); axis([0 24 0 4]); shading flat
+                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,4.45,'Wind direction');
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:90:360;
                     ylabel('Height (km)')
                     
                     sp4 = subplot(324);
-                    pcolor(vad.time,vad.height/1000,wd_e'); axis([0 24 0 3]); shading flat
-                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 .5]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,3.35,'Wind direction error')
+                    pcolor(vad.time,vad.height/1000,wd_e'); axis([0 24 0 4]); shading flat
+                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 2]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,4.45,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.125:1;

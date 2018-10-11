@@ -146,7 +146,7 @@ for ii = 1:size(tkefield,1)
 end
 
 
-tkefield(isnan(epsilon)) = 0;
+tkefield(isnan(epsilon) & tkefield ~= 4) = 0;
 tkefield(isnan(tkefield)) = 0; % no signal
 tkefield(:,1:3) = nan;
 end
