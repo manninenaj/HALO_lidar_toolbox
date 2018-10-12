@@ -6,7 +6,7 @@ category_bits = bitfield;
 % Read bitfield
 layer_bit = double(bitand(uint16(category_bits),uint16(1))>0);
 epsilon_bit = double(bitand(uint16(category_bits),uint16(2))>0);
-contact_bit = double(bitand(uint16(category_bits),uint16(4))>0);
+% contact_bit = double(bitand(uint16(category_bits),uint16(4))>0);
 heatflux_bit = double(bitand(uint16(category_bits),uint16(8))>0);
 heatfluxabshi_bit = double(bitand(uint16(category_bits),uint16(16))>0);
 shear_bit = double(bitand(uint16(category_bits),uint16(32))>0);
@@ -20,6 +20,7 @@ precipitation_bit = double(bitand(uint16(category_bits),uint16(512))>0);
 BL_mask = zeros(size(bitfield));
 BL_mask(~heatfluxabshi_bit | (~heatflux_bit & heatfluxabshi_bit)) = 1;
 BL_mask(heatflux_bit & heatfluxabshi_bit) = 2;
+fill = BL_mask;
 % Non-turbulentdt_i
 BL_mask(~epsilon_bit & layer_bit) = 3;
 % Turbulent
@@ -29,6 +30,7 @@ BL_mask(epsilon_bit & layer_bit) = 3.5;
 BL_mask(convective_bit==1) = 4;
 % In cloud
 BL_mask(incloud_bit & layer_bit) = 7;
+BL_mask(incloud_bit & ~layer_bit) = 7;
 % Cloud driven
 BL_mask(BL_mask == 3.5 & driven_bit == 1 & ~incloud_bit & layer_bit) = 8;
 % Wind shear1
@@ -38,11 +40,12 @@ BL_mask(BL_mask == 3.5) = 6;
 
 %% Clean up
 BL_mask(:,1:3) = 0;
-BL_mask(:,1:3) = BL_mask(:,end-2:end);
-BL_mask(~layer_bit) = 0;
+BL_mask(:,1:3) = fill(:,end-2:end);
+BL_mask(~layer_bit & ~incloud_bit) = 0;
+BL_mask(BL_mask ~= 1 & BL_mask ~= 2 & fubarfield == 0) = 0;
 TKE_mask = fubarfield;
 TKE_mask(:,1:3) = 0;
-TKE_mask(~layer_bit) = 0;
+TKE_mask(~layer_bit & ~incloud_bit) = 0;
 TKE_mask(TKE_mask==6) = 2;
 TKE_mask(BL_mask==3) = 1;
 BL_mask(TKE_mask==1) = 3;
@@ -94,9 +97,9 @@ product_attribute.(['bl_classification_' dt_i]).dimensions = {['time_' dt_i]','h
 % [1.0 0.4 0.7 0.4 1.0 0.0 0.0 1.0 0.5 1.0 0.0]
 % [1.0 0.4 0.7 0.8 0.2 0.6 0.0 0.9 0.0 0.0 1.0]
 % [1.0 0.4 0.7 1.0 0.2 0.6 1.0 0.0 0.5 1.0 0.5]
-product_attribute.(['bl_classification_' dt_i]).legend_key_red =   [0.9 0.5 1.0 0.4 0.9 0.0 1.0 0.5 1.0 0.8];
-product_attribute.(['bl_classification_' dt_i]).legend_key_green = [0.9 0.5 1.0 0.8 0.0 0.0 0.9 0.0 0.6 0.7];
-product_attribute.(['bl_classification_' dt_i]).legend_key_blue =  [0.9 0.6 1.0 1.0 0.2 1.0 0.2 0.5 0.0 0.5];
+product_attribute.(['bl_classification_' dt_i]).legend_key_red =   [0.6602 0.5 1.0 0.4 0.9 0.0 1.0 0.5 1.0 0.8];
+product_attribute.(['bl_classification_' dt_i]).legend_key_green = [0.6602 0.5 1.0 0.8 0.0 0.0 0.9 0.0 0.6 0.7];
+product_attribute.(['bl_classification_' dt_i]).legend_key_blue =  [0.6602 0.6 1.0 1.0 0.2 1.0 0.2 0.5 0.0 0.5];
 
 %% Turbulence coupling
 
@@ -130,9 +133,9 @@ product_attribute.(['turbulence_coupling_' dt_i]).long_definition = ...
      '5: Unconnected' 10 ...
      '6: Precipitation' 10];
 
-product_attribute.(['turbulence_coupling_' dt_i]).legend_key_red =   [0.9 0.0 1.0 1.0 0.4 1.0 0.8];
-product_attribute.(['turbulence_coupling_' dt_i]).legend_key_green = [0.9 0.7 1.0 0.8 0.5 0.0 0.7];
-product_attribute.(['turbulence_coupling_' dt_i]).legend_key_blue =  [0.9 1.0 0.6 0.5 0.6 1.0 0.5];
+product_attribute.(['turbulence_coupling_' dt_i]).legend_key_red =   [0.6602 0.0 1.0 1.0 0.4 1.0 0.8];
+product_attribute.(['turbulence_coupling_' dt_i]).legend_key_green = [0.6602 0.7 1.0 0.8 0.5 0.0 0.7];
+product_attribute.(['turbulence_coupling_' dt_i]).legend_key_blue =  [0.6602 1.0 0.6 0.5 0.6 1.0 0.5];
 
 product_attribute.(['turbulence_coupling_' dt_i]).dimensions = {['time_' dt_i],'height'};
 

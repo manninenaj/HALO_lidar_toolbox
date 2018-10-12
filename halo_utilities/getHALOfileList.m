@@ -104,8 +104,10 @@ end
 % Generate path
 switch processlev
     case 'original'
-        fileformatfield = C.file_format_after_hpl2netcdf;
         filenamingfield = C.(['file_naming_original_' measmode '_' typeof]);
+        fileformatfield = C.file_format_after_hpl2netcdf;
+        fileformatfield = [filenamingfield '.'  C.file_format_after_hpl2netcdf];
+
     case 'background'
         fileformatfield = '.txt';       
     otherwise

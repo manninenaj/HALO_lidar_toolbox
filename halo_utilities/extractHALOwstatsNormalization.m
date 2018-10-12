@@ -12,7 +12,7 @@ function extractHALOwstatsNormalization(site,DATES)
 %
 %
 % Check inputs
-DATEstart = []; DATEend = []; DATES_cell = []; iter_flag = [];
+DATEstart = []; DATEend = []; DATES_cell = []; 
 if nargin < 2
     error('''site'' and ''DATES'' are required inputs!')
 end
@@ -55,14 +55,13 @@ switch iter_flag
         DATES_iter = datenum(DATES_cell,'yyyymmdd');
 end
 
-for DATEi = DATES_iter
+
+bkg_var_cell = cell(length(DATES_iter),1);
+for i = 1:length(DATES_iter)
     % Check input and ouput files
-    thedate = datestr(DATEi,'yyyymmdd');
+    thedate = datestr(DATES_iter(i),'yyyymmdd');
     DATE = str2double(thedate);
-    
-    % Get default and site/unit/period specific parameters
-    C = getconfig(site,DATE);
-    
+        
     % Get list of wstats files
     [dir_in, files] = getHALOfileList(site,DATE,'product','wstats4precipfilter');
     % If no files for today, skip the day
@@ -79,10 +78,48 @@ for DATEi = DATES_iter
         continue;
     end
 
-    % load signal and beta
-    data = load_nc_struct(fullfile([dir_in '/' files{1}]));
+    datab = load_nc_struct(fullfile([dir_in files{1}]),...
+        {'beta_variance_3min','beta_wvariance_3min','height'});
+    
+    % Collect 
+    bkg_var_cell{i} = datab.beta_variance_3min;
 
-    disp('Hello!')
+end
+
+% Convert from cell to mat
+bkg_var = cell2mat(bkg_var_cell);
+
+% Calculate mean bkg variance, assume it follows normal distribution
+bkg_var_mean = nanmedian(bkg_var);
+
+% Initialize
+Output = cell(1,2);
+
+% Construct a cell array which will be written to output file
+for iCellRow = 1:length(datab.height)
+    Output{iCellRow,1} = datab.height(iCellRow);
+    Output{iCellRow,2} = bkg_var_mean(iCellRow) / 1e-13;
+    Output{iCellRow,3} = '1e-13';
+end
+
+% Open file for writing
+if length(DATES_iter)>1
+    fileID = fopen(sprintf('%s%s_%s_background_mean_variance_profile.dat',...
+        dir_out, datestr(DATES_iter(1),'yyyymmdd'), datestr(DATES_iter(2),'yyyymmdd')), 'w');
+else
+    fileID = fopen(sprintf('%s%s_%s_background_mean_variance_profile.dat',...
+        dir_out, datestr(DATES_iter(1),'yyyymmdd'), datestr(DATES_iter(2),'yyyymmdd')), 'w');
+end
+
+% Specify format
+formatSpec = '%.13g %.13g %s\n';
+
+% Write to file row by row
+for iRow = 1:length(datab.height), fprintf(fileID, formatSpec, Output{iRow,:}); end
+
+% Close file
+fclose(fileID);
+
 end
 
 

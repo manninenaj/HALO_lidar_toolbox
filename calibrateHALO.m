@@ -73,7 +73,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
             continue
         else
             % Check data and data fields, then load time, range, and snr
+<<<<<<< HEAD
             data_tmp = loadHALO4bkgCorr(site,DATE,fnames{i_in,1},fnames{i_in,2})
+=======
+            data_tmp = loadHALO4bkgCorr(site,DATE,fnames{i_in,1},fnames{i_in,2});
+            if isempty(data_tmp), continue; end
+>>>>>>> f8e3a83ba7155706e015b9e9bd62a953e3dee4b8
             
             % Check order of time stamps and reorder if needed
             data_tmp = checkHALOtimeStamps(data_tmp);
