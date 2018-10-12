@@ -61,7 +61,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
     for i_in = 1:size(fnames,1)
         
         % Check path to write to exists
-        status = checkHALOpath(site,DATE,'calibrated',fnames{i_in,1},fnames{i_in,2});
+        status = checkHALOpath(site,DATE,'calibrated',fnames{i_in,1},fnames{i_in,2})
         if ~status
             continue
         end
@@ -73,7 +73,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
             continue
         else
             % Check data and data fields, then load time, range, and snr
-            data_tmp = loadHALO4bkgCorr(site,DATE,fnames{i_in,1},fnames{i_in,2});
+            data_tmp = loadHALO4bkgCorr(site,DATE,fnames{i_in,1},fnames{i_in,2})
             
             % Check order of time stamps and reorder if needed
             data_tmp = checkHALOtimeStamps(data_tmp);
