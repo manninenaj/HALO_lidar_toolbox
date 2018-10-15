@@ -101,8 +101,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                             hf.Color = 'white'; hf.Visible = 'off';
                             sp1 = subplot(321);
-                            [X_out,t_out] = fillGapsWithNaNs(data.time,data.signal0);
-                            pcolor(t_out,data.range/1000,X_out'); axis([0 24 0 11]); shading flat;
+                            imagesc(data.time,data.range/1000,data.signal0'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([.995 1.01]); colormap(sp1,chilljet);
@@ -112,10 +111,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ylabel('Height (km)')
                             
                             sp2 = subplot(322);
-%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.signal);
-                            X_out1 = nan(size(X_out));
-                            X_out1(~isnan(X_out)) = data.signal;
-                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
+                            imagesc(data.time,data.range/1000,data.signal'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([.995 1.01]); colormap(sp2,chilljet);
@@ -126,10 +122,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             X_out1 = [];
                             
                             sp3 = subplot(323);
-%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_raw);
-                            X_out1 = nan(size(X_out));
-                            X_out1(~isnan(X_out)) = data.beta_raw;
-                            pcolor(t_out,data.range/1000,real(log10(X_out1))'); axis([0 24 0 11]); shading flat;
+                            imagesc(data.time,data.range/1000,real(log10(data.beta_raw))'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-7 -4]); colormap(sp3,chilljet);
@@ -142,10 +135,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             X_out1 = [];
                             
                             sp4 = subplot(324);
-%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.beta_error);
-                            X_out1 = nan(size(X_out));
-                            X_out1(~isnan(X_out)) = data.beta_error;
-                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
+                            imagesc(data.time,data.range/1000,data.beta_error'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 1]); colormap(sp4,chilljet);
@@ -156,10 +146,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             X_out1 = [];
                             
                             sp5 = subplot(325);
-%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_raw);
-                            X_out1 = nan(size(X_out));
-                            X_out1(~isnan(X_out)) = data.v_raw;
-                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
+                            imagesc(data.time,data.range/1000,data.v_raw'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
@@ -170,10 +157,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             X_out1 = [];
                             
                             sp6 = subplot(326);
-%                             [X_out,t_out] = fillGapsWithNaNs(data.time,data.v_error);
-                            X_out1 = nan(size(X_out));
-                            X_out1(~isnan(X_out)) = data.v_error;
-                            pcolor(t_out,data.range/1000,X_out1'); axis([0 24 0 11]); shading flat;
+                            pcolor(data.time,data.range/1000,data.v_error'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 .5]); colormap(sp6,chilljet);
