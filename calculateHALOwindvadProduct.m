@@ -100,6 +100,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         Din.elevation = tmp.elevation;
         Din.velocity  = tmp.v_raw;
         Din.snr       = tmp.signal;
+        Din.snr_e     = tmp.beta_error .* tmp.signal;
 
         % Check time vector
         midnight = find(diff(Din.time)< -23);
@@ -137,7 +138,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         % Collect other variables and parameters
         elevation_angle{i} = nanmedian(Din.elevation(:));
         time{i} = nanmedian(Din.time(:));
-        mean_snr{i} = nanmean(Din.snr);
+        mean_snr{i} = weightedMean(Din.snr,Din.snr_e);
     end
     
     % Calculate height above ground level (m)
