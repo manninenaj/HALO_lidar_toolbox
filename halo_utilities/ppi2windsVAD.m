@@ -254,7 +254,7 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         
         % % % Note: if the total uncertainty of radial velocity would be
         % % % known the wind component errors could be calculated by:
-        % % % Sigma_uvw = diag(C_newsom);
+        % % % Sigma_uvw = sqrt(diag(C_newsom));
         % % % u_error(i) = Sigma_uvw(1);
         % % % v_error(i) = Sigma_uvw(2);
         % % % w_error(i) = Sigma_uvw(3);
