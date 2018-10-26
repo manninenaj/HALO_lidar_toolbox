@@ -1,8 +1,8 @@
-# HALO_lidar_toolbox
+#### HALO_lidar_toolbox
 HALO Streamline Photonics lidar data postprocessing toolbox
 
 
-Recommended, and partly compulsory sequence for processing HALO Doppler lidar data by using this toolbox:
+### Recommended, and partly compulsory sequence for processing HALO Doppler lidar data by using this toolbox:
 ----------------------------------------------------------
 
 1) halo_config.txt
@@ -16,7 +16,7 @@ Recommended, and partly compulsory sequence for processing HALO Doppler lidar da
 9) calculateHALObetaVeloCovarianceProduct
 
 
----- DETAILED INSTRUCTIONS  ----
+### DETAILED INSTRUCTIONS
 
 More information of the matlab functions can be found by typing >>>  help nameofthefunction  <<<
 
