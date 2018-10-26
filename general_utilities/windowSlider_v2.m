@@ -103,16 +103,20 @@ end
 
 % Construct indices, which the sliding/running window would have
 a0 = nan(1,size(Xi,2)); a0(1) = 0; for i = 2:size(Xi,2), a0(i) = a0(i-1)+size(Xi_p,1); end
-a1 = repmat(sort(repmat(a0,1,size(Xi,1))),win(2)*win(1),1);
-a2 = repmat(repmat(1:size(Xi,1),1,size(Xi,2)),win(2)*win(1),1);
+rtmp1 = repmat(a0,1,size(Xi,1));
+rtmp1s = sort(rtmp1);
+a1 = repmat(rtmp1s,win(2)*win(1),1);
+rtmp2 = repmat(1:size(Xi,1),1,size(Xi,2));
+a2 = repmat(rtmp2,win(2)*win(1),1);
 a3 = a1 + a2;
-a4 = a3 + repmat(repmat(transpose(0:win(1)-1),1,size(Xi,1)*size(Xi,2)),win(2),1);
+rtmp = repmat(transpose(0:win(1)-1),1,size(Xi,1)*size(Xi,2));
+a4 = a3 + repmat(rtmp,win(2),1);
 a5 = repmat(sort(repmat(transpose((1:win(2))-1)*size(Xi_p,1),win(1),1)),1,size(Xi,1)*size(Xi,2));
 ind_running = a4 + a5;
 
 % Calculate number of total samples and number of non-nan samples
-n_nonnan_samples = reshape(sum(~isnan(A_padded(ind_running))),size(A));
-nsamples = reshape(repmat(size(ind_running,1),1,size(ind_running,2)),size(A));
+n_nonnan_samples = reshape(sum(~isnan(Xi_p(ind_running))),size(Xi));
+nsamples = reshape(repmat(size(ind_running,1),1,size(ind_running,2)),size(Xi));
 
 switch func2str(f)
     case 'fraction'
