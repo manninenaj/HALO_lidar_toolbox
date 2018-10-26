@@ -1,16 +1,16 @@
-function [Xo,nsamples,n_nonnan_samples] = windowSlider2D(Xi,win,f,edges,prc_val,Yi)
+function [Xo,nsamples,n_nonnan_samples] = windowSlider_v2(Xi,win,f,edges,prc_val,Yi)
 %windowSlider_v2 can calculate mean, median, standard deviation, variance, min,
 %max, skewness, kurtosis, fraction (inputs ones and zeros), or covariance 
 %within a sliding window.
 %
 % Usage:
-% Xo = windowSlider2D(Xi,win)
-% Xo = windowSlider2D(Xi,win,f)
-% Xo = windowSlider2D(Xi,win,f,edges)
-% Xo = windowSlider2D(Xi,win,f,edges,prc_val) ... if 3rd input is @prctile
-% Xo = windowSlider2D(Xi,win,f,edges,[],Yi) ... when calcuting covariance
-% [Xo,nsamples] = windowSlider2D(Xi,...)
-% [Xo,nsamples,n_nonnan_samples] = windowSlider2D(Xi,...)
+% Xo = windowSlider(Xi,win)
+% Xo = windowSlider(Xi,win,f)
+% Xo = windowSlider(Xi,win,f,edges)
+% Xo = windowSlider(Xi,win,f,edges,prc_val) ... if 3rd input is @prctile
+% Xo = windowSlider(Xi,win,f,edges,[],Yi) ... when calcuting covariance
+% [Xo,nsamples] = windowSlider(Xi,...)
+% [Xo,nsamples,n_nonnan_samples] = windowSlider(Xi,...)
 %
 % Inputs:
 % - Xi                Input array, either a vector or a matrix
@@ -32,7 +32,7 @@ function [Xo,nsamples,n_nonnan_samples] = windowSlider2D(Xi,win,f,edges,prc_val,
 % antti.j.manninen(at)helsinki.fi
 % INAR, University of Helsinki, Finland
 
-warning('windowSlider2D doesn''t work on large arrays (depends on how much memory there is available).')
+warning('Doensn''t work on large ''Xi'' and ''Yi'' arrays, runs out of memory!')
 
 % Check the inputs and defaults
 if nargin < 1
@@ -102,7 +102,7 @@ switch edges
         end
 end
 
-% Construct indices of the running window
+% Construct indices, which the sliding/running window would have
 a0 = nan(1,size(Xi,2)); a0(1) = 0; for i = 2:size(Xi,2), a0(i) = a0(i-1)+size(Xi_p,1); end
 rtmp1 = repmat(a0,1,size(Xi,1));
 rtmp1s = sort(rtmp1);
@@ -119,7 +119,6 @@ ind_running = a4 + a5;
 n_nonnan_samples = reshape(sum(~isnan(Xi_p(ind_running))),size(Xi));
 nsamples = reshape(repmat(size(ind_running,1),1,size(ind_running,2)),size(Xi));
 
-% Determine which calculation is to be performed according to inputs
 switch func2str(f)
     case 'fraction'
     case 'prctile'

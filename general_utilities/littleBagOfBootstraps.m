@@ -14,16 +14,16 @@ function [lbob] = littleBagOfBootstraps(lbob, X, Y, Y_errors, method, display_ms
 %
 % Inputs:
 % - lbob                  struct
-%       .score_func       function handle, a function used to score sampled 
-%                         values. Special use: if string, can be either 
+%       .score_func       function handle, a function used to score sampled
+%                         values. Special use: if string, can be either
 %                         'wstats', or 'wstats-weighted'
-%       .agg_func         function handle, a function used to aggregate 
+%       .agg_func         function handle, a function used to aggregate
 %                         separate estimates made in the inner loop.
 %       .subsample_size   numeric, sample size in outer loop > 0 and <= 1.
-%       .n_subsamples     numeric, number of sub-samples taken by the outer 
+%       .n_subsamples     numeric, number of sub-samples taken by the outer
 %                         loop. Three is minimum.
-%       .n_trials         numeric, number of samples taken by the inner 
-%                         loop. These samples are drawn repetitively from 
+%       .n_trials         numeric, number of samples taken by the inner
+%                         loop. These samples are drawn repetitively from
 %                         a single sub-sample. Default is 30.
 % - X                     numeric, vector or matrix. Can be empty, X = [];
 % - Y                     numeric, vector or matrix
@@ -31,13 +31,13 @@ function [lbob] = littleBagOfBootstraps(lbob, X, Y, Y_errors, method, display_ms
 %
 % Outputs
 % - lbob                  struct
-%       .scores           estimates generated on each iteration of the 
-%                         outer loop. These are used to estimate the upper 
+%       .scores           estimates generated on each iteration of the
+%                         outer loop. These are used to estimate the upper
 %                         and lower bounds.
-%       .best_estimate    final value, the best estimate calculated at the 
+%       .best_estimate    final value, the best estimate calculated at the
 %                         outer loop
 %       .standard_error   standard error of the estimate
-%       .confidence_interval_low 
+%       .confidence_interval_low
 %                         confidence interval low, 25th percentile
 %       .confidence_interval_high
 %                         confidence interval high, 75th percentile
@@ -48,9 +48,9 @@ function [lbob] = littleBagOfBootstraps(lbob, X, Y, Y_errors, method, display_ms
 % antti.j.manninen@helsinki.fi
 
 % Check inputs
-if ~isstruct(lbob) || any(~isfield(lbob,'score_func') || ~isfield(lbob,'agg_func'))       
+if ~isstruct(lbob) || any(~isfield(lbob,'score_func') || ~isfield(lbob,'agg_func'))
     error(sprintf(['The 1st input ''lbob'' needs to be a struct including, at least, '...
-        'the fields ''score_func'' and ''agg_func''. \nType: help littleBagOfBootstraps']))   
+        'the fields ''score_func'' and ''agg_func''. \nType: help littleBagOfBootstraps']))
 end
 if isa(lbob.score_func, 'function_handle') && ...
         ~(strcmp(func2str(lbob.score_func),'weightedMean') || ...
@@ -65,14 +65,14 @@ end
 if (~isa(lbob.score_func, 'function_handle') && ...
         ~ischar(lbob.score_func)) || ...
         ~isa(lbob.score_func, 'function_handle') && ...
-        ~any(strcmp(lbob.score_func,{'wstats','wstats-weighted'}))
+        ~any(strcmp(lbob.score_func,{'wstats','wstats-weighted','covariance'}))
     error(['If the field ''score_func'' in ''lbob'' is not a function '...
         ' handle, it can be either a ''wstats'' or a ''wstats-weighted'' string.'])
 end
 if isfield(lbob,'subsample_size')
     if ~isnumeric(lbob.subsample_size) || ...
-        (lbob.subsample_size > 1 || lbob.subsample_size <= 0)
-    error('The field ''subsample_size'' in ''lbob'' must be a number that is > 0 and <= 1.')
+            (lbob.subsample_size > 1 || lbob.subsample_size <= 0)
+        error('The field ''subsample_size'' in ''lbob'' must be a number that is > 0 and <= 1.')
     end
 else
     % Sample size in outer loop, b, n**0.67 used in literature.
@@ -80,12 +80,12 @@ else
     % if less than 1, the sample size is taken as n**subsample_size.
     lbob.subsample_size = .67;
 end
-if isfield(lbob,'n_subsamples') 
+if isfield(lbob,'n_subsamples')
     if ~isnumeric(lbob.n_subsamples) || (lbob.n_subsamples < 3)
         error('The field ''n_subsamples'' in ''lbob'' must be a number that is > 3.')
     end
 else
-    % The number of sub-samples taken by the outer loop. Three is the 
+    % The number of sub-samples taken by the outer loop. Three is the
     % absolute minimum for simple distributions.
     lbob.n_subsamples = 3;
 end
@@ -94,7 +94,7 @@ if isfield(lbob,'n_trials')
         error('The field ''n_trials'' in ''lbob'' must be a number that is >= 1.')
     end
 else
-    % The number of samples taken by the inner loop. These samples are 
+    % The number of samples taken by the inner loop. These samples are
     % drawn repetitively from a single sub-sample. Default is 30.
     lbob.n_trials = 30;
 end
@@ -156,14 +156,14 @@ n_trials = lbob.n_trials;
 sample_size = size(lbob.y,1);
 use_freqs = lbob.use_freqs;
 
-if isa(lbob.score_func, 'function_handle')
+if isa(lbob.score_func, 'function_handle') | strcmp(lbob.score_func,'covariance')
     lbob.scores = zeros(lbob.n_subsamples, size(Y,2));
-elseif any(strcmp(lbob.score_func,{'wstats','wstats-weighted'}))
+elseif any(strcmp(lbob.score_func,{'wstats','wstats-weighted','covariance'}))
     lbob.mean_scores = zeros(lbob.n_subsamples, size(Y,2));
     lbob.std_scores = zeros(lbob.n_subsamples, size(Y,2));
     lbob.var_scores = zeros(lbob.n_subsamples, size(Y,2));
-%     lbob.scores_skewness = zeros(lbob.n_subsamples, size(Y,2));
-%     lbob.scores_kurtosis = zeros(lbob.n_subsamples, size(Y,2));
+    %     lbob.scores_skewness = zeros(lbob.n_subsamples, size(Y,2));
+    %     lbob.scores_kurtosis = zeros(lbob.n_subsamples, size(Y,2));
 else
     lbob = [];
     return
@@ -181,51 +181,54 @@ for subset = 1:lbob.n_subsamples
     end
     test_size = (size(Yunused,1) - subsample_size);
     [Xunused, Yunused, Yunused_errors] = train_test_split(Xunused,Yunused,Yunused_errors,test_size);
-
-    if isa(lbob.score_func, 'function_handle')
+    
+    if isa(lbob.score_func, 'function_handle') | strcmp(lbob.score_func,'covariance')
         [lbob.scores(subset,:)] = lbob_little_boot(lbob,Xunused,Yunused,Yunused_errors,n_trials,sample_size,use_freqs,method,display_msgs);
     else
         [~,lbob.mean_scores(subset,:),lbob.std_scores(subset,:),lbob.var_scores(subset,:)] = ...
             lbob_little_boot(lbob,Xunused,Yunused,Yunused_errors,n_trials,sample_size,use_freqs,method,display_msgs);
-%         scores_skewness(subset,:),scores_kurtosis(subset,:)
+        %         scores_skewness(subset,:),scores_kurtosis(subset,:)
     end
 end
-if isa(lbob.score_func, 'function_handle')
-%     lbob.scores = scores;
+if isa(lbob.score_func, 'function_handle') | strcmp(lbob.score_func,'covariance')
+    %     lbob.scores = scores;
     lbob.best_estimate = nanmean(lbob.scores); % best estimate
     lbob.standard_error = nanstd(lbob.scores); % standard error
     lbob.confidence_interval_low = prctile(lbob.scores, 5);
     lbob.confidence_interval_high = prctile(lbob.scores, 95);
 else
-%     lbob.mean_scores = scores_mean;
-%     lbob.std_scores = scores_std;
-%     lbob.var_scores = scores_var;
-%     lbob.skewness_scores = scores_skewness;
-%     lbob.kurtosis_scores = scores_kurtosis;
-    
-    lbob.mean_best_estimate = nanmean(lbob.mean_scores); % best estimate
-    lbob.std_best_estimate = nanmean(lbob.std_scores); % best estimate
-    lbob.var_best_estimate = nanmean(lbob.var_scores); % best estimate
-%     lbob.skewness_best_estimate = nanmean(scores_skewness); % best estimate
-%     lbob.kurtosis_best_estimate = nanmean(scores_kurtosis); % best estimate
-    
-    lbob.mean_standard_error = nanstd(lbob.mean_scores); % standard error
-    lbob.std_standard_error = nanstd(lbob.std_scores); % standard error
-    lbob.var_standard_error = nanstd(lbob.var_scores); % standard error
-%     lbob.skewness_standard_error = nanstd(scores_skewness); % standard error
-%     lbob.kurtosis_standard_error = nanstd(scores_kurtosis); % standard error
-    
-    lbob.mean_confidence_interval_low = prctile(lbob.mean_scores, 5);
-    lbob.std_confidence_interval_low = prctile(lbob.std_scores, 5);
-    lbob.var_confidence_interval_low = prctile(lbob.var_scores, 5);
-%     lbob.skewness_confidence_interval_low = prctile(scores_skewness, 5);
-%     lbob.kurtosis_confidence_interval_low = prctile(scores_kurtosis, 5);
-    
-    lbob.mean_confidence_interval_high = prctile(lbob.mean_scores, 95);
-    lbob.std_confidence_interval_high = prctile(lbob.std_scores, 95);
-    lbob.var_confidence_interval_high = prctile(lbob.var_scores, 95);
-%     lbob.skewness_confidence_interval_high = prctile(scores_skewness, 95);
-%     lbob.kurtosis_confidence_interval_high = prctile(scores_kurtosis, 95);
+    switch lbob.score_func
+        case {'wstats','wstats-weighted'}
+            %     lbob.mean_scores = scores_mean;
+            %     lbob.std_scores = scores_std;
+            %     lbob.var_scores = scores_var;
+            %     lbob.skewness_scores = scores_skewness;
+            %     lbob.kurtosis_scores = scores_kurtosis;
+            
+            lbob.mean_best_estimate = nanmean(lbob.mean_scores); % best estimate
+            lbob.std_best_estimate = nanmean(lbob.std_scores); % best estimate
+            lbob.var_best_estimate = nanmean(lbob.var_scores); % best estimate
+            %     lbob.skewness_best_estimate = nanmean(scores_skewness); % best estimate
+            %     lbob.kurtosis_best_estimate = nanmean(scores_kurtosis); % best estimate
+            
+            lbob.mean_standard_error = nanstd(lbob.mean_scores); % standard error
+            lbob.std_standard_error = nanstd(lbob.std_scores); % standard error
+            lbob.var_standard_error = nanstd(lbob.var_scores); % standard error
+            %     lbob.skewness_standard_error = nanstd(scores_skewness); % standard error
+            %     lbob.kurtosis_standard_error = nanstd(scores_kurtosis); % standard error
+            
+            lbob.mean_confidence_interval_low = prctile(lbob.mean_scores, 5);
+            lbob.std_confidence_interval_low = prctile(lbob.std_scores, 5);
+            lbob.var_confidence_interval_low = prctile(lbob.var_scores, 5);
+            %     lbob.skewness_confidence_interval_low = prctile(scores_skewness, 5);
+            %     lbob.kurtosis_confidence_interval_low = prctile(scores_kurtosis, 5);
+            
+            lbob.mean_confidence_interval_high = prctile(lbob.mean_scores, 95);
+            lbob.std_confidence_interval_high = prctile(lbob.std_scores, 95);
+            lbob.var_confidence_interval_high = prctile(lbob.var_scores, 95);
+            %     lbob.skewness_confidence_interval_high = prctile(scores_skewness, 95);
+            %     lbob.kurtosis_confidence_interval_high = prctile(scores_kurtosis, 95);
+    end
 end
 % fprintf('\n')
 end
@@ -247,69 +250,74 @@ function [scores,scores_mean,scores_std,scores_var] = ...
 % use_freqs: If True then frequencies are used.
 
 % freq = [];
-if isa(lbob.score_func, 'function_handle')
+if isa(lbob.score_func, 'function_handle')  | strcmp(lbob.score_func,'covariance')
     scores = zeros(n_trials, size(Y,2));
 else
     scores_mean = zeros(n_trials, size(Y,2));
     scores_std = zeros(n_trials, size(Y,2));
     scores_var = zeros(n_trials, size(Y,2));
-%     scores_skewness = zeros(n_trials, size(Y,2));
-%     scores_kurtosis = zeros(n_trials, size(Y,2));
+    %     scores_skewness = zeros(n_trials, size(Y,2));
+    %     scores_kurtosis = zeros(n_trials, size(Y,2));
 end
 for t = 1:n_trials
-
-%     if use_freqs % use frequencies
-% %         subsample_score = []; % TBD!?!?!? or not...
-%         return
-% %         [~, Y_eval, Y_errors_eval, ~] = lbob_get_multinomial_sample_with_freqs(X, Y, Y_errors, sample_size);
-%     else % do not use frequencies
-        [~, Y_eval, Y_errors_eval] = lbob_get_multinomial_sample(X, Y, Y_errors, sample_size);
-%     end
-%     if use_freqs % use frequencies
-% %         subsample_score = []; % TBD!?!?!? or not...
-%         return
-%     else % do not use frequencies
-        if isa(lbob.score_func, 'function_handle')
-                switch method
-                    case 'unweighted'
-                        scores(t,:) = lbob.score_func(Y_eval,Y_errors_eval,method);
-                    case 'weighted'
-                        scores(t,:) = lbob.score_func(Y_eval,Y_errors_eval,method);
-                end
-        else
-            switch lbob.score_func
-                case 'wstats'
-                    scores_mean(t,:) = weightedMean(Y_eval,Y_errors_eval,method);
-                    scores_std(t,:) = weightedStddev(Y_eval,Y_errors_eval,method);
-                    scores_var(t,:) = scores_std(t,:).^2;   
-% % %                     scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method); DOES NOT WORK
-%                     scores_skewness(t,:) = weightedSkewness(Y_eval,Y_errors_eval,'unweighted');
-%                     scores_kurtosis(t,:) = weightedKurtosis(Y_eval,Y_errors_eval,'unweighted');
-                case 'wstats-weighted'
-                    scores_mean(t,:) = weightedMean(Y_eval,Y_errors_eval,method);
-                    scores_std(t,:) = weightedStddev(Y_eval,Y_errors_eval,method);
-                    scores_var(t,:) = scores_std(t,:).^2;
-% % %                     scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method); DOES NOT WORK
-%                     scores_skewness(t,:) = weightedSkewness(Y_eval,Y_errors_eval);
-%                     scores_kurtosis(t,:) = weightedKurtosis(Y_eval,Y_errors_eval);
-                otherwise
-            end
+    
+    %     if use_freqs % use frequencies
+    % %         subsample_score = []; % TBD!?!?!? or not...
+    %         return
+    % %         [~, Y_eval, Y_errors_eval, ~] = lbob_get_multinomial_sample_with_freqs(X, Y, Y_errors, sample_size);
+    %     else % do not use frequencies
+    [~, Y_eval, Y_errors_eval] = lbob_get_multinomial_sample(X, Y, Y_errors, sample_size);
+    %     end
+    %     if use_freqs % use frequencies
+    % %         subsample_score = []; % TBD!?!?!? or not...
+    %         return
+    %     else % do not use frequencies
+    if isa(lbob.score_func, 'function_handle')
+        switch method
+            case 'unweighted'
+                scores(t,:) = lbob.score_func(Y_eval,Y_errors_eval,method);
+            case 'weighted'
+                scores(t,:) = lbob.score_func(Y_eval,Y_errors_eval,method);
         end
-%     end
-    if display_msgs        
+    else
+        switch lbob.score_func
+            case 'wstats'
+                scores_mean(t,:) = weightedMean(Y_eval,Y_errors_eval,method);
+                scores_std(t,:) = weightedStddev(Y_eval,Y_errors_eval,method);
+                scores_var(t,:) = scores_std(t,:).^2;
+                % % %                     scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method); DOES NOT WORK
+                %                     scores_skewness(t,:) = weightedSkewness(Y_eval,Y_errors_eval,'unweighted');
+                %                     scores_kurtosis(t,:) = weightedKurtosis(Y_eval,Y_errors_eval,'unweighted');
+            case 'wstats-weighted'
+                scores_mean(t,:) = weightedMean(Y_eval,Y_errors_eval,method);
+                scores_std(t,:) = weightedStddev(Y_eval,Y_errors_eval,method);
+                scores_var(t,:) = scores_std(t,:).^2;
+                % % %                     scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method); DOES NOT WORK
+                %                     scores_skewness(t,:) = weightedSkewness(Y_eval,Y_errors_eval);
+                %                     scores_kurtosis(t,:) = weightedKurtosis(Y_eval,Y_errors_eval);
+            case 'covariance'
+                scores(t,:) = nansum( ...
+                    ((X-repmat(nanmean(X),size(X,1),1)).* ...
+                    (Y-repmat(nanmean(X),size(X,1),1))))./ ...
+                    repmat(size(X,1),1,size(X,2));
+            otherwise
+        end
+    end
+    %     end
+    if display_msgs
         fprintf('%3.3g%% ',t/n_trials*100)
     end
 end
 % average (default) the aggregated scores
-if isa(lbob.score_func, 'function_handle')
+if isa(lbob.score_func, 'function_handle') | strcmp(lbob.score_func,'covariance')
     scores = lbob.agg_func(scores);
 else
     scores = [];
     scores_mean = lbob.agg_func(scores_mean);
     scores_std = lbob.agg_func(scores_std);
     scores_var = lbob.agg_func(scores_var);
-%     scores_skewness = lbob.agg_func(scores_skewness);
-%     scores_kurtosis = lbob.agg_func(scores_kurtosis);
+    %     scores_skewness = lbob.agg_func(scores_skewness);
+    %     scores_kurtosis = lbob.agg_func(scores_kurtosis);
 end
 end
 
@@ -366,10 +374,10 @@ y = y(indp(1:n-test_size),:);
 % y = y(indp(n-test_size+1:n),:);
 if isempty(y_error)
     y_error = [];
-%     y_error = [];
+    %     y_error = [];
 else
     y_error = y_error(indp(1:n-test_size),:);
-%     y_error = y_error(indp(n-test_size+1:n),:);
+    %     y_error = y_error(indp(n-test_size+1:n),:);
 end
 end
 
@@ -385,9 +393,9 @@ end
 % % X: Feature matrix.
 % % Y: Dependent variables or values.
 % % sample_size: Number of rows in returned arrays. Defaults to size of input vector Y.
-% 
+%
 % if isempty(sample_size)
-%     sample_size = size(Y,1); 
+%     sample_size = size(Y,1);
 % end
 %     n_rows = size(Y,1);
 %     freq_by_row = mnrnd(sample_size,repmat(1./n_rows,n_rows,1));
