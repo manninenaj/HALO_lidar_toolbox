@@ -48,15 +48,15 @@ correct focus (currently at specified site only) and writes a netcdf file per da
 mode into their respective specified paths.
 
 ----
-3 Calculate winds with uncertainties
+3) Calculate winds with uncertainties
 
-3.1 If VAD/PPI wind scans are available, calculate them by using calculateHALOwindvadProduct.m function:
+3.1) If VAD/PPI wind scans are available, calculate them by using calculateHALOwindvadProduct.m function:
 
 calculateHALOwindvadProduct('site',[YYYMMDD YYYYMMDD],'NN')
 
 where 'NN' is the elevation angle of the scan; if 75 degrees then type '75' (string input).
 
-3.2 If DBS winds are available, calculate them by using calculateHALOwinddbsProduct.m function:
+3.2) If DBS winds are available, calculate them by using calculateHALOwinddbsProduct.m function:
 
 calculateHALOwinddbsProduct('site',[YYYMMDD YYYYMMDD],'noofbeams')
 
