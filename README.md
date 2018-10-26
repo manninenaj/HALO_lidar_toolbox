@@ -5,7 +5,7 @@ HALO Streamline Photonics lidar data postprocessing toolbox
 ### Recommended, and partly compulsory sequence for processing HALO Doppler lidar data by using this toolbox:
 1) halo_config.txt
 2) calibrateHALO
-3) calculateHALOwindvadProduct AND/OR calculateHALOwinddbsProduct
+3) calculateHALOwindvadProduct **AND/OR** calculateHALOwinddbsProduct
 4) calculateHALOwStatsProduct
 5) calculateHALOverticalTKEproduct
 6) calculateHALOwindShearProduct
