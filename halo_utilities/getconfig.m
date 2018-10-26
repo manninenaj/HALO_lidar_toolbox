@@ -98,12 +98,12 @@ if exist('halo_config.txt','file') == 2
                 datenum(spcfc_param_values(iperiods(1)),'yyyymmdd')
             
             % All parameters  for the site are read and if a parameter has
-            % changed after some specified data, the last occurrence of the
+            % changed after some specified date, the last occurrence of the
             % parameter is read and outputted.
-            iend2 = iperiods(find(datenum(num2str(DATE),'yyyymmdd') < ...
-                datenum(spcfc_param_values(iperiods),'yyyymmdd')...
-                ,1,'last'))-1;
-            
+            if length(iperiods)>1
+                iend2 = iperiods(find(datenum(num2str(DATE),'yyyymmdd') < ...
+                    datenum(spcfc_param_values(iperiods),'yyyymmdd'),1,'first'))-1;
+            end
             % if last period
             if isempty(iend2), iend2 = length(spcfc_param_values); end
             
