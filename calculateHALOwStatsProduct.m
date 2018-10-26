@@ -204,10 +204,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.(['signal_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['beta_weighted_mean_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
             data.(['beta_weighted_variance_error_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.([bn '_instrumental_precision_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.([bn '_instrumental_precision_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.(['signal_instrumental_precision_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
-            data.(['signal_instrumental_precision_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+%             data.([bn '_instrumental_precision_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+%             data.([bn '_instrumental_precision_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+%             data.(['signal_instrumental_precision_weighted_mean_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
+%             data.(['signal_instrumental_precision_weighted_variance_' tres 'min']) = cell(numel(unique(ref_time_block_indices)),1);
         end
     end
     
@@ -269,7 +269,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
                 
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
-        lbob.n_subsamples = 20;
+        lbob.n_subsamples = 15;
         lbob.n_trials = 2; % Integer
         lbob.score_func = []; % set up later, separately for each calculation
         lbob.agg_func = @nanmean;
