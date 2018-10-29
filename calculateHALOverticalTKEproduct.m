@@ -156,12 +156,17 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     ifs_false = strmatch('radial_velocity_variance_error',fnames_var);
     fnames_var(ifs_false) = [];
         
-    ifs_e_mean = strmatch('radial_velocity_instrumental_error_mean', fnames);
+    switch isempty(strmatch('radial_velocity_instrumental_error_mean', fnames))
+        case 0
+            ifs_e_mean = strmatch('radial_velocity_instrumental_error_mean', fnames);
+            ifs_e_var = strmatch('radial_velocity_instrumental_error_variance', fnames);
+        case 1
+            ifs_e_mean = strmatch('radial_velocity_instrumental_precision_mean', fnames);
+            ifs_e_var = strmatch('radial_velocity_instrumental_precision_variance', fnames);
+    end
     fnames_mean_e = fnames(ifs_e_mean);
-
-    ifs_e_var = strmatch('radial_velocity_instrumental_error_variance', fnames);
     fnames_var_e = fnames(ifs_e_var);
-
+    
     ifs_nsamples = strmatch('nsamples', fnames);
     fnames_nsamples = fnames(ifs_nsamples);
     
