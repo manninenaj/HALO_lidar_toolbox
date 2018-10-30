@@ -281,20 +281,12 @@ for t = 1:n_trials
         end
     else
         switch lbob.score_func
-            case 'wstats'
+            case {'wstats','wstats-weighted'}
                 scores_mean(t,:) = weightedMean(Y_eval,Y_errors_eval,method);
-                scores_std(t,:) = weightedStddev(Y_eval,Y_errors_eval,method);
-                scores_var(t,:) = scores_std(t,:).^2;
-                % % %                     scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method); DOES NOT WORK
+                scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method);
+                scores_std(t,:) = sqrt(scores_var(t,:));
                 %                     scores_skewness(t,:) = weightedSkewness(Y_eval,Y_errors_eval,'unweighted');
                 %                     scores_kurtosis(t,:) = weightedKurtosis(Y_eval,Y_errors_eval,'unweighted');
-            case 'wstats-weighted'
-                scores_mean(t,:) = weightedMean(Y_eval,Y_errors_eval,method);
-                scores_std(t,:) = weightedStddev(Y_eval,Y_errors_eval,method);
-                scores_var(t,:) = scores_std(t,:).^2;
-                % % %                     scores_var(t,:) = weightedVariance(Y_eval,Y_errors_eval,method); DOES NOT WORK
-                %                     scores_skewness(t,:) = weightedSkewness(Y_eval,Y_errors_eval);
-                %                     scores_kurtosis(t,:) = weightedKurtosis(Y_eval,Y_errors_eval);
             case 'covariance'
                 scores(t,:) = nansum( ...
                     ((X-repmat(nanmean(X),size(X,1),1)).* ...

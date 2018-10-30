@@ -181,42 +181,42 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             switch measmode
                 case 'wstats'
                     beta_mean = data.beta_mean_3min;
-                    snr_var = data.signal_variance_3min;
+                    snr_mean = data.signal_mean_3min;
                     velo_mean = data.radial_velocity_mean_3min;
                     velo_var = data.radial_velocity_variance_3min;
                     velo_skewn = data.radial_velocity_skewness_60min;
                     velo_kurto = data.radial_velocity_kurtosis_60min;
-                    % Create a cleaning filter based what field are available
-                    fnames = fieldnames(data);
-                    switch ~isempty(strmatch('signal_instrumental_precision_variance_',fnames))
-                        case 1
-                            condnan = ...
-                                10*real(log10(data.signal_mean_3min-1)) < -23 | ...
-                                isnan(data.signal_mean_3min) | ...
-                                real(log10(data.signal_instrumental_precision_variance_3min)) > 0 | ...
-                                data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
-                        case 0
-                            condnan = ...
-                                10*real(log10(data.signal_mean_3min-1)) < -23 | ...
-                                isnan(data.signal_mean_3min) | ...
-                                data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
-                    end
-                    beta_mean(condnan) = nan;
-                    snr_var(condnan) = nan;
-                    velo_mean(condnan) = nan;
-                    velo_var(condnan) = nan;
-                    condnan = 10*real(log10(data.signal_mean_60min-1))<-20 | ...
-                        isnan(data.signal_mean_60min) | ...
-                        data.radial_velocity_mean_error_60min > .33;
-                    velo_skewn(condnan) = nan;
-                    velo_kurto(condnan) = nan;
+                    %% Create a cleaning filter based what field are available
+                    %fnames = fieldnames(data);
+                    %switch ~isempty(strmatch('signal_instrumental_precision_variance_',fnames))
+                    %    case 1
+                    %        condnan = ...
+                    %            10*real(log10(data.signal_mean_3min-1)) < -23 | ...
+                    %            isnan(data.signal_mean_3min) | ...
+                    %            real(log10(data.signal_instrumental_precision_variance_3min)) > 0 | ...
+                    %            data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
+                    %    case 0
+                    %        condnan = ...
+                    %            10*real(log10(data.signal_mean_3min-1)) < -23 | ...
+                    %            isnan(data.signal_mean_3min) | ...
+                    %            data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
+                    %end
+                    %beta_mean(condnan) = nan;
+                    %snr_var(condnan) = nan;
+                    %velo_mean(condnan) = nan;
+                    %velo_var(condnan) = nan;
+                    %condnan = 10*real(log10(data.signal_mean_60min-1))<-20 | ...
+                    %    isnan(data.signal_mean_60min) | ...
+                    %    data.radial_velocity_mean_error_60min > .33;
+                    %velo_skewn(condnan) = nan;
+                    %velo_kurto(condnan) = nan;
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
                     sp1 = subplot(321);
                     pcolor(data.time_3min,data.height/1000,real(log10(beta_mean))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
-                    caxis([-7 -4]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,3.35,'beta mean');
+                    caxis([-7 -4]); colormap(sp1,chilljet); text(0,3.35,'beta mean');
                     cb = colorbar; cb.Label.String = 'm-1 sr-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = -7:-4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
@@ -224,13 +224,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)');
                     set(gca,'Color',[.5 .5 .5])
                     sp2 = subplot(322);
-                    pcolor(data.time_3min,data.height/1000,real(log10(snr_var))'); axis([0 24 0 3]); shading flat
+                    pcolor(data.time_3min,data.height/1000,snr_mean'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2]);
-                    caxis([-4 4]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,3.35,'signal variance')
-                    cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
+                    caxis([0.995 1.01]); colormap(sp2,chilljet); text(0,3.35,'signal mean')
+                    cb = colorbar; cb.Label.String = 'SNR+1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = -4:2:4; ylabel('Height (km)'); cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
-                        num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
+                    cb.Ticks = .995:.005:1.01; ylabel('Height (km)');
                     set(gca,'Color',[.5 .5 .5])
                     sp3 = subplot(323);
                     pcolor(data.time_3min,data.height/1000,velo_mean'); axis([0 24 0 3]); shading flat
@@ -243,7 +242,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp4 = subplot(324);
                     pcolor(data.time_3min,data.height/1000,real(log10(velo_var))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2]);
-                    caxis([-3 1]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,3.35,'velocity variance')
+                    caxis([-3 1]); colormap(sp4,chilljet); text(0,3.35,'velocity variance')
                     cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -261,7 +260,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp6 = subplot(326);
                     pcolor(data.time_60min,data.height/1000,velo_kurto'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2]);
-                    caxis([-4 6]); colormap(sp6,cmap_darkviolet_to_brickred); text(0,3.35,'velocity kurtosis')
+                    caxis([-4 6]); colormap(sp6,chilljet); text(0,3.35,'velocity kurtosis')
                     cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25;   cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)'); xlabel('Time UTC')
