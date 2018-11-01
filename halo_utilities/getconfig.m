@@ -103,9 +103,10 @@ if exist('halo_config.txt','file') == 2
             if length(iperiods)>1
                 iend2 = iperiods(find(datenum(num2str(DATE),'yyyymmdd') < ...
                     datenum(spcfc_param_values(iperiods),'yyyymmdd'),1,'first'))-1;
+            else
+                % if last period
+                iend2 = length(spcfc_param_values);
             end
-            % if last period
-            if isempty(iend2), iend2 = length(spcfc_param_values); end
             
             % Allocate parameter/value pairs into a struct variable,
             % overwrite default parameters if they are different for  
