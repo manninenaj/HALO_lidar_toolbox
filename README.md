@@ -18,7 +18,7 @@ HALO Streamline Photonics lidar data postprocessing toolbox
 
 More information of the matlab functions can be found by typing >>>  help nameofthefunction  <<<
 
-----
+
 ### 1) Fill in the halo_config.txt file for your site.
 
 Check the paths!
@@ -35,7 +35,7 @@ For example, if HALO unit was replaced and it has a different focus range:
 halo_unit_ID = XX
 focus_stare_co = 1500
 
-----
+
 ### 2) Calibrate HALO data by using the calibrateHALO.m function:
 
 calibrateHALO('site',[YYYMMDD YYYYMMDD])
@@ -45,7 +45,7 @@ file, corrects the background (with ripple correction if *background*.txt files 
 correct focus (currently at specified site only) and writes a netcdf file per day per measurement
 mode into their respective specified paths.
 
-----
+
 ### 3) Calculate winds with uncertainties
 
   #### 3.1) If VAD/PPI wind scans are available, calculate them by using calculateHALOwindvadProduct.m function:
@@ -60,7 +60,7 @@ mode into their respective specified paths.
 
   where 'noofbeams' is the number of beams in the DBS scans; if 3 beams then type '3beams' (string input).
 
-----
+
 ### 4) Calculate vertical velocity statistics
 
 calculateHALOwStatsProduct('site',[YYYMMDD YYYYMMDD])
