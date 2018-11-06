@@ -63,6 +63,13 @@ mode into their respective specified paths.
 ----
 ### 4) Calculate vertical velocity statistics
 
+calculateHALOwStatsProduct('site',[YYYMMDD YYYYMMDD])
+
+The function calculates the following quantitites from vertically pointing measurements with 3 and 60 min resolutions:
+-radial velocity mean, std. deviation, variance, skewness and kurtosis with respective standard errors
+-attenuated backscatter coefficient mean and variance with respective standard errors
+-signal (SNR+1) mean and variance with respective standard errors
+-instrumental precision mean and variance
 
 28 October 2018,
 Antti J Manninen
