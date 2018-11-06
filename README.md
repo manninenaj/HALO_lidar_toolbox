@@ -32,6 +32,7 @@ Then, add the all of the parameters which have changed right below the above men
 For example, if HALO unit was replaced and it has a different focus range:
 
 halo_unit_ID = XX
+
 focus_stare_co = 1500
 
 ### 2) Calibrate HALO data by using the calibrateHALO.m function:
