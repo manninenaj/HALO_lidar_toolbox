@@ -77,8 +77,10 @@ calculateHALOverticalTKEproduct('site',[YYYMMDD YYYYMMDD],'windproduct','typeof'
 
 The dissipation rate of turbulent kinetic energy (TKE) can be calculated with using either
 - vad
+
 ...'windproduct' and 'typeof' are 'windvad' and 'eleNN', respectively with NN being the elevation angle in degrees (e.g. 'ele75' or 'ele09')
 - dbs:
+
 ...'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. '3beams')
 
 ### 6) calculateHALOwindShearProduct
