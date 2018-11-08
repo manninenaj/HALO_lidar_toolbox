@@ -128,7 +128,7 @@ resolution(s) based on what is/are available in the vertical velocity statistics
 calculateHALOatmBLclassificationProduct('site',[YYYMMDD YYYYMMDD])
 
 The function generates boundary layer classification product from calculated Doppler lidar quantities, and writes the 
-product into a netcdf file. Plese refer to Manninen et al. (2018, doi:10.1029/2017JD028169) for a in-detail 
+product into a netcdf file. Plese refer to Manninen et al. (2018, doi:10.1029/2017JD028169) for an in-detail 
 description of the method and product.
 
 ### 9) calculateHALObetaVeloCovarianceProduct
