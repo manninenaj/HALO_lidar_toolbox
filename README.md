@@ -1,6 +1,8 @@
 # HALO_lidar_toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
+Please note that this toolbox is still in its development phase and errors mights pop up. You are more than welcome to suggest changes or additions in to the toolbox! 
+
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
 1) halo_config.txt
@@ -23,7 +25,7 @@ More information of the matlab functions can be found by typing >>>  help nameof
 Check the paths!
 
 If instrument parameters are changed during deployment, first specify the date from when
-the changes are to be taken into account. Add at the very end of our site's parameter list
+the changes are to be taken into account. Add at the very end of your site's parameter list
 a new field specifying that date:
 
 parameters_valid_from_including = YYYYMMDD
@@ -41,7 +43,7 @@ calibrateHALO('site',[YYYMMDD YYYYMMDD])
 
 The function reads all of the data, which is available for the site and date as specified in the halo_config.txt
 file. It then corrects the background (with ripple correction if *background*.txt files are available),
-corrects focus (currently at specified site only), and writes a netcdf file per day and per measurement
+corrects focus (currently at specified sites only), and writes a netcdf file per day and per measurement
 mode into their respective specified paths.
 
 ### 3) Calculate winds with uncertainties
@@ -53,8 +55,8 @@ mode into their respective specified paths.
   where 'NN' is the elevation angle of the scan; if 75 degrees then type '75' (string input).
 
   The function reads ppi files and calculates (u,v,w) wind components, wind speed, wind direction, respective errors 
-  due to random instumental noise, and overall errors using VAD tehcnique, and writes the retrieved winds into a 
-  netcdf file.
+  due to random instumental noise, and overall errors using VAD tehcnique (Päschke et al. 2015; Newsom et al. 2017), 
+  and writes the retrieved winds into a netcdf file.
    
   #### 3.2) If DBS winds are available, calculate them by using calculateHALOwinddbsProduct.m function:
 
@@ -73,7 +75,7 @@ The vector wind shear can be calculated with using either 1) vad or 2) dbs (depe
 1) 'windproduct' and 'typeof' are 'windvad' and 'eleNN', respectively with NN being the elevation angle in degrees (e.g. 'ele75' or 'ele09')
 2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. '3beams')
 
-The function calculates vector wind shear in temporal resolution(s) based on what is/are available in the vertical 
+The function calculates vector wind shear ()in temporal resolution(s) based on what is/are available in the vertical 
 velocity statistics product, and writes the results into a netcdf file.
 
 ### 5) Calculate vertical velocity statistics
@@ -95,8 +97,8 @@ The dissipation rate of turbulent kinetic energy (TKE) can be calculated with us
 2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. '3beams')
 
 The function calculates the dissipation rate of turbulent kinetic energy directly from vertical velocity variance 
-with temporal resolution the vertical velocity statistics product is provided, and writes the results into a netcdf 
-file.
+(O'Connor et al 2010) with temporal resolution the vertical velocity statistics product is provided, and writes the 
+results into a netcdf file.
 
 ### 7) calculateHALOcloudProduct
 
