@@ -98,7 +98,7 @@ resolutions. The statistics which are unbiased by random noise and sample size a
 Kleiner et al. (2014, doi:10.1111/rssb.12050).
 - unbiased mean, std. dev., variance, skewness, and kurtosis of radial velocity with their respective standard errors
 - unbiased mean and variance of attenuated backscatter coefficient with their respective standard errors 
-- unbiased mean and variance mean and variance of signal (SNR+1) with their respective standard errors 
+- unbiased mean and variance of signal (SNR+1) with their respective standard errors 
 - mean and variance of radial velocity and signal instrumental precision (Pearson et al., 2009)
 
 ### 6) calculateHALOverticalTKEproduct
