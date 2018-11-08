@@ -6,11 +6,7 @@ and campaign site, Jülich (Germany), Granada (Spain). However, please note that
 development phase and errors mights occur. Let me know if that happens. You are also more than welcome to suggest 
 changes or additions in to the toolbox! 
 
-Antti Manninen
-University of Helsinki, Finland
-
-
-8 November 2018,
+8 November 2018
 Antti J Manninen
 University of Helsinki, Finland
 antti.j.manninen(at)helsinki.fi
