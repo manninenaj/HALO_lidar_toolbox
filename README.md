@@ -67,8 +67,8 @@ coefficients with uncertainties are also re-calculated. Calibrated data are writ
 
   The function reads ppi files and calculates (u,v,w) wind components, wind speed, wind direction, respective errors 
   due to random instumental noise, and overall errors using VAD tehcnique with methods given by Päschke et al. (2015, 
-  doi:10.5194/amt-8-2251-2015) and Newsom et al. (2017, doi:10.5194/amt-10-1229-2017). The product is into a netcdf 
-  file.
+  doi:10.5194/amt-8-2251-2015) and Newsom et al. (2017, doi:10.5194/amt-10-1229-2017). The product is written into a 
+  netcdf file.
    
   #### 3.2) If DBS winds are available, calculate them by using calculateHALOwinddbsProduct.m function:
 
