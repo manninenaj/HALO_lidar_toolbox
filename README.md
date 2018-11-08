@@ -84,32 +84,41 @@ mode into their respective specified paths.
 calculateHALOwindShearProduct('site',[YYYMMDD YYYYMMDD],'windproduct','typeof')
 
 The vector wind shear can be calculated with using either 1) vad or 2) dbs (depending on what is available):
-1) 'windproduct' and 'typeof' are 'windvad' and 'eleNN', respectively with NN being the elevation angle in degrees (e.g. 'ele75' or 'ele09')
-2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. '3beams')
+1) 'windproduct' and 'typeof' are 'windvad' and 'eleNN', respectively with NN being the elevation angle in degrees 
+(e.g. 'ele75' or 'ele09')
+2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. 
+'3beams')
 
-The function calculates vector wind shear ()in temporal resolution(s) based on what is/are available in the vertical 
-velocity statistics product, and writes the results into a netcdf file.
+The function calculates vector wind shear (Manual on Low-Level Wind Shear, ICAO, 2005; https://www.skybrary.aero
+/bookshelf/books/2194.pdf) in temporal resolution(s) based on what is/are available in the vertical velocity 
+statistics product, and writes the results into a netcdf file.
 
 ### 5) Calculate vertical velocity statistics
 
 calculateHALOwStatsProduct('site',[YYYMMDD YYYYMMDD])
 
-By default, the function calculates the following quantitites from vertically pointing measurements at 3 and 60 min resolutions:
-- radial velocity mean, std. deviation, variance, skewness and kurtosis with respective standard errors
-- attenuated backscatter coefficient mean and variance with respective standard errors
-- signal (SNR+1) mean and variance with respective standard errors
-- instrumental precision mean and variance
+By default, the function calculates the following quantitites from vertically pointing measurements at 3 and 60 min 
+resolutions. The statistics which are unbiased by random noise and sample size are calculated as given by Rimoldini, 
+(2014, doi:10.1016/j.ascom.2014.02.001), and standard errors are estimated with a bootstrap method described by 
+Kleiner et al. (2014, doi:10.1111/rssb.12050).
+- unbiased mean, std. dev., variance, skewness, and kurtosis of radial velocity with their respective standard errors
+- unbiased mean and variance of attenuated backscatter coefficient with their respective standard errors 
+- unbiased mean and variance mean and variance of signal (SNR+1) with their respective standard errors 
+- mean and variance of radial velocity and signal instrumental precision (Pearson et al., 2009)
 
 ### 6) calculateHALOverticalTKEproduct
 
 calculateHALOverticalTKEproduct('site',[YYYMMDD YYYYMMDD],'windproduct','typeof')
 
-The dissipation rate of turbulent kinetic energy (TKE) can be calculated with using either 1) vad or 2) dbs wind product (depending on what is available):
-1) 'windproduct' and 'typeof' are 'windvad' and 'eleNN', respectively with NN being the elevation angle in degrees (e.g. 'ele75' or 'ele09')
-2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. '3beams')
+The dissipation rate of turbulent kinetic energy (TKE) can be calculated with using either 1) vad or 2) dbs wind 
+product (depending on what is available):
+1) 'windproduct' and 'typeof' are 'windvad' and 'eleNN', respectively, with NN being the elevation angle in degrees 
+(e.g. 'ele75' or 'ele09')
+2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. 
+'3beams')
 
 The function calculates the dissipation rate of turbulent kinetic energy directly from vertical velocity variance 
-(O'Connor et al 2010) with temporal resolution the vertical velocity statistics product is provided, and writes the 
+(O'Connor et al., 2010, doi:10.1175/2010JTECHA1455.1) with temporal resolution the vertical velocity statistics product is provided, and writes the 
 results into a netcdf file.
 
 ### 7) calculateHALOcloudProduct
@@ -124,12 +133,15 @@ resolution(s) based on what is/are available in the vertical velocity statistics
 calculateHALOatmBLclassificationProduct('site',[YYYMMDD YYYYMMDD])
 
 The function generates boundary layer classification product from calculated Doppler lidar quantities, and writes the 
-product into a netcdf file. See detailed description of the method in Manninen et al. (2018), doi: 
-10.1029/2017JD028169.
+product into a netcdf file. Plese refer to Manninen et al. (2018, doi:10.1029/2017JD028169) for a in-detail 
+description of the method and product.
 
 ### 9) calculateHALObetaVeloCovarianceProduct
 
 calculateHALObetaVeloCovarianceProduct('site',[YYYMMDD YYYYMMDD])
 
 The function calculates covariance between the attenuated backscatter coefficient and vertical velocity, which are 
-read from the vertical velocity statistics product by using a default window size of 90 min and 6 range bins, and outputs the covariance with standard errors and confidence interval into a netcdf file.
+read from the vertical velocity statistics product by using a default window size of 90 min and 6 range bins, and 
+outputs the covariance with standard errors and confidence interval into a netcdf file. The product is calculated with 
+the method described by Engelmann et al., (2008, doi:10.1175/2007JTECHA967.1). Standard errors for the products are 
+estimated with a bootstrap method described by Kleiner et al. (2014, doi:10.1111/rssb.12050).
