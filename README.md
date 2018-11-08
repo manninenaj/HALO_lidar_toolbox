@@ -142,7 +142,7 @@ description of the method and product.
 calculateHALObetaVeloCovarianceProduct('site',[YYYMMDD YYYYMMDD])
 
 The function calculates covariance between the attenuated backscatter coefficient and vertical velocity, which are 
-read from the vertical velocity statistics product by using a default window size of 90 min and 6 range bins, and 
-outputs the covariance with standard errors and confidence interval into a netcdf file. The product is calculated with 
-the method described by Engelmann et al., (2008, doi:10.1175/2007JTECHA967.1). Standard errors for the products are 
-estimated with a bootstrap method described by Kleiner et al. (2014, doi:10.1111/rssb.12050).
+read from the vertical velocity statistics product. A window of 90 min and 6 range bins is used to estimate the 
+covariance, standard errors, and confidence intervals. The function uses the method given by Engelmann et al., (2008, 
+doi:10.1175/2007JTECHA967.1). Standard errors and confidence intervals are estimated with a bootstrap method described 
+by Kleiner et al. (2014, doi:10.1111/rssb.12050). Product is written into a netcdf file.
