@@ -123,8 +123,8 @@ results into a netcdf file.
 
 calculateHALOcloudProduct('site',[YYYMMDD YYYYMMDD])
 
-The function calculates cloud base height, cloud base velocity, and provides cloud-precipitation mask in temporal
-resolution(s) based on what is/are available in the vertical velocity statistics product.
+The function calculates cloud base height, cloud base velocity, and provides cloud mask in temporal resolution(s) 
+based on what is/are available in the vertical velocity statistics product.
 
 ### 8) calculateHALOatmBLclassificationProduct
 
