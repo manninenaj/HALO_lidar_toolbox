@@ -1,12 +1,17 @@
 # HALO_lidar_toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
-This toolbox has been succesfully tested at several sites: Finnish Dopper lidar network site, ARM Dopper lidar network 
-and campaign site, Jülich (Germany), Granada (Spain). However, please note that the toolbox is still in its 
+This toolbox has been succesfully tested at several sites: Finnish Dopper lidar network sites, ARM Dopper lidar 
+network and campaign sites, Jülich (Germany), and Granada (Spain). However, please note that the toolbox is still in 
 development phase and errors mights occur. Let me know if that happens. You are also more than welcome to suggest 
 changes or additions in to the toolbox! 
 
-8 November 2018, Antti J Manninen, University of Helsinki, Finland, antti.j.manninen(at)helsinki.fi
+8 November 2018, 
+Antti J Manninen
+University of Helsinki
+Finland
+antti.j.manninen(at)helsinki.fi
+
 
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
