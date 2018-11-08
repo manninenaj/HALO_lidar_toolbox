@@ -1,8 +1,8 @@
 # HALO_lidar_toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
-This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM Dopper lidar 
-network and campaign sites, Jülich (Germany), and Granada (Spain). However, please note that the toolbox is still in 
+This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM sites where Doppler 
+lidar was deployed, Jülich (Germany), and Granada (Spain). However, please note that the toolbox is still in 
 development phase and errors mights occur. Let me know if that happens. You are also more than welcome to suggest 
 changes or additions in to the toolbox! 
 
