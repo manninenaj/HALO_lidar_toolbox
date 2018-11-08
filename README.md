@@ -52,7 +52,7 @@ calibrateHALO('site',[YYYMMDD YYYYMMDD])
 The function reads all of the data, which is available for the site and date as specified in the halo_config.txt
 file. It then corrects the background artefacts (if present) in the signal with a method described by Manninen et al., 
 (2016, doi:10.5194/amt-9-817-2016) and if *background*.txt files are available, the functions does a ripple removal as 
-described by Vakkari et al. (2018, 10.5194/amt-2018-323), and finally corrects focus (currently at specified sites 
+described by Vakkari et al. (2018, doi:10.5194/amt-2018-323), and finally corrects focus (currently at specified sites 
 only). The instrumental precision of radial velocities are (re-)estimated with the method given by Rye and Hardesty 
 (1997, doi:10.1364/AO.36.009425), and Pearson et al. (2009, doi:10.1175/2008JTECHA1128.1), and attenuated backscatter 
 coefficients with uncertainties are also re-calculated. Calibrated data are written into a netcdf file per day and per measurement mode into their respective specified paths.
