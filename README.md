@@ -1,4 +1,4 @@
-# HALO_lidar_toolbox
+# HALO lidar toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
 This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM sites where Doppler 
