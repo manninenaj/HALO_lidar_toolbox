@@ -95,10 +95,10 @@ a netcdf file.
 
 calculateHALOwStatsProduct('site',[YYYMMDD YYYYMMDD])
 
-By default, the function calculates the following quantitites from vertically pointing measurements at 3 and 60 min 
-resolutions. The statistics which are unbiased by random noise and sample size are calculated as given by Rimoldini, 
-(2014, doi:10.1016/j.ascom.2014.02.001), and standard errors are estimated with a bootstrap method described by 
-Kleiner et al. (2014, doi:10.1111/rssb.12050).
+By default, the function calculates the following quantitites from vertically pointing measurements at 3, 30, and 60 
+min resolutions. The statistics which are unbiased by random noise and sample size are calculated as given by 
+Rimoldini, (2014, doi:10.1016/j.ascom.2014.02.001), and standard errors are estimated with a bootstrap method 
+described by Kleiner et al. (2014, doi:10.1111/rssb.12050).
 - unbiased mean, std. dev., variance, skewness, and kurtosis of radial velocity with their respective standard errors
 - unbiased mean and variance of attenuated backscatter coefficient with their respective standard errors 
 - unbiased mean and variance of signal (SNR+1) with their respective standard errors 
