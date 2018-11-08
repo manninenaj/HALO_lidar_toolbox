@@ -55,7 +55,8 @@ file. It then corrects the background artefacts (if present) in the signal with 
 described by Vakkari et al. (2018, doi:10.5194/amt-2018-323), and finally corrects focus (currently at specified sites 
 only). The instrumental precision of radial velocities are (re-)estimated with the method given by Rye and Hardesty 
 (1997, doi:10.1364/AO.36.009425), and Pearson et al. (2009, doi:10.1175/2008JTECHA1128.1), and attenuated backscatter 
-coefficients with uncertainties are also re-calculated. Calibrated data are written into a netcdf file per day and per measurement mode into their respective specified paths.
+coefficients with uncertainties are also re-calculated. Calibrated data are written into a netcdf file per day and per 
+measurement mode into their respective specified paths.
 
 ### 3) Calculate winds with uncertainties
 
@@ -118,8 +119,8 @@ product (depending on what is available):
 '3beams')
 
 The function calculates the dissipation rate of turbulent kinetic energy directly from vertical velocity variance 
-(O'Connor et al., 2010, doi:10.1175/2010JTECHA1455.1) with temporal resolution the vertical velocity statistics product is provided, and writes the 
-results into a netcdf file.
+(O'Connor et al., 2010, doi:10.1175/2010JTECHA1455.1) with temporal resolution the vertical velocity statistics 
+product is provided, and writes the results into a netcdf file.
 
 ### 7) calculateHALOcloudProduct
 
