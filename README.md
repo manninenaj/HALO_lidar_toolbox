@@ -6,10 +6,7 @@ and campaign site, Jülich (Germany), Granada (Spain). However, please note that
 development phase and errors mights occur. Let me know if that happens. You are also more than welcome to suggest 
 changes or additions in to the toolbox! 
 
-8 November 2018
-Antti J Manninen
-University of Helsinki, Finland
-antti.j.manninen(at)helsinki.fi
+8 November 2018, Antti J Manninen, University of Helsinki, Finland, antti.j.manninen(at)helsinki.fi
 
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
@@ -53,7 +50,7 @@ The function reads all of the data, which is available for the site and date as 
 file. It then corrects the background artefacts (if present) in the signal with a method described by Manninen et al., 
 (2016, doi:10.5194/amt-9-817-2016) and if *background*.txt files are available, the functions does a ripple removal as 
 described by Vakkari et al. (2018, 10.5194/amt-2018-323), and finally corrects focus (currently at specified sites 
-only). Calibrated data are writtend into a netcdf file per day and per measurement mode into their respective 
+only). Calibrated data are written into a netcdf file per day and per measurement mode into their respective 
 specified paths.
 
 ### 3) Calculate winds with uncertainties
