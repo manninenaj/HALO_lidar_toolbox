@@ -54,9 +54,11 @@ focus_stare_co = 1500
 calibrateHALO('site',[YYYMMDD YYYYMMDD])
 
 The function reads all of the data, which is available for the site and date as specified in the halo_config.txt
-file. It then corrects the background (with ripple correction if *background*.txt files are available),
-corrects focus (currently at specified sites only), and writes a netcdf file per day and per measurement
-mode into their respective specified paths.
+file. It then corrects the background artefacts (if present) in the signal with a method described by Manninen et al., 
+(2016, doi:10.5194/amt-9-817-2016) and if *background*.txt files are available, the functions does a ripple removal as 
+described by Vakkari et al. (2018, 10.5194/amt-2018-323), and finally corrects focus (currently at specified sites 
+only). Calibrated data are writtend into a netcdf file per day and per measurement mode into their respective 
+specified paths.
 
 ### 3) Calculate winds with uncertainties
 
@@ -89,9 +91,9 @@ The vector wind shear can be calculated with using either 1) vad or 2) dbs (depe
 2) 'windproduct' and 'typeof' are 'windbs' and 'Nbeams', respectively with N specifying the number of dbs beams (e.g. 
 '3beams')
 
-The function calculates vector wind shear (Manual on Low-Level Wind Shear, ICAO, 2005; https://www.skybrary.aero
-/bookshelf/books/2194.pdf) in temporal resolution(s) based on what is/are available in the vertical velocity 
-statistics product, and writes the results into a netcdf file.
+The function calculates vector wind shear (ICAO, 2005; https://www.skybrary.aero/bookshelf/books/2194.pdf) in temporal 
+resolution(s) based on what is/are available in the vertical velocity statistics product, and writes the results into 
+a netcdf file.
 
 ### 5) Calculate vertical velocity statistics
 
