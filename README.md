@@ -1,7 +1,19 @@
 # HALO_lidar_toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
-Please note that this toolbox is still in its development phase and errors mights pop up. You are more than welcome to suggest changes or additions in to the toolbox! 
+This toolbox has been succesfully tested at several sites: Finnish Dopper lidar network site, ARM Dopper lidar network 
+and campaign site, Jülich (Germany), Granada (Spain). However, please note that the toolbox is still in its 
+development phase and errors mights occur. Let me know if that happens. You are also more than welcome to suggest 
+changes or additions in to the toolbox! 
+
+Antti Manninen
+University of Helsinki, Finland
+
+
+8 November 2018,
+Antti J Manninen
+University of Helsinki, Finland
+antti.j.manninen(at)helsinki.fi
 
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
@@ -121,7 +133,3 @@ calculateHALObetaVeloCovarianceProduct('site',[YYYMMDD YYYYMMDD])
 
 The function calculates covariance between the attenuated backscatter coefficient and vertical velocity, which are 
 read from the vertical velocity statistics product by using a default window size of 90 min and 6 range bins, and outputs the covariance with standard errors and confidence interval into a netcdf file.
-
-___
-28 October 2018,
-Antti J Manninen
