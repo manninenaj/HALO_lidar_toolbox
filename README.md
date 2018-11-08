@@ -6,12 +6,10 @@ network and campaign sites, Jülich (Germany), and Granada (Spain). However, ple
 development phase and errors mights occur. Let me know if that happens. You are also more than welcome to suggest 
 changes or additions in to the toolbox! 
 
-8 November 2018, 
-Antti J Manninen
-University of Helsinki
-Finland
-antti.j.manninen(at)helsinki.fi
-
+8 November 2018  
+Antti J Manninen  
+University of Helsinki, Finland  
+antti.j.manninen(at)helsinki.fi  
 
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
