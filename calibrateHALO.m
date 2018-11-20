@@ -116,7 +116,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
         %% Ripple removal & background correction
         snr_corr_1 = correctHALOripples(site,DATE,snr,time_hrs);
         snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
-            'correct_remnant','correct','ignore',60,'cloud_mask',logical(atm_mask));
+            'correct_remnant','correct','ignore',80,'cloud_mask',logical(atm_mask));
         
         %% Reorganize into original form and write out
         for i_out = 1:size(fnames,1)

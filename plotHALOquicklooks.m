@@ -479,7 +479,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp6 = subplot(326);
                     pcolor(data.time,data.height/1000,snr'); axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([.995 1.015]); colormap(sp6,cmap_darkviolet_to_brickred); text(0,4.45,'Mean signal')
+                    caxis([.995 1.015]); colormap(sp6,chilljet); text(0,4.45,'Mean signal')
                     cb = colorbar; cb.Label.String = 'SNR+1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = .995:.005:1.015;

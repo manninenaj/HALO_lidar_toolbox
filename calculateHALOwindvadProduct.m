@@ -91,7 +91,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
     for i = 1:length(halo_vad_files)
         % Load
-        [tmp,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' halo_vad_files{i}]));
+        [tmp,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' ...
+            halo_vad_files{i}]),{'time','range','azimuth','elevation',...
+            'v_raw','signal','beta_error'});
         
         % Wind retrieval
         Din.time      = tmp.time;
@@ -138,7 +140,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         % Collect other variables and parameters
         elevation_angle{i} = nanmedian(Din.elevation(:));
         time{i} = nanmedian(Din.time(:));
-        mean_snr{i} = weightedMean(Din.snr,Din.snr_e);
+        if length(weightedMean(Din.snr,Din.snr_e,'unweighted'))==1
+            mean_snr{i} = nan(1,length(Din.velocity));
+        else
+            mean_snr{i} = weightedMean(Din.snr,Din.snr_e,'unweighted');
+        end
     end
     
     % Calculate height above ground level (m)
@@ -146,9 +152,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
     %%--- Create variables ---%%
     data.time = transpose(cell2mat(time)); % hrs
-    data.latitude = tmp.latitude; % deg
-    data.longitude = tmp.longitude; % deg
-    data.altitude = tmp.altitude;
+    data.latitude = C.latitude; % deg
+    data.longitude = C.longitude; % deg
+    data.altitude = C.altitude_in_meters;
     data.elevation = transpose(cell2mat(elevation_angle)); % deg
     data.mean_snr = cell2mat(transpose(mean_snr));
     data.height = height(:); % m

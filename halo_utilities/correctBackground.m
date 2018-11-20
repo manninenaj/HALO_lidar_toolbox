@@ -352,7 +352,7 @@ else
             y_fit_prof_2deg = polyval(p_2deg_prof, range);
 
             % If 1st degree polynomial fit is better
-            if stats_1deg.ols_s/stats_2deg.ols_s < 1.1 || ...
+            if stats_1deg.ols_s/stats_2deg.ols_s < 1.2 || ...
                     flag_fit_step == 1
                 
                 % Correct for step change and background shape

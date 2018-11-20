@@ -47,7 +47,7 @@ if nargin < 3
     % Temporal resolutions, min/60 = hrs
     dt = 3; %dt = dt./60;
     dtskewn = 30; %dtskewn = dtskewn./60;
-    weighting = true;
+    weighting = false;
 end
 if nargin < 4
     % Temporal resolutions, min/60 = hrs
@@ -56,7 +56,7 @@ if nargin < 4
         error(['The 3rd input must a numerical scalar or vector'...
             ' specifying the temporal resolution in full minutes.'])
     end
-    weighting = true;
+    weighting = false;
 elseif nargin == 4
     if ~isnumeric(dt) || int16(dt)~=(dt)
         error(['The 3rd input must a numerical scalar or vector'...
@@ -66,7 +66,7 @@ elseif nargin == 4
         error(['The 4th input must a numerical scalar or vector'...
             ' specifying the temporal resolution for skewness in full minutes.'])
     end
-    weighting = true;
+    weighting = false;
 end
 if nargin == 5
     if not(islogical(weighting))
