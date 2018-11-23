@@ -106,7 +106,7 @@ switch processlev
     case 'original'
         filenamingfield = C.(['file_naming_original_' measmode '_' typeof]);
         fileformatfield = C.file_format_after_hpl2netcdf;
-        fileformatfield = [filenamingfield '*' C.file_format_after_hpl2netcdf];
+        fileformatfield = [filenamingfield '*' fileformatfield];
 
     case 'background'
         fileformatfield = '.txt';       
