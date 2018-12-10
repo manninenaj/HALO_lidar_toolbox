@@ -108,7 +108,7 @@ switch processlev
   file_format = C.file_format_after_hpl2netcdf;
   switch findstr(site,'arm-')
    case 1 % ARM site
-    file_names_2look4 = ['*' file_naming '*' thedate '*' file_format]
+    file_names_2look4 = ['*' file_naming '*' thedate '*' file_format];
    case 0 % non-ARM site
     file_names_2look4 = ['*' thedate '*' file_naming  '*' file_format];
    end
@@ -131,7 +131,7 @@ dir_to_folder = strrep(dir_to_folder,'+YYYY+',thedate(1:4));
 dir_to_folder = strrep(dir_to_folder,'+MM+',thedate(5:6));
 dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
 
-direc = dir([dir_to_folder,file_names_2look4])
+direc = dir([dir_to_folder,file_names_2look4]);
 if isempty(direc)
   file_list = [];
   if nargin < 5 && nargout == 1
