@@ -130,7 +130,12 @@ switch processlev
  case 'background'
   file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' fileformatfield];
  otherwise
-  file_names_2look4 = ['*' thedate '*' fileformatfield];
+  switch findstr(site,'arm-')
+   case 1 % ARM site
+    file_names_2look4 = ['*' fileformatfield '*' thedate];
+   case 0 % non-ARM site
+    file_names_2look4 = ['*' thedate '*' fileformatfield];
+  end
 end
 
 direc = dir([dir_to_folder,file_names_2look4]);
