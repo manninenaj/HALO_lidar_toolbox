@@ -103,17 +103,23 @@ end
 
 % Generate path
 switch processlev
-    case 'original'
-        filenamingfield = C.(['file_naming_original_' measmode '_' typeof]);
-        fileformatfield = C.file_format_after_hpl2netcdf;
-        fileformatfield = [filenamingfield '*' fileformatfield];
-
-    case 'background'
-        fileformatfield = '.txt';       
-    otherwise
-        % blindly assume that there are no other type of files
-        % with the same naming in the same directory --> default cloudnet 
-        fileformatfield = '.nc';
+ case 'original'
+  file_naming = C.(['file_naming_original_' measmode '_' typeof]);
+  file_format = C.file_format_after_hpl2netcdf;
+  switch findstr(site,'arm-')
+   case 1 % ARM site
+    file_names_2look4 = ['*' file_naming '*' thedate '*' file_format]
+   case 0 % non-ARM site
+    file_names_2look4 = ['*' thedate '*' file_naming  '*' file_format];
+   end
+ case 'background'
+  file_format = '.txt';
+  file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' file_format];
+ otherwise
+  % blindly assume that there are no other type of files
+  % with the same naming in the same directory (default in cloudnet) 
+  file_format = '.nc';
+  file_names_2look4 = ['*' thedate '*' file_format];
 end
 
 % Get directory to the folder
@@ -128,17 +134,17 @@ dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
 % Handle background files, which have different naming scheme
 switch processlev
  case 'background'
-  file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' fileformatfield];
+  file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' file_format];
  otherwise
   switch findstr(site,'arm-')
    case 1 % ARM site
-    file_names_2look4 = ['*' fileformatfield '*' thedate];
+    file_names_2look4 = ['*' file_format '*' thedate]
    case 0 % non-ARM site
-    file_names_2look4 = ['*' thedate '*' fileformatfield];
+    file_names_2look4 = ['*' thedate '*' file_format];
   end
 end
 
-direc = dir([dir_to_folder,file_names_2look4]);
+direc = dir([dir_to_folder,file_names_2look4])
 if isempty(direc)
   file_list = [];
   if nargin < 5 && nargout == 1
@@ -171,7 +177,7 @@ else
             else
                 %Look for specific files based on the naming
                 i_file = ~cellfun('isempty',strfind(file_list,...
-                    filenamingfield));
+                    file_naming));
                 file_list = file_list(i_file);
                 file_list = sort(file_list);
             end
@@ -196,7 +202,7 @@ else
             else
                 %Look for specific files based on the naming
                 i_file = ~cellfun('isempty',strfind(file_list,...
-                    filenamingfield));
+                    file_naming));
                 file_list = file_list(i_file);
                 file_list = sort(file_list);
             end
