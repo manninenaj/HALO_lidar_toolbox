@@ -175,11 +175,16 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         fnames_wvar = fnames(ifs_w);
         ifs_wfalse = strmatch('radial_velocity_weighted_variance_error',fnames_wvar);
         fnames_wvar(ifs_wfalse) = [];
-        
-        ifs_e_wmean = strmatch('radial_velocity_instrumental_error_weighted_mean', fnames);
-        fnames_wmean_e = fnames(ifs_e_wmean);
-    
-        ifs_e_wvar = strmatch('radial_velocity_instrumental_error_weighted_variance', fnames);
+
+        switch isempty(strmatch('radial_velocity_instrumental_error_weighted_mean', fnames))
+            case 0
+                ifs_e_wmean = strmatch('radial_velocity_instrumental_error_weighted_mean', fnames);
+                ifs_e_wvar = strmatch('radial_velocity_instrumental_error_weighted_variance', fnames);
+            case 1
+                ifs_e_wmean = strmatch('radial_velocity_instrumental_precision_weighted_mean', fnames);
+                ifs_e_wvar = strmatch('radial_velocity_instrumental_precision_weighted_variance', fnames);
+        end
+        fnames_wmean_e = fnames(ifs_e_wmean);    
         fnames_wvar_e = fnames(ifs_e_wvar);
     end
     
@@ -200,8 +205,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             wstats.(fnames_var_e{ii});
         
         if weighting
-            % true weighted variance = variance unbiased by random noise or
-            % sample size and weighted with measurement errors
+            % true weighted variance = weighted variance - noise weighted variance
             if isfield(wstats,'radial_velocity_weighted_mean_3min')
                 true_wvariance = wstats.(fnames_wvar{ii})-wstats.(fnames_wvar_e{ii});
             else

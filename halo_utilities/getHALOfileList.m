@@ -106,7 +106,7 @@ switch processlev
  case 'original'
   file_naming = C.(['file_naming_original_' measmode '_' typeof]);
   file_format = C.file_format_after_hpl2netcdf;
-  switch findstr(site,'arm-')
+  switch ~isempty(findstr(site,'arm-'))
    case 1 % ARM site
     file_names_2look4 = ['*' file_naming '*' thedate '*' file_format];
    case 0 % non-ARM site

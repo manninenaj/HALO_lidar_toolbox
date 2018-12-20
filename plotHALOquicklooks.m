@@ -125,9 +125,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             imagesc(data.time,data.range/1000,real(log10(data.beta_raw))'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 4.2 11 2.2],'Color',[.75 .75 .75]);
-                            caxis([-7 -4]); colormap(sp3,chilljet);
+                            caxis([-7.1 -4]); colormap(sp3,chilljet);
                             cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,12,'beta');
-                            cb.Ticks = -7:-4; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+                            cb.Ticks = -8:-3; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                                 num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
@@ -184,8 +184,15 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     snr_mean = data.signal_mean_3min;
                     velo_mean = data.radial_velocity_mean_3min;
                     velo_var = data.radial_velocity_variance_3min;
-                    velo_skewn = data.radial_velocity_skewness_60min;
-                    velo_kurto = data.radial_velocity_kurtosis_60min;
+                    if isfield(data,'radial_velocity_skewness_60min')
+                     velo_skewn = data.radial_velocity_skewness_60min;
+                     velo_kurto = data.radial_velocity_kurtosis_60min;
+                     wstats_time = data.time_60min;
+                    else
+                     velo_skewn = data.radial_velocity_skewness_30min;
+                     velo_kurto = data.radial_velocity_kurtosis_30min;
+                     wstats_time = data.time_30min;
+                    end
                     %% Create a cleaning filter based what field are available
                     %fnames = fieldnames(data);
                     %switch ~isempty(strmatch('signal_instrumental_precision_variance_',fnames))
@@ -250,7 +257,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)')
                     set(gca,'Color',[.5 .5 .5])
                     sp5 = subplot(325);
-                    pcolor(data.time_60min,data.height/1000,velo_skewn'); axis([0 24 0 3]); shading flat
+                    pcolor(wstats_time,data.height/1000,velo_skewn'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2]);
                     caxis([-2 2]); colormap(sp5,cmocean('balance')); text(0,3.35,'velocity skewness')
                     cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
@@ -258,7 +265,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)'); xlabel('Time UTC'); cb.Ticks = -2:1:2;
                     set(gca,'Color',[.5 .5 .5])
                     sp6 = subplot(326);
-                    pcolor(data.time_60min,data.height/1000,velo_kurto'); axis([0 24 0 3]); shading flat
+                    pcolor(wstats_time,data.height/1000,velo_kurto'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2]);
                     caxis([-4 6]); colormap(sp6,chilljet); text(0,3.35,'velocity kurtosis')
                     cb = colorbar; cb.Label.String = '-'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
