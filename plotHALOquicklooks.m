@@ -291,12 +291,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     epsilon_error = data.epsilon_error_3min;
                     L = data.L_3min;
                     L1 = data.L1_3min;
-                    velovar_error = wstats.radial_velocity_variance_error_3min;
-                    velo_var = wstats.radial_velocity_variance_3min;
+                    velovar_error = wstats.radial_velocity_simple_variance_error_3min;
+                    velo_var = wstats.radial_velocity_simple_variance_3min - wstats.radial_velocity_instrumental_precision_variance_3min;
+		    velo_var(velo_var<0)=nan;
                     
-                    cond = 10*real(log10(wstats.signal_mean_3min-1))<-20 | ...
-                        isnan(wstats.signal_mean_3min) | ...
-                        data.radial_velocity_mean_error_60min > .33;
+                    cond = [];
+			%10*real(log10(wstats.signal_mean_3min-1))<-32 | ...
+                        %isnan(wstats.signal_mean_3min);% | ...
+%                        wstats.radial_velocity_mean_error_3min > .33;
                     epsilon(cond) = nan;
                     epsilon_error(cond) = nan;
                     L(cond) = nan;

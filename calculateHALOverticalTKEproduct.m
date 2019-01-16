@@ -151,9 +151,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         
     % Get field names and extract the variables of interest
     fnames = fieldnames(wstats);
-    ifs = strmatch('radial_velocity_variance', fnames);
+    ifs = strmatch('radial_velocity_simple_variance', fnames);
     fnames_var = fnames(ifs);
-    ifs_false = strmatch('radial_velocity_variance_error',fnames_var);
+    ifs_false = strmatch('radial_velocity_simple_variance_error',fnames_var);
     fnames_var(ifs_false) = [];
         
     switch isempty(strmatch('radial_velocity_instrumental_error_mean', fnames))
