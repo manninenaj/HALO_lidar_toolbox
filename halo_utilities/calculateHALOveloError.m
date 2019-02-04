@@ -1,11 +1,18 @@
 function [v_error, v_error_att] = calculateHALOveloError(site,DATE,measmode,typeof,signal)
 %calculateHALOveloError calculates the standard deviation of an individual 
 % velocity estimate.
-% 
+%
+% Usage:
+%  v_error = calculateHALOveloError(site,DATE,measmode,typeof,signal)
+%  [v_error, v_error_att] = calculateHALOveloError(site,DATE,measmode,typeof,signal)
+%
 % Inputs:
 % - site            string, name of the site, e.g. 'kuopio'
 % - DATE            scalar, numerical date, e.g. 20171231
-% - snr             matrix, signal-to-noise ratio, no. of rows must match 
+% - measmode        string, 'stare','vad','rhi','co','custom','windvad','winddbs','txt','wstats',
+%                   'TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'
+% - typeof          string, 'co', 'eleXX', 'aziXXX'
+% - signal          matrix, signal-to-noise ratio, no. of rows must match 
 %                   the length of time
 %
 % Ouputs:

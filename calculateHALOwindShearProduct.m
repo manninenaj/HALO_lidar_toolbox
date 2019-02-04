@@ -45,8 +45,8 @@ if strcmp(windproduct,'windvad')
         error('For vad winds, the 4th input must be a string and no longer than 2 characters specifying the elevation angle 0-90 degrees.')
     end
 elseif strcmp(windproduct,'winddbs')
-    if not(any(strcmp(typeof,{'3beams','4beams','5beams'})))
-        error('For dbs winds, the 4th input must be a string and be in the form: ''3beams'', ''4beams'', or ''5beams''.')
+    if not(any(strcmp(typeof,{'3','4','5'})))
+        error('For dbs winds, the 4th input must be a string and be in the form: ''3'', ''4'', or ''5''.')
     end
 end
 if nargin < 5
@@ -80,8 +80,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Get default and site/unit/period specific parameters
     C = getconfig(site,DATE);
     
-    if strcmp(windproduct,'windvad')
-        typeof1 = ['ele' typeof];
+    switch windproduct
+	case 'windvad'
+	    typeof1 = ['ele' typeof];
+	case 'winddbs'
+            typeof1 = [typeof 'beams']
     end
     [dir_wind_in, wind_files_tday] = getHALOfileList(site,DATE,'product',windproduct,typeof1);
     if isempty(wind_files_tday)
