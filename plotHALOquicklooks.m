@@ -157,7 +157,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             X_out1 = [];
                             
                             sp6 = subplot(326);
-                            pcolor(data.time,data.range/1000,data.v_error'); axis([0 24 0 11]); shading flat;
+                            imagesc(data.time,data.range/1000,data.v_error'); axis([0 24 0 11]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 .5]); colormap(sp6,chilljet);
