@@ -6,7 +6,7 @@ if ~strcmp(site,'juelich')
 else
     P_bkg_res = cell(1,1);
     i = 1;
-    for daten = datenum(YEAR,01,01):datenum(YEAR,02,31)
+    for daten = datenum(YEAR,01,01):datenum(YEAR,12,31)
         thedate = datestr(daten,'yyyymmdd');
         DATE = str2num(thedate);
         C = getconfig(site,DATE);

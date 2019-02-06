@@ -124,7 +124,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
             abc = [fnames{i_out,1} '_' fnames{i_out,2}];
             
             % Check path to write to exists
-            status = checkHALOpath(site,DATE,'calibrated',fnames{i_out,1},fnames{i_out,2});    P_amp = P_amp.P_amp;
+            status = checkHALOpath(site,DATE,'calibrated',fnames{i_out,1},fnames{i_out,2});
 
             if ~status, continue; end
             
