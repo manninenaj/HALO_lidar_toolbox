@@ -12,9 +12,8 @@ daten = datenum(num2str(DATE),'yyyymmdd');
 
 thedate = num2str(DATE);
 path_to_P_amp = [C.dir_housekeeping thedate(1:4) '_amp_ave_resp.mat'];
-if exist(path_to_P_amp,'file')==2
+if ~exist(path_to_P_amp,'file')
     P_amp = load(path_to_P_amp);
-    P_amp = P_amp.P_amp;
     P_amp_exists = true;
 else
     P_amp_exists = false;
@@ -49,7 +48,7 @@ if ~isempty(files_bkg)
         end
         %         P_snr = P_bkg(istep,:) - P_fit(istep,:);
         if P_amp_exists
-            P_noise = P_fit + repmat(transpose(P_amp),size(P_fit,1),1);
+            P_noise = P_fit + P_amp;
         else
             P_noise = P_fit;
         end
