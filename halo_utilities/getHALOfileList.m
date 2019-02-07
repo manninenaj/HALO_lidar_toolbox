@@ -104,6 +104,13 @@ end
 % Get directory to the folder
 dir_to_folder = C.(cpmt);
 
+% Replace/expand dates subdirectories as required
+% find year, month, day wildcards
+dir_to_folder = strrep(dir_to_folder,'+YYYY+',thedate(1:4));
+dir_to_folder = strrep(dir_to_folder,'+MM+',thedate(5:6));
+dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
+
+
 % Generate path
 switch processlev
  case 'original'
@@ -114,7 +121,7 @@ switch processlev
      %     file_names_2look4 = ['*' file_naming '*' thedate '*' file_format];
      %    case 0 % non-ARM site
      file_names_2look4 = ['*' thedate '*' file_naming  '*' file_format];
-     % Check if empty , try other pattern
+     % Check if empty , try other pattern     
      if isempty(dir([dir_to_folder,file_names_2look4]))
          file_names_2look4 = ['*' file_naming '*' thedate '*' file_format];
      end
@@ -130,11 +137,6 @@ switch processlev
 end
 
 
-% Replace/expand dates subdirectories as required
-% find year, month, day wildcards
-dir_to_folder = strrep(dir_to_folder,'+YYYY+',thedate(1:4));
-dir_to_folder = strrep(dir_to_folder,'+MM+',thedate(5:6));
-dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
 
 direc = dir([dir_to_folder,file_names_2look4]);
 if isempty(direc)

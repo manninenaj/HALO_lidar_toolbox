@@ -1,7 +1,7 @@
 function estimateHALOaverageAmplifierResponse(site,YEAR)
 % Still under development...
 
-if ~strcmp(site,'juelich')
+if ~any(strcmp(site,{'juelich','hyytiala'})) 
     return
 else
     P_bkg_res = cell(1,1);
