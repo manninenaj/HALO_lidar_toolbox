@@ -84,7 +84,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 	case 'windvad'
 	    typeof1 = ['ele' typeof];
 	case 'winddbs'
-            typeof1 = [typeof 'beams']
+            typeof1 = [typeof 'beams'];
     end
     [dir_wind_in, wind_files_tday] = getHALOfileList(site,DATE,'product',windproduct,typeof1);
     if isempty(wind_files_tday)
@@ -110,16 +110,16 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
 
     % Load, assume only one *.nc file per day, load only the needed fields
-    wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]),{'time','height','u','v'});   
+    wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]),{'time','height','u','v','u_error','v_error'});   
     if ~isempty(wind_files_yday)
-        wind_yday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]),{'time','height','u','v'});
+        wind_yday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]),{'time','height','u','v','u_error','v_error'});
     else
         % empty otherwise
         wind_yday = [];
     end
     if ~isempty(wind_files_tmrw)
         % load if exists
-        wind_tmrw = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tmrw{1}]),{'time','height','u','v'});
+        wind_tmrw = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tmrw{1}]),{'time','height','u','v','u_error','v_error'});
     else 
         % empty otherwise
         wind_tmrw = [];
@@ -143,35 +143,62 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                 [wind_yday.u; ...
                 wind_tday.u; ...
                 wind_tmrw.u],Xr,Yr);
+            if strcmp(windproduct,'windvad')
+
+            u_error = interp2(Xo,Yo, ...
+                [wind_yday.u_error; ...
+                wind_tday.u_error; ...
+                wind_tmrw.u_error],Xr,Yr);
+            end            
             v = interp2(Xo,Yo, ...
                 [wind_yday.v; ...
                 wind_tday.v; ...
                 wind_tmrw.v],Xr,Yr);
+            
+            if strcmp(windproduct,'windvad')
+            v_error = interp2(Xo,Yo, ...
+                [wind_yday.v_error; ...
+                wind_tday.v_error; ...
+                wind_tmrw.v_error],Xr,Yr);
+            end
         else
             [Xo,Yo] = meshgrid(wind_tday.height,wind_tday.time);
             u = interp2(Xo,Yo,wind_tday.u,Xr,Yr);
             v = interp2(Xo,Yo,wind_tday.v,Xr,Yr);
+            if strcmp(windproduct,'windvad')
+            u_error = interp2(Xo,Yo,wind_tday.u_error,Xr,Yr);
+            v_error = interp2(Xo,Yo,wind_tday.v_error,Xr,Yr);
+            end
         end
         
         % Calculate wind shear
         win_size = 5; % calculate over about 100 meter range
         shear_vec = nan(size(u));
+        shear_vec_e = nan(size(u));
         for ir = 1:length(atime)
             for ic = floor(win_size/2)+1:length(wind_tday.height)-floor(win_size/2)
                 du = u(ir,ic+floor(win_size/2))-...
                     u(ir,ic-floor(win_size/2));
                 dv = v(ir,ic+floor(win_size/2))-...
                     v(ir,ic-floor(win_size/2));
+
                 dz = wind_tday.height(ic + floor(win_size/2))-...
                     wind_tday.height(ic - floor(win_size/2));
                 shear_vec(ir,ic) = sqrt((du).^2 + (dv).^2) ./ dz;
+
+                if strcmp(windproduct,'windvad')
+                % Error propagation, u_error and v_error are dependent
+                shear_vec_e(ir,ic) = sqrt(u_error(ir,ic).^2 +  v_error(ir,ic).^2) ./ dz;
+                end
             end
         end
         % time reso in string
         tres = num2str(dt(kk)*60);
         data.(['time_' tres 'min']) = atime(:);
         data.(['vector_wind_shear_' tres 'min']) = shear_vec;
-        
+        if strcmp(windproduct,'windvad')
+        data.(['vector_wind_shear_error_' tres 'min']) = shear_vec_e;
+        end        
         % time
         att.(['time_' tres 'min']) = create_attributes(...
             {['time_' tres 'min']},...
@@ -188,7 +215,16 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             C.missing_value,...
             'Calculated over five range gates which in vertically pointing mode translate to about 100 m.',...
             {[0 0.06], 'linear'});
-
+        if strcmp(windproduct,'windvad')
+        % vector_wind_shear error
+        att.(['vector_wind_shear_error_' tres 'min']) = create_attributes(...
+            {['time_' tres 'min'],'height'},...
+            'Vector_wind_shear error',...
+            {'s-1',''},...
+            C.missing_value,...
+            'Propagated from u_error and v_error.',...
+            {[0 0.01], 'linear'});
+        end
         % Create dimensions
         dim.(['time_' tres 'min']) = length(data.(['time_' tres 'min']));
         

@@ -364,22 +364,34 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
                     close(hf)
                 case 'windshear'
-                    [dirsnr,filessnr] = getHALOfileList(site,DATE,'product' ,'wstats');
-                    wstats = load_nc_struct(fullfile([dirsnr filessnr{1}]),{'signal_mean_3min'});
-                    
+                    [dirto,files] = getHALOfileList(site,DATE,'product','windshear');
+                    data = load_nc_struct(fullfile([dirto files{1}]));
+%                     
                     windhsear = data.vector_wind_shear_3min;
-                    windhsear(10*real(log10(wstats.signal_mean_3min-1))<-23|isnan(wstats.signal_mean_3min))=nan;
+                    windhsear_e = data.vector_wind_shear_error_3min;
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
                     sp1 = subplot(321);
-                    pcolor(data.time_3min,data.height/1000,real(log10(windhsear))'); axis([0 24 0 3]); shading flat
+                    pcolor(data.time_3min,data.height/1000,((windhsear))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
-                    caxis([-3 -1]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,3.35,'vector wind shear');
+                    caxis([0 0.06]); colormap(sp1,cmocean('thermal')); text(0,3.35,'vector wind shear');
                     cb = colorbar; cb.Label.String = 's-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Ticks = -3:0; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
-                        num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
+                    cb.Ticks = 0:0.01:0.06; 
+%                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+%                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    
+                    sp1 = subplot(322);
+                    pcolor(data.time_3min,data.height/1000,((windhsear_e))'); axis([0 24 0 3]); shading flat
+                    set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2]);
+                    caxis([0 0.01]); colormap(sp1,cmocean('thermal')); text(0,3.35,'vector wind shear error');
+                    cb = colorbar; cb.Label.String = 's-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
+                    cb.Ticks = 0:0.01:0.06;
+                    %                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+                    %                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
+                    cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+
                     
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
