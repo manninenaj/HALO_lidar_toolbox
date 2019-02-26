@@ -130,11 +130,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     %% Set thresholds
     th.heatflux = 0;
     th.heatflux_hi = 10;
-    th.epsilon = -5; % log10, is it turbulent?
+    th.epsilon = -4; % log10, is it turbulent?
     th.epsilon_hi = -4; % log10, is it convective?
     th.windshear = 0.03;
     th.vert_velo = 0;
-    th.cloud = -5; % log10
+    th.cloud = real(log10(2e-5)); % log10
     
     %% Load low level jets - TBD
     
@@ -144,17 +144,39 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         
         % temporal resolutions
         dt_i = [num2str(dt(it)) 'min'];
-
-        %% Find the top of the aerosol layer       
+        
         % load signal and beta
         wstats = load_nc_struct(fullfile([dir_wstats_in '/' wstats_files{1}]));
         signal_it = wstats.(['signal_mean_' dt_i]); 
         beta_it = real(log10(wstats.(['beta_mean_' dt_i])));
         
+        %% Cloud mask
+        cloudmask = zeros(size(beta_it));
+        cloudbit = get_droplet_bit_matine(wstats.height,wstats.(['beta_mean_' dt_i]),0);
+%         cloudmask(beta_it>th.cloud) = 1;
+        cloudmask(cloudbit > 0) = 1;
+        for i = 1:size(cloudmask,1)
+            ibit = find(cloudbit(i),1,'first');
+            imask = find(cloudmask(i),1,'first');
+            if not(isempty(ibit) | isempty(imask)) && not(ibit == 0 | imask == 0) && imask < ibit
+                cloudmask(i,1:ibit) = 0;
+            end
+        end
+        
+        % Dilate cloudmask
+        shift_m1 = [cloudmask(:,2:end) zeros(size(cloudmask,1),1)];
+        shift_p1 = [zeros(size(cloudmask,1),1) cloudmask(:,1:end-1)];
+        cloudmask_dilated = cloudmask + shift_m1 + shift_p1;
+        cloudmask_dilated(cloudmask_dilated<0) = 1;
+        cloudmask_dilated(:,1:3) = 0;
+%         cloudmask_dilated(BLclass.(['aerosol_layer_mask_' dt_i]) == 0) = 0;
+        cloudmask = logical(cloudmask_dilated);
+
+        %% Find the top of the aerosol layer       
+        
         % Filter out noise
         beta_it(10*real(log10(signal_it-1))<-20 | isnan(signal_it)) = nan;
-        beta_top = beta_it; beta_top(beta_top > th.cloud) = nan;
-        
+        beta_top = beta_it; %beta_top(cloudbit > 0) = nan;            
         
         % search for the aerosol layer top
         itop_beta_it = ones(size(beta_it));
@@ -166,7 +188,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                 itop_beta_it(ip,jp) = not((isnan(beta_top(ip,jp)) | beta_top(ip,jp) == 0) &...
                     (all(isnan(beta_top(ip,jp:jp+2))) | all(beta_top(ip,jp:jp+2)==0)));
             end
-            itop_beta_it(ip,[1:3,find(itop_beta_it(ip,:) == 0,1,'last'):end]) = 0;
+            itop_beta_it(ip,[1:3,find(itop_beta_it(ip,:) == 0,1,'first'):end]) = 0;
             tmp = itop_beta_it(ip,:); tmp(1:3) = 1;
             if not(isempty(find(tmp == 1,1,'last')))
                 aero_top_beta_it(ip) = find(tmp == 1,1,'last')-1;
@@ -182,8 +204,22 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         aero_top_beta_it = round(smooth(aero_top_beta_it,5));
 
         % place into the output struct
-        BLclass.(['aerosol_layer_top_' dt_i]) = aero_top_beta_it;
-        BLclass.(['aerosol_layer_mask_' dt_i]) = aero_layer_mask_it;
+        data.(['aerosol_layer_top_' dt_i]) = aero_top_beta_it;
+        data.(['aerosol_layer_mask_' dt_i]) = aero_layer_mask_it;
+        att.(['aerosol_layer_top_' dt_i]) = create_attributes(...
+            {['time_' dt_i]},...
+            'Aerosol_Layer_Top',...
+            'm',...
+            C.missing_value,...
+            'Last range gate with a certain aerosol backscatter signal (also used for plots).');
+        att.(['aerosol_layer_mask_' dt_i]) = create_attributes(...
+            {['time_' dt_i],'height'},...
+            'Aerosol_Layer_Mask',...
+            [],...
+            C.missing_value,...
+            ['This variable is the bitfield indicating the part of the atmosphere with a certain' ...
+            'aerosol backscatter signal (up to Aerosol_Layer_Top).'],...
+            [0 1]);
         
         %% Load TKE
         TKE = load_nc_struct(fullfile([dir_tke_in '/' tke_files{1}]));
@@ -210,27 +246,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
         %% Estimate sun rise and sun set times
         sun_rise_set = suncycle(C.latitude,C.longitude,datenum(thedate,'yyyymmdd'));
-
-        %% Cloud mask
-        cloudmask = zeros(size(beta_it));
-        cloudbit = get_droplet_bit_matine(wstats.height,wstats.(['beta_mean_' dt_i]),0);
-        cloudmask(beta_it>th.cloud) = 1;
-        for i = 1:size(cloudmask,1)
-            ibit = find(cloudbit(i),1,'first');
-            imask = find(cloudmask(i),1,'first');
-            if not(isempty(ibit) | isempty(imask)) && not(ibit == 0 | imask == 0) && imask < ibit
-                cloudmask(i,1:ibit) = 0;
-            end
-        end
-        
-        % Dilate cloudmask
-        shift_m1 = [cloudmask(:,2:end) zeros(size(cloudmask,1),1)];
-        shift_p1 = [zeros(size(cloudmask,1),1) cloudmask(:,1:end-1)];
-        cloudmask_dilated = cloudmask + shift_m1 + shift_p1;
-        cloudmask_dilated(cloudmask_dilated<0) = 1;
-        cloudmask_dilated(:,1:3) = 0;
-%         cloudmask_dilated(BLclass.(['aerosol_layer_mask_' dt_i]) == 0) = 0;
-        cloudmask = logical(cloudmask_dilated);
         
         %% Mask for precipitation
         velo = wstats.(['radial_velocity_mean_' dt_i]);
@@ -255,7 +270,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         epsilon_log10(isnan(beta_it)) = nan;
         nan_profiles = all(isnan(epsilon_log10),2);
         eps_smooth_nonans = nan(size(epsilon_log10));
-        eps_smooth_nonans(logical(aero_layer_mask_it)|cloudmask) = epsilon_log10(logical(aero_layer_mask_it)|cloudmask);
+        eps_smooth_nonans(logical(aero_layer_mask_it)|cloudmask) = ...
+            epsilon_log10(logical(aero_layer_mask_it)|cloudmask);
         eps_smooth_nonans_filled = inpaint_nans(eps_smooth_nonans,4);
         eps_smooth_nonans_filled(not(aero_layer_mask_it)) = nan;
         eps_smooth_nonans_filled_smoooth = windowSlider(eps_smooth_nonans_filled,[3,3],@nanmedian);
@@ -268,8 +284,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             eps_filled,skewn_interp_smooth,cloudmask,th,sun_rise_set,wstats.time_3min);
         
         %% Create bitfield
-        bitfield.(['bits_' dt_i]) = createHALObitfield(th, wstats.(['time_' dt_i]),wstats.(['beta_mean_' dt_i]),...
-            BLclass.(['aerosol_layer_top_' dt_i]),[],eps_filled,windshear.(['vector_wind_shear_' dt_i]),...
+        bitfield.(['bits_' dt_i]) = createHALObitfield(th, wstats.(['time_' dt_i]),wstats.(['signal_mean_' dt_i]),...
+            data.(['aerosol_layer_top_' dt_i]),[],eps_filled,windshear.(['vector_wind_shear_' dt_i]),...
             sun_rise_set,fubarfield.(['coupled_' dt_i]),precip_bit);
 
         %% Generate boundary layer classification product
