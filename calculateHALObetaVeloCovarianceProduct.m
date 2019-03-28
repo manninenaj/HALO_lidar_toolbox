@@ -167,7 +167,8 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             % Calculate number of total samples and number of non-nan samples
             nsamples = reshape(sum(~isnan(beta_padded(ind_running))),size(beta));
             
-            fprintf('\n  covariance of beta and Doppler velocity ...')
+            fprintf('\n  covariance of beta and Doppler velocity,' ...
+                    num2str(dt) ' min ...')
             X = beta_padded(ind_running); % assign X as beta
             Y = velo_padded(ind_running); % assign Y as vertical velocity
             Y_errors = zeros(size(ind_running)); % as dummy
