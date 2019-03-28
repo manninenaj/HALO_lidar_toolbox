@@ -14,8 +14,9 @@ function calculateHALObetaVeloCovarianceProduct(site,DATES,dt,drange)
 %              or DATES = [20170401 20170431]
 % -dt          scalar or vector, numeric, time window size in minutes,
 %              e.g. dt = [10 30 60], or dt = 30. Default: dt = 30
-% -drange      scalar or vector, numeric, range resolution in range bins,
-%              e.g. dt = [1 6 10], or dt = 6. Default: dt = 6
+% -drange      scalar or vector, numeric, range resolution in
+%              number of range bins, e.g. drange = [1 6 10], or
+%              drange = 6. Default: drange = 6
 %
 % Created 2018-10-28
 % Antti Manninen
@@ -143,8 +144,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             % Generate window
             win = [dt(i) drange(j)];
             winlen = num2str(dt(i)*3); % in minutes
-            winheight = num2str(abs(wstats.height(1)-wstats.height(drange(j)))); % in metres
-            
+            winheight = num2str(abs(wstats.height(1)-wstats.height(drange(j)) ))  % in metres
             % Padding with nans
             beta_tmp = [nan(floor(win(1)/2),size(beta,2)); beta; nan(floor(win(1)/2),size(beta,2))];
             beta_padded = [nan(size(beta_tmp,1),floor(win(2)/2)), beta_tmp, nan(size(beta_tmp,1),floor(win(2)/2))];
@@ -174,7 +174,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             Y_errors = zeros(size(ind_running)); % as dummy
             lbob.score_func = 'covariance'; % re-assign scoring function
             lbob = littleBagOfBootstraps(lbob,X,Y,Y_errors);
-            fprintf('done.')
+            fprintf('done.\n')
             
             lbob.best_estimate(lbob.best_estimate == 0) = nan;
             lbob.standard_error(lbob.standard_error == 0) = nan;
