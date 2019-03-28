@@ -11,7 +11,7 @@ function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measm
 % Inputs:
 % - site            string, name of the site, e.g. 'kuopio'
 % - DATE            scalar, numerical date, e.g. 20171231
-% - processlev      string, 'corrected','uncalibrated','calibrated','background','product'
+% - processlev      string, 'corrected','original','calibrated','background','product'
 % - measmode        string, 'stare','vad','rhi','co','custom','windvad','winddbs','txt','wstats',
 %                   'TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'
 % - typeof          string, 'co', 'eleXX', 'aziXXX'

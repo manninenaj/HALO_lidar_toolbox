@@ -23,7 +23,9 @@ else
         P_amp = P_amp(:);
         save([C.dir_housekeeping num2str(YEAR) '_amp_ave_resp.mat'],'P_amp')
     else
-        warning('Wavelet toolbox missing, P_amp estimation skipped.')
+        warning(['Wavelet toolbox missing, P_amp estimation ' ...
+                 'skipped.'])
+        return
     end
 end
 end

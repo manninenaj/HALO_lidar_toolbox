@@ -5,8 +5,8 @@ function calculateHALObetaVeloCovarianceProduct(site,DATES,dt,drange)
 %
 % Usage:
 % calculateHALObetaVeloCovarianceProduct(site,DATES)
-% calculateHALObetaVeloCovarianceProduct(site,DATES,dtime)
-% calculateHALObetaVeloCovarianceProduct(site,DATES,dtime,drange)
+% calculateHALObetaVeloCovarianceProduct(site,DATES,dt)
+% calculateHALObetaVeloCovarianceProduct(site,DATES,dt,drange)
 %
 % Inputs:
 % -site        string, site name, e.g. site = 'kuopio'
@@ -72,10 +72,10 @@ if nargin == 4
         % temporal resolution, min / 3 min = window length
         dt = floor(dt./3);
     end
-    if ~isnumeric(drange) | int16(drange)~=drange | drange < 10
+    if ~isnumeric(drange) | int16(drange)~=drange | drange > 10
         error(['The 4th input must a numerical scalar or vector'...
             ' specifying the range resolution(s) in no. of range bins,'...
-            ' and be less than 10.'])
+            ' and be less than or equal to 10.'])
     end
 end
 if nargin > 4
