@@ -6,6 +6,8 @@ lidar was deployed, Jülich (Germany), and Granada (Spain). However, note that t
 phase and errors might occur. Please let me know if that happens. You are also more than welcome to suggest changes or 
 additions in to the toolbox! 
 
+Please note that the toolbox requires that the original hpl files are converted into netcdf format!
+
 8 November 2018  
 Antti J Manninen  
 University of Helsinki, Finland  
