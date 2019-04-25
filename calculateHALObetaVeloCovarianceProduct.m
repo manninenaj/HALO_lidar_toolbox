@@ -144,7 +144,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             % Generate window
             win = [dt(i) drange(j)];
             winlen = num2str(dt(i)*3); % in minutes
-            winheight = num2str(abs(wstats.height(1)-wstats.height(drange(j)) ))  % in metres
+            winheight = num2str(abs(wstats.height(1)-wstats.height(drange(j))));  % in metres
             % Padding with nans
             beta_tmp = [nan(floor(win(1)/2),size(beta,2)); beta; nan(floor(win(1)/2),size(beta,2))];
             beta_padded = [nan(size(beta_tmp,1),floor(win(2)/2)), beta_tmp, nan(size(beta_tmp,1),floor(win(2)/2))];
@@ -194,11 +194,11 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             nsamples(cond_clean) = nan;
             
             %%-- Create output data struct --%%
-            data.(['covariance_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = cova_flux;
-            data.(['covariance_error_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = cova_flux_e;
-            data.(['covariance_conf_int_lo_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = cova_flux_conf_int_lo;
-            data.(['covariance_conf_int_hi_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = cova_flux_conf_int_hi;
-            data.(['nsamples_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = nsamples;
+            data.(['covar_' tres 'min_win_' winlen 'min_by_' winheight 'm']) = cova_flux;
+            data.(['covar_error_' tres 'min_win' winlen 'minby' winheight 'm']) = cova_flux_e;
+            data.(['covar_conf_lo_' tres 'min_win_' winlen 'min_by_' winheight 'm']) = cova_flux_conf_int_lo;
+            data.(['covar_conf_hi_' tres 'min_win_' winlen 'min_by_' winheight 'm']) = cova_flux_conf_int_hi;
+            data.(['nsamples_' tres 'min_win_' winlen 'min_by_' winheight 'm']) = nsamples;
             
             %%-- Create attributes --%%
             % cov
