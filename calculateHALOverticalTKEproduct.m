@@ -154,7 +154,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     ifs = strmatch('radial_velocity_simple_variance', fnames);
     fnames_var = fnames(ifs);
     if isempty(fnames_var)
-        warning(['Simple variance not calculated for ' thedate ' at ' site '. Try recalculating wstats.')
+        warning(['Simple variance not calculated for ' thedate ' at ' site '. Try recalculating wstats.'])
         continue
     end
     ifs_false = strmatch('radial_velocity_simple_variance_error',fnames_var);
