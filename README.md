@@ -10,8 +10,8 @@ Please note that the toolbox requires that the original hpl files are converted 
 
 8 November 2018  
 Antti J Manninen  
-University of Helsinki, Finland  
-antti.j.manninen(at)helsinki.fi  
+Finnish Meteorological Institute  
+antti.manninen(at)fmi.fi  
 
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
