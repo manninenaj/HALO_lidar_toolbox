@@ -199,10 +199,17 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.(['covariance_conf_int_lo_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = cova_flux_conf_int_lo;
             data.(['covariance_conf_int_hi_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = cova_flux_conf_int_hi;
             data.(['nsamples_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = nsamples;
+
+%            data.(['covarflux']) = cova_flux;
+%            data.(['covarflux_error']) = cova_flux_e;
+%            data.(['covar_conf_int_lo']) = cova_flux_conf_int_lo;
+%            data.(['covar_conf_int_hi']) = cova_flux_conf_int_hi;
+%            data.(['nsamples']) = nsamples;
+
             
             %%-- Create attributes --%%
             % cov
-            att.(['covariance_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = create_attributes(...
+           att.(['covariance_' tres 'min_window_' winlen 'min_by_' winheight 'm']) = create_attributes(...
                 {['time_' tres 'min'],'height'},...
                 'Covariance of attenuated backscatter and vertical Doppler velocity',...
                 {'Mm-1 sr-1 m s-1',''},...
@@ -320,10 +327,32 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Order fields
     data = orderfields(data);
     att  = orderfields(att);
+
+data
+att
+dim
     
     % Write into new netcdf
-    write_nc_silent(fullfile([dir_to_folder_out '/' thedate ...
+%    write_nc_silent(fullfile([dir_to_folder_out '/' thedate ...
+%        '_' site '_halo-doppler-lidar_covariance-beta-velo.nc']), dim, data, att)
+ 
+
+fname = fullfile([dir_to_folder_out '/' thedate ...
+        '_' site '_halo-doppler-lidar_covariance-beta-velo.nc'])
+
+write_nc_struct(fullfile([dir_to_folder_out '/' thedate ...
         '_' site '_halo-doppler-lidar_covariance-beta-velo.nc']), dim, data, att)
+write_nc_struct(['/home/cloudnet/' thedate ...
+        '_' site '_halo-doppler-lidar_covariance-beta-velo.nc'], dim, data, att)
+
+fname1 = ['/home/cloudnet/' thedate ...
+        '_' site '_halo-doppler-lidar_covariance-beta-velo.nc']
+
+
+[p a d]=load_nc_struct(fname1)
+write_nc_struct(fname,d, p, a)                                                     
+
+
     
 end
 % % %     % Calculate covariance
