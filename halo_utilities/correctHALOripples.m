@@ -11,8 +11,9 @@ daten = datenum(num2str(DATE),'yyyymmdd');
 % [P_amp_path, files_P_amp] = getHALOfileList(site,DATE,'P_amp','txt');
 
 thedate = num2str(DATE);
-path_to_P_amp = [C.dir_housekeeping thedate(1:4) '_amp_ave_resp.mat'];
-if exist(path_to_P_amp,'file')==2
+
+if isfield(C,'dir_housekeeping')
+    path_to_P_amp = [C.dir_housekeeping thedate(1:4) '_amp_ave_resp.mat'];
     P_amp = load(path_to_P_amp);
     P_amp = P_amp.P_amp;
     P_amp_exists = true;
