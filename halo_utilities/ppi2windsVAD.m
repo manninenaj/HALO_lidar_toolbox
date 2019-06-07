@@ -8,8 +8,8 @@ function [S_out] = ppi2windsVAD(site,DATE,S_in)
 % - S_in              struct with the followind fields:
 %    .time            vector, time in numerical format
 %    .range           vector, range from the instrument
-%    .azimuth         vector, azimuth angles (degrees)[time 1]
-%    .elevation       vector, elevation angles (degrees)[time 1]
+%    .azimuth         vector, azimuth angles (degrees 0-360)[time 1]
+%    .elevation       vector, elevation angles (degrees 0-360)[time 1]
 %    .velocity        matrix, radial velocities (m s-1)[time range]
 %    .snr             matrix, signal-to-noise ratio [time range]
 %    .velocity_error  matrix, radial velocity uncertainties (m s-1)[time range]

@@ -212,7 +212,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                     for i2 = 1:length(fnamesdata1)
                                         % Stack only those fields where time is one dimension
                                         if ~any(size(tmpdata1.(fnamesdata1{i2}))==size(tmpdata1.time(:),1)), continue; end
-                                        % Don't stack range
+                                        % Don''t stack range
                                         if strcmp(fnamesdata1{i2},'range'), continue; end
                                         % Stack the rest...
                                         data1.(fnamesdata1{i2}) = [data1.(fnamesdata1{i2}); tmpdata1.(fnamesdata1{i2})];

@@ -62,6 +62,7 @@ end
 data1.elevation = data0.(C.field_name_original_elevation)(:);
 % azimuth
 data1.azimuth = data0.(C.field_name_original_azimuth)(:);
+data1.azimuth(data1.azimuth<0) = 360+data1.azimuth(data1.azimuth<0);
 % altitude
 % if specified
 if isfield(C,'field_name_original_altitude')
