@@ -18,8 +18,8 @@ function [C,O] = getconfig(site,DATE)
 %
 % Created 2017-09-31
 % Antti Manninen
-% University of Helsinki, Finland
-% antti.j.manninen(at)helsinki.fi
+% Finnish Meteorological Institute
+% antti.manninen(at)fmi.fi
 
 % Check inputs
 if nargin < 2
@@ -81,11 +81,11 @@ if exist('halo_config.txt','file') == 2
         end
         %%--- Get site specific parameters ---%%
         % Set limits
-        ibegin = find(strcmp(param_val_pairs(:,2),site))+1;
-        iend = find(strcmp(param_val_pairs(ibegin+1:end,1),'site')) + ...
-            ibegin-1;
-        if isempty(iend), iend = length(param_val_pairs); end % if last
-        
+        ibegin = find(strcmp(param_val_pairs(:,2),site),1,'first');
+        iend = ibegin + find(strcmp(param_val_pairs(ibegin+1:end,1),'site'),1,'first')-1;
+
+        if isempty(iend), iend = length(param_val_pairs); end % in case last
+    
         % Get names and values
         spcfc_param_names = param_val_pairs(ibegin:iend,1);
         spcfc_param_values = param_val_pairs(ibegin:iend,2);
@@ -93,46 +93,32 @@ if exist('halo_config.txt','file') == 2
         % Check parameters_valid_from_including for the time period
         iperiods = find(strcmp(spcfc_param_names,...
             'parameters_valid_from_including'));
-        
-        if datenum(num2str(DATE),'yyyymmdd') >= ...
-                datenum(spcfc_param_values(iperiods(1)),'yyyymmdd')
-            
-            % All parameters  for the site are read and if a parameter has
-            % changed after some specified date, the last occurrence of the
-            % parameter is read and outputted.
-            if length(iperiods)>1
-                dts = (datenum(num2str(DATE),'yyyymmdd') - ...
-                    datenum(spcfc_param_values(iperiods),'yyyymmdd'));
-                dts(dts<0) = nan; [~,imin] = min(dts);
-                iend2 = iperiods(imin)+1;
-            else
-                % if last period
-                iend2 = length(spcfc_param_values);
-            end
-            
-            % Allocate parameter/value pairs into a struct variable,
-            % overwrite default parameters if they are different for  
-            % the site and the time period
-            for i = 1:iend2
-                if ~isnan(str2double(spcfc_param_values{i}))
-                    % Convert numeric parameters into double precision
-                    C.(spcfc_param_names{i}) = ...
-                        str2double(spcfc_param_values{i});
-%                     C.site_specific.(spcfc_param_names{i}) = ...
-%                         str2double(spcfc_param_values{i});
-                else
-                    % Text as is
-%                     C.site_specific.(spcfc_param_names{i}) = ...
-%                         spcfc_param_values{i};
-                    C.(spcfc_param_names{i}) = ...
-                        spcfc_param_values{i};
-                end
-            end
+
+        if any(datenum(num2str(DATE),'yyyymmdd') >= ...
+            datenum(spcfc_param_values(iperiods),'yyyymmdd'))
+
+	  for i = 1:length(iperiods)
+              % 
+              if datenum(num2str(DATE),'yyyymmdd') >= ...
+	          datenum(spcfc_param_values(iperiods(i)),'yyyymmdd')
+		  for j = 1:length(spcfc_param_values)
+                      % number
+                      if ~isnan(str2double(spcfc_param_values{j}))
+	                  C.(spcfc_param_names{j}) = ...
+		              str2double(spcfc_param_values{j});
+                      % string
+                      else
+                          C.(spcfc_param_names{j}) = ...
+                              spcfc_param_values{j};
+                      end
+		  end
+              end
+	  end	    		    
         else
             error(['DATE = %d < the earliest valid date specified in' ...
-                ' the halo_config.txt\nfor'' %s'' site.' ...
-                ' Please check ''parameters_valid_from_including''' ...
-                '\nfrom halo_config.txt.'],DATE,site)
+                  ' the halo_config.txt\nfor'' %s'' site.' ...
+                  ' Please check ''parameters_valid_from_including''' ...
+                  '\nfrom halo_config.txt.'],DATE,site)
         end
     else
         error(['''%s'' is not specified in halo_config.txt.\nCheck' ...
