@@ -6,7 +6,6 @@ function [snr1,step_locations] = correctHALOripples(site,DATE,...
 C = getconfig(site,DATE);
 daten = datenum(num2str(DATE),'yyyymmdd');
 
-% Get the date folder structure
 [bkg_path, files_bkg] = getHALOfileList(site,DATE,'background','txt');
 % [P_amp_path, files_P_amp] = getHALOfileList(site,DATE,'P_amp','txt');
 
@@ -21,10 +20,11 @@ else
     P_amp_exists = false;
 end
 
+
 if ~isempty(files_bkg)
 % if exist(path_bkg,'dir') == 7 % if bkg files exist
-    [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,daten,...
-        size(snr0,2));
+    [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,daten,...
+        C.num_range_gates);
 %     b_file(:,1:3) = nan; b_fit(:,1:3) = nan;
     P_bkg(all(isnan(P_bkg),2),:) = []; 
     P_fit(all(isnan(P_fit),2),:) = [];

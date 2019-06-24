@@ -1,33 +1,35 @@
-function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,daten,n_range_gates)
+function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,daten,n_range_gates)
 
 % find co and cross background files
 
 dates=datestr(daten,'ddmmyy');
 
-filess=dir([bkg_path 'Background_' dates '*.txt']);
-
-bkg_times=nan(length(filess),1); % col1: time
-for i=1:length(filess)
-    b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
-    bkg_times(i,:)=b_daten;
+%%%filess=dir([bkg_path 'Background_' dates '*.txt']);
+filess = files_bkg;
+bkg_times = nan(length(filess),1); % col1: time
+for i = 1:length(filess)
+    %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
+    b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
+    bkg_times(i,:) = b_daten;
 end
 
 %% read in backgrounds
-bkg=nan(length(filess),n_range_gates);
-for i=1:length(filess)
-    fn=[bkg_path filess(i).name];
+bkg = nan(length(filess),n_range_gates);
+for j=1:length(filess)
+    %%%fn=[bkg_path filess(j).name];
+    fn = [bkg_path filess{j}];
     fid=fopen(fn,'r');
     bk=fscanf(fid,'%s');
     fclose(fid);
     
-    dot_i=find(bk=='.');
-    end_i=[1;transpose(dot_i+7)];
+    dot_j=find(bk=='.');
+    end_j=[1;transpose(dot_j+7)];
 
-    bi=1;
+    bj=1;
     %         for ii=2:length(end_i)
-    for ii=2:n_range_gates+1
-        bkg(i,bi)=str2num(bk(end_i(ii-1):end_i(ii)-1));
-        bi=bi+1;
+    for jj=2:n_range_gates+1
+        bkg(j,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
+        bj=bj+1;
     end
 end
 
@@ -58,6 +60,7 @@ else
         bkg=sortrows(bkg,1);
     end
 end
+    
 bkg_raw=bkg;
 clear bkg;
 %% to SNR

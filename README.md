@@ -1,6 +1,8 @@
 # HALO lidar toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
+This software is released under DRAPL license, for now. See the CRAPL-LICENSE.txt for more details.
+
 This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM sites where Doppler 
 lidar was deployed, Jülich (Germany), and Granada (Spain). However, note that the toolbox is still in development 
 phase and errors might occur. Please let me know if that happens. You are also more than welcome to suggest changes or 
