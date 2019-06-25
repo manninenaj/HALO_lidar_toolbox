@@ -51,7 +51,7 @@ end
 % Go back in time to get the timestamp of the last bkg profile
 % Hopefully the last bkg file is not too far back in time...
 fprintf("Looking for the last bkg profile recorded before '%s'.\n", ...
-        datestr(time_snr_dnum,'yyyymmdd HH:MM:SS'));
+        datestr(time_snr_dnum(1),'yyyymmdd HH:MM:SS'));
 bkg_time_last = bkg_time1;
 files_bkg_yday = [];
 while isnan(bkg_time1) | bkg_time_last > time_snr_dnum(1)
