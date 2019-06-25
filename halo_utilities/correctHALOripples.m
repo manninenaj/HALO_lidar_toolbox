@@ -54,8 +54,9 @@ fprintf("Looking for the last bkg profile recorded before '%s'.\n", ...
         datestr(time_snr_dnum(1),'yyyy-mm-dd HH:MM:SS'));
 bkg_time_last = bkg_time1;
 files_bkg_yday = [];
+daten_yday = daten;
 while isnan(bkg_time1) | bkg_time_last > time_snr_dnum(1)
-    daten_yday = daten-1;
+    daten_yday = daten_yday-1;
     DATE_yday = str2num(datestr(daten_yday,'yyyymmdd'));
     if DATE_yday >= C.parameters_valid_from_including
         fprintf("Checking '%s'.\n", datestr(daten_yday,'yyyy-mm-dd HH:MM:SS'));
