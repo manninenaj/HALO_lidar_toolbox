@@ -5,32 +5,39 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,date
 dates=datestr(daten,'ddmmyy');
 
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
-filess = files_bkg;
-bkg_times = nan(length(filess),1); % col1: time
-for i = 1:length(filess)
-    %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
-    b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
-    bkg_times(i,:) = b_daten;
-end
 
-%% read in backgrounds
-bkg = nan(length(filess),n_range_gates);
-for j=1:length(filess)
-    %%%fn=[bkg_path filess(j).name];
-    fn = [bkg_path filess{j}];
-    fid=fopen(fn,'r');
-    bk=fscanf(fid,'%s');
-    fclose(fid);
-    
-    dot_j=find(bk=='.');
-    end_j=[1;transpose(dot_j+7)];
-
-    bj=1;
-    %         for ii=2:length(end_i)
-    for jj=2:n_range_gates+1
-        bkg(j,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
-        bj=bj+1;
+switch file_type
+  case 'txt'
+    filess = files_bkg;
+    bkg_times = nan(length(filess),1); % col1: time
+    for i = 1:length(filess)
+        %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
+        b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
+        bkg_times(i,:) = b_daten;
     end
+    %% read in backgrounds
+    bkg = nan(length(filess),n_range_gates);
+    for j=1:length(filess)
+        %%%fn=[bkg_path filess(j).name];
+        fn = [bkg_path filess{j}];
+        fid=fopen(fn,'r');
+        bk=fscanf(fid,'%s');
+        fclose(fid);
+        
+        dot_j=find(bk=='.');
+        end_j=[1;transpose(dot_j+7)];
+        
+        bj=1;
+        %         for ii=2:length(end_i)
+        for jj=2:n_range_gates+1
+            bkg(j,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
+            bj=bj+1;
+        end
+      end
+  case 'nc' % blindly assume only one file, only ARM uses this..
+    tmp = load_nc_struct([bkg_path,files_bkg{1}]);
+    bkg_times = decimal2daten(tmp.time/3600,daten);
+    bkg = tmp.background;
 end
 
 %% gapfilling
@@ -88,8 +95,3 @@ for i=1:length(bkg_raw(:,1));
         bkg_out(i,:) = b_temp;
     end
 end
-end
-
-
-
-
