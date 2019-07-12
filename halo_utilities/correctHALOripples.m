@@ -6,7 +6,13 @@ function [snr1,step_locations] = correctHALOripples(site,DATE,...
 C = getconfig(site,DATE);
 daten = datenum(num2str(DATE),'yyyymmdd');
 
-[bkg_path, files_bkg] = getHALOfileList(site,DATE,'background','txt');
+if isfield(C,background_file_type)
+    bkg_file_type = C.background_file_type;
+else
+    bkg_file_type = 'txt';
+end
+
+[bkg_path, files_bkg] = getHALOfileList(site,DATE,'background',bkg_file_type);
 % [P_amp_path, files_P_amp] = getHALOfileList(site,DATE,'P_amp','txt');
 
 thedate = num2str(DATE);
