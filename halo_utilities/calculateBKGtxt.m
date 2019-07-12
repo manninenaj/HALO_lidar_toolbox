@@ -1,8 +1,8 @@
-function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,daten,n_range_gates)
+function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,n_range_gates)
 
 % find co and cross background files
 
-dates=datestr(daten,'ddmmyy');
+%dates=datestr(daten,'ddmmyy');
 
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
 
@@ -15,6 +15,7 @@ switch file_type
         b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
         bkg_times(i,:) = b_daten;
     end
+    
     %% read in backgrounds
     bkg = nan(length(filess),n_range_gates);
     for j=1:length(filess)
@@ -78,7 +79,7 @@ fits_2=bkg_raw(:,1:4)*nan; % p(1) p(2) p(3) rmse
 
 fit_out = nan(length(bkg_raw(:,1)),n_range_gates);
 bkg_out = nan(length(bkg_raw(:,1)),n_range_gates);
-for i=1:length(bkg_raw(:,1));
+for i=1:length(bkg_raw(:,1))
     b_temp=bkg_raw(i,:);
     if ~isnan(b_temp(1)) % fit 1 and 2 order polynomial
         fitti_1 = polyfit((4:n_range_gates),b_temp(4:n_range_gates),1);
