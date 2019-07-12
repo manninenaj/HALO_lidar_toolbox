@@ -3,11 +3,8 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file
 % find co and cross background files
 
 dates=datestr(daten,'ddmmyy');
-
-
-    
+   
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
-
 
 switch file_type
   case 'txt'
@@ -42,39 +39,37 @@ switch file_type
     bkg_times = decimal2daten(tmp.time/3600,daten);
     bkg = tmp.background;
 end
-
       
-
 %% gapfilling
 
-if isempty(bkg) % no data for a day
-    bkg=nan(24,n_range_gates+1);
-    bkg(:,1)=(0:23)/24+daten;
-else
+%if isempty(bkg) % no data for a day
+%    bkg=nan(24,n_range_gates+1);
+%    bkg(:,1)=(0:23)/24+daten;
+%else
+%    
+%    bkg=[bkg_times bkg];
+%    if str2num(datestr(bkg(1,1),'HH'))~=0
+%        bkg=[[floor(bkg_times(1));bkg(:,1)] [bkg(1,2:end)*nan;bkg(:,2:end)]];
+%    end
+%    if str2num(datestr(bkg_times(end),'HH'))~=23
+%        bkg=[[bkg(:,1); daten+23/24] [bkg(:,2:end);bkg(1,2:end)*nan]];
+%    end
     
-    bkg=[bkg_times bkg];
-    if str2num(datestr(bkg(1,1),'HH'))~=0
-        bkg=[[floor(bkg_times(1));bkg(:,1)] [bkg(1,2:end)*nan;bkg(:,2:end)]];
-    end
-    if str2num(datestr(bkg_times(end),'HH'))~=23
-        bkg=[[bkg(:,1); daten+23/24] [bkg(:,2:end);bkg(1,2:end)*nan]];
-    end
-          
-    dd=(diff(bkg(:,1)-daten))*24;
-    for i=1:length(dd)
-        if dd(i)>1.5
-            new_t=transpose((bkg(i,1)+1/24):1/24:(bkg(i,1)+floor(dd(i))/24));
-            bkg=[[bkg(:,1); new_t] [bkg(:,2:end);repmat(bkg(1,2:end)*nan,length(new_t),1)]];
-        end
-    end
-          
-    if any(dd>1.5)
-        bkg=sortrows(bkg,1);
-    end
-end
+%    dd=(diff(bkg(:,1)-daten))*24;
+%    for i=1:length(dd)
+%        if dd(i)>1.5
+%            new_t=transpose((bkg(i,1)+1/24):1/24:(bkg(i,1)+floor(dd(i))/24));
+%            bkg=[[bkg(:,1); new_t] [bkg(:,2:end);repmat(bkg(1,2:end)*nan,length(new_t),1)]];
+%        end
+%    end
+    
+%    if any(dd>1.5)
+%        bkg=sortrows(bkg,1);
+%    end
+%end
     
 bkg_raw=bkg;
-clear bkg;
+%clear bkg;
 %% to SNR
 % bkg_snr=bkg_raw;
 % bkg_snr(:,2:end)=nan;
