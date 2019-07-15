@@ -38,8 +38,9 @@ switch file_type
         end
       end
   case 'nc' % blindly assume only one file, only ARM uses this..
-    tmp
+    
     tmp = load_nc_struct([bkg_path,files_bkg{1}]);
+    tmp
     bkg_times = decimal2daten(tmp.time/3600,daten);
     bkg = tmp.background;
 end
