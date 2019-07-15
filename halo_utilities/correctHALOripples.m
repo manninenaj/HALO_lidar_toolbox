@@ -12,6 +12,9 @@ else
     bkg_file_type = 'txt';
 end
 
+C.background_file_type
+bkg_file_type
+
 [bkg_path, files_bkg] = getHALOfileList(site,DATE,'background',bkg_file_type);
 % [P_amp_path, files_P_amp] = getHALOfileList(site,DATE,'P_amp','txt');
 

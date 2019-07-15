@@ -90,10 +90,10 @@ thedate = num2str(DATE);
 
 % check if path for given combination of 'processlev' and 'measmode' exist
 switch nargin
-    case 5
-        cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
-    case 4
-        cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+  case 5
+    cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+  case 4
+    cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
 end
 if ~isfield(C,cpmt)
     error(['Can''t find parameter ''%s'' for the site ''%s'' \nand'...
