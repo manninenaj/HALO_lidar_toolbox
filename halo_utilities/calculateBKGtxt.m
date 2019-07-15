@@ -42,7 +42,7 @@ switch file_type
     tmp = load_nc_struct([bkg_path,files_bkg{1}]);
     tmp
     bkg_times = decimal2daten(tmp.time/3600,daten);
-    bkg = transpose(tmp.background);
+    bkg = tmp.background;
 end
       
 %% gapfilling
@@ -86,17 +86,28 @@ bkg_out = nan(length(bkg_raw(:,1)),n_range_gates);
 for i=1:length(bkg_raw(:,1));
     b_temp=bkg_raw(i,2:end);
     if ~isnan(b_temp(1)) % fit 1 and 2 order polynomial
-        fitti_1 = polyfit((4:n_range_gates),b_temp(4:n_range_gates),1);
+        switch file_type
+          case 'txt'
+            fitti_1 = polyfit((4:n_range_gates-1),b_temp(4: ...
+                                                         n_range_gates-1),1);
+            fitti_2 = polyfit((4:n_range_gates-1),b_temp(4: ...
+                                                         n_range_gates-1),2);
+          case 'nc'
+            fitti_1 = polyfit((4:n_range_gates-1),b_temp(4:end),1);
+            fitti_2 = polyfit((4:n_range_gates-1),b_temp(4:end),2);
+        end            
         bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
-        fitti_2=polyfit((4:n_range_gates),b_temp(4:n_range_gates),2);
-        bkg_fitted_2=((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
-        rmse_1=sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_1(4:n_range_gates)).^2,2));
-        rmse_2=sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_2(4:n_range_gates)).^2,2));
-                    if rmse_2<(0.9*rmse_1)
-                        fit_out(i,:) = bkg_fitted_2;
-                    else
-                        fit_out(i,:) = bkg_fitted_1;
-                    end       
+        bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1: ...
+                                                          n_range_gates)*fitti_2(2)+fitti_2(3);
+        rmse_1 = sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_1(4: ...
+                                                          n_range_gates)).^2,2));       
+        rmse_2 = sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_2(4: ...
+                                                          n_range_gates)).^2,2));
+        if rmse_2<(0.9*rmse_1)
+            fit_out(i,:) = bkg_fitted_2;
+        else
+            fit_out(i,:) = bkg_fitted_1;
+        end       
         bkg_out(i,:) = b_temp;
     end
 end
