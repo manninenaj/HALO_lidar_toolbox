@@ -5,8 +5,9 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file
 dates=datestr(daten,'ddmmyy');
    
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
-
+bkg = nan(length(filess),n_range_gates)
 switch file_type
+  %% read in backgrounds
   case 'txt'
     filess = files_bkg;
     bkg_times = nan(length(filess),1); % col1: time
@@ -14,12 +15,10 @@ switch file_type
         %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
         b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
         bkg_times(i,:) = b_daten;
-    end
-    %% read in backgrounds
-    bkg = nan(length(filess),n_range_gates);
-    for j=1:length(filess)
+    
+        %for j=1:length(filess)
         %%%fn=[bkg_path filess(j).name];
-        fn = [bkg_path filess{j}];
+        fn = [bkg_path filess{i}];
         fid=fopen(fn,'r');
         bk=fscanf(fid,'%s');
         fclose(fid);
@@ -30,11 +29,12 @@ switch file_type
         bj=1;
         %         for ii=2:length(end_i)
         for jj=2:n_range_gates+1
-            bkg(j,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
+            bkg(i,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
             bj=bj+1;
         end
       end
   case 'nc' % blindly assume only one file, only ARM uses this..
+    tmp
     tmp = load_nc_struct([bkg_path,files_bkg{1}]);
     bkg_times = decimal2daten(tmp.time/3600,daten);
     bkg = tmp.background;
