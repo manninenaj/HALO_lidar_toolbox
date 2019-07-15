@@ -6,7 +6,7 @@ function [snr1,step_locations] = correctHALOripples(site,DATE,...
 C = getconfig(site,DATE);
 daten = datenum(num2str(DATE),'yyyymmdd');
 
-if isfield(C,background_file_type)
+if isfield(C,'background_file_type')
     bkg_file_type = C.background_file_type;
 else
     bkg_file_type = 'txt';
