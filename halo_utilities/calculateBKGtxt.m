@@ -5,20 +5,20 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file
 dates=datestr(daten,'ddmmyy');
    
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
-bkg = nan(length(filess),n_range_gates)
+bkg = nan(length(files_bkg),n_range_gates)
 switch file_type
   %% read in backgrounds
   case 'txt'
-    filess = files_bkg;
-    bkg_times = nan(length(filess),1); % col1: time
+    % filess = files_bkg;
+    bkg_times = nan(length(files_bkg),1); % col1: time
     for i = 1:length(filess)
         %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
-        b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
+        b_daten = datenum([files_bkg{i}(12:17) files_bkg{i}(19:24)],'ddmmyyHHMMSS');
         bkg_times(i,:) = b_daten;
     
         %for j=1:length(filess)
         %%%fn=[bkg_path filess(j).name];
-        fn = [bkg_path filess{i}];
+        fn = [bkg_path files_bkg{i}];
         fid=fopen(fn,'r');
         bk=fscanf(fid,'%s');
         fclose(fid);
