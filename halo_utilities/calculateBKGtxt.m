@@ -88,13 +88,20 @@ for i=1:length(bkg_raw(:,1));
     if ~isnan(b_temp(1)) % fit 1 and 2 order polynomial
         switch file_type
           case 'txt'
-            fitti_1 = polyfit((4:n_range_gates-1),b_temp(4: ...
-                                                         n_range_gates-1),1);
-            fitti_2 = polyfit((4:n_range_gates-1),b_temp(4: ...
-                                                         n_range_gates-1),2);
+            fitti_1 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),1);
+            fitti_2 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),2);
+            bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
+            bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
+            rmse_1 = sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_1(4:n_range_gates)).^2,2));       
+            rmse_2 = sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_2(4:n_range_gates)).^2,2));
           case 'nc'
             fitti_1 = polyfit((4:n_range_gates-1),b_temp(4:end),1);
             fitti_2 = polyfit((4:n_range_gates-1),b_temp(4:end),2);
+            bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
+            bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
+            rmse_1 = sqrt(mean((b_temp(4:end)-bkg_fitted_1(4:end)).^2,2));       
+            rmse_2 = sqrt(mean((b_temp(4:end)-bkg_fitted_2(4:end)).^2,2));
+
         end            
         bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
         bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1: ...
