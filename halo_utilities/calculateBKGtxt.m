@@ -42,7 +42,7 @@ switch file_type
     tmp = load_nc_struct([bkg_path,files_bkg{1}]);
     tmp
     bkg_times = decimal2daten(tmp.time/3600,daten);
-    bkg = tmp.background;
+    bkg = transpose(tmp.background);
 end
       
 %% gapfilling
