@@ -5,7 +5,11 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file
 dates=datestr(daten,'ddmmyy');
    
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
-bkg = nan(length(files_bkg),n_range_gates)
+if isempty(files_bkg)
+    bkg = nan(1,n_range_gates);
+else
+    bkg = nan(length(files_bkg),n_range_gates);
+    end
 switch file_type
   %% read in backgrounds
   case 'txt'
