@@ -127,9 +127,14 @@ switch processlev
      end
      %    end
   case 'background'
-    if strcmp(measmode,'txt')
-      file_format = '.txt';
-      file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' file_format];
+    switch measmode
+      case 'txt'
+        file_format = '.txt';
+        file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' ...
+                            file_format];
+      case 'nc'
+        file_format = '.nc';
+        file_names_2look4 = ['*' thedate '*' file_format];
     end
  otherwise
   % blindly assume that there are no other type of files
