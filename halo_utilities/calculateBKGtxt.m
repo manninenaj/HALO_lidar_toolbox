@@ -8,8 +8,10 @@ dates=datestr(daten,'ddmmyy');
 if isempty(files_bkg)
     bkg = nan(1,n_range_gates);
 else
-    bkg = nan(length(files_bkg),n_range_gates);
-    end
+   length(files_bkg)
+   n_range_gates  
+   bkg = nan(length(files_bkg),n_range_gates); 
+end
 switch file_type
   %% read in backgrounds
   case 'txt'
@@ -84,35 +86,43 @@ fits_2=bkg_raw(:,1:4)*nan; % p(1) p(2) p(3) rmse
 fit_out = nan(length(bkg_raw(:,1)),n_range_gates);
 bkg_out = nan(length(bkg_raw(:,1)),n_range_gates);
 for i=1:length(bkg_raw(:,1));
-    b_temp=bkg_raw(i,2:end);
-    b_temp = b_temp(:);
-    if ~isnan(b_temp(1)) % fit 1 and 2 order polynomial
+    %b_temp=bkg_raw(i,2:end);
+    %b_temp = b_temp(:);
+    if ~isnan(bkg_raw(i,1)) % fit 1 and 2 order polynomial
         switch file_type
           case 'txt'
-            fitti_1 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),1);
-            fitti_2 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),2);
+    	    %fitti_1 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),1);
+            %fitti_2 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),2);
+            fitti_1 = polyfit((4:n_range_gates-1),bkg_raw(i,5:n_range_gates-1),1);
+            fitti_2 = polyfit((4:n_range_gates-1),bkg_raw(i,5:n_range_gates-1),2);
             bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
             bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
-            bkg_fitted_1 =  bkg_fitted_1(:);
-            bkg_fitted_2 =  bkg_fitted_2(:);            
-            rmse_1 = sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_1(4:n_range_gates)).^2,2));       
-            rmse_2 = sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_2(4:n_range_gates)).^2,2));
+            bkg_fitted_1 =  transpose(bkg_fitted_1(:));
+            bkg_fitted_2 =  transpose(bkg_fitted_2(:));  
+            rmse_1 = sqrt(mean((bkg_raw(i,5:n_range_gates)-bkg_fitted_1(4:n_range_gates)).^2,2));       
+            rmse_2 = sqrt(mean((bkg_raw(i,5:n_range_gates)-bkg_fitted_2(4:n_range_gates)).^2,2));
           case 'nc'
-            x = 4:length(b_temp); x = x(:);
-            fitti_1 = polyfit(x,b_temp(4:end),1);
-            fitti_2 = polyfit(x,b_temp(4:end),2);
+            x = 1:length(bkg_raw(i,5:end)); x = transpose(x(:));
+            fitti_1 = polyfit(x,bkg_raw(i,5:end),1);
+            fitti_2 = polyfit(x,bkg_raw(i,5:end),2);
             bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
             bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
             bkg_fitted_1 =  bkg_fitted_1(:);
             bkg_fitted_2 =  bkg_fitted_2(:);
-            rmse_1 = sqrt(mean((b_temp(4:end)-bkg_fitted_1(4:end)).^2,2));       
-            rmse_2 = sqrt(mean((b_temp(4:end)-bkg_fitted_2(4:end)).^2,2));
+            rmse_1 = sqrt(mean((bkg_raw(i,5:end)-bkg_fitted_1(5:end)).^2,2));       
+            rmse_2 = sqrt(mean((bkg_raw(i,5:end)-bkg_fitted_2(5:end)).^2,2));
         end            
         if rmse_2<(0.9*rmse_1)
             fit_out(i,:) = bkg_fitted_2;
         else
             fit_out(i,:) = bkg_fitted_1;
-        end       
-        bkg_out(i,:) = b_temp;
+        end
+        
+       switch file_type
+         case 'txt'
+           bkg_out(i,:) = bkg_raw(i,2:n_range_gates);
+         case 'nc'
+           bkg_out(i,:) = bkg_raw(i,:);
+       end
     end
 end

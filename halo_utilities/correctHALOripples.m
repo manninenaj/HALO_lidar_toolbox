@@ -32,8 +32,7 @@ end
 
 if ~isempty(files_bkg)
 % if exist(path_bkg,'dir') == 7 % if bkg files exist
-    [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,daten,...
-        C.num_range_gates);
+    [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,C.background_file_type,daten,C.num_range_gates);
 %     b_file(:,1:3) = nan; b_fit(:,1:3) = nan;
     P_bkg(all(isnan(P_bkg),2),:) = []; 
     P_fit(all(isnan(P_fit),2),:) = [];
