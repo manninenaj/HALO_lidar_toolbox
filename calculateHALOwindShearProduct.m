@@ -286,9 +286,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     att.global.source = C.source;
     att.global.institution = C.institution;
     att.global.title = C.title;
-    att.global.day   = str2double(thedate(7:8));
-    att.global.month = str2double(thedate(5:6));
-    att.global.year  = str2double(thedate(1:4));
+    att.global.day   = int16(str2double(thedate(7:8)));
+    att.global.month = int16(str2double(thedate(5:6)));
+    att.global.year  = int16(str2double(thedate(1:4)));
     current_date = datestr(now);
     current_date(current_date == '-') = ' ';
     att.global.history = [current_date ' - Created by ' C.user ];

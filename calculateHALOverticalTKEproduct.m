@@ -263,7 +263,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         v_smooth = medianfilter(v_tmp);
         ws_e_smooth = medianfilter(ws_e_tmp);
         [~, count] = medianfilter(isfinite(u_tmp));
-        
+ 
         % kernel is [3 3], max count is 9
         u_smooth(count < 3) = NaN;
         ind_nm = isnan(u_tmp) & isfinite(u_smooth);
@@ -439,9 +439,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     att.global.source = C.source;
     att.global.institution = C.institution;
     att.global.title = C.title;
-    att.global.day   = str2double(thedate(7:8));
-    att.global.month = str2double(thedate(5:6));
-    att.global.year  = str2double(thedate(1:4));
+    att.global.day   = int16(str2double(thedate(7:8)));
+    att.global.month = int16(str2double(thedate(5:6)));
+    att.global.year  = int16(str2double(thedate(1:4)));
     current_date = datestr(now,'yyyy-mm-dd HH:MM:SS');
     att.global.history = [current_date ' - Created by ' C.user ];
     
