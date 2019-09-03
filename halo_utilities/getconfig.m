@@ -97,23 +97,46 @@ if exist('halo_config.txt','file') == 2
         if any(datenum(num2str(DATE),'yyyymmdd') >= ...
             datenum(spcfc_param_values(iperiods),'yyyymmdd'))
 
-	  for i = 1:length(iperiods)
-              % 
-              if datenum(num2str(DATE),'yyyymmdd') >= ...
-	          datenum(spcfc_param_values(iperiods(i)),'yyyymmdd')
-		  for j = 1:length(spcfc_param_values)
-                      % number
-                      if ~isnan(str2double(spcfc_param_values{j}))
-	                  C.(spcfc_param_names{j}) = ...
-		              str2double(spcfc_param_values{j});
-                      % string
-                      else
-                          C.(spcfc_param_names{j}) = ...
-                              spcfc_param_values{j};
-                      end
-		  end
-              end
-	  end	    		    
+        % Read parameter-value pairs for the appropriate date
+        valid_from_date = '0';
+        for j = 1:length(spcfc_param_values)
+          % Update valid time period from 'parameters_valid_from_including'
+          if strcmp(spcfc_param_names{j},'parameters_valid_from_including')
+            valid_from_date = spcfc_param_values{j};
+          end
+
+          if datenum(num2str(DATE),'yyyymmdd') >= datenum(valid_from_date,'yyyymmdd')
+            % Check if value is a number or a string
+            if ~isnan(str2double(spcfc_param_values{j}))
+              C.(spcfc_param_names{j}) = str2double(spcfc_param_values{j});
+            else
+              C.(spcfc_param_names{j}) = spcfc_param_values{j};
+            end
+          end
+        end       
+
+
+
+
+
+%	  for i = 1:length(iperiods)
+%              %
+%
+%              if datenum(num2str(DATE),'yyyymmdd') >= ...
+%	          datenum(spcfc_param_values(iperiods(i)),'yyyymmdd')
+%		  for j = 1:length(spcfc_param_values)
+%                      % number
+%                      if ~isnan(str2double(spcfc_param_values{j}))
+%	                  C.(spcfc_param_names{j}) = ...
+%		              str2double(spcfc_param_values{j});
+%                      % string
+%                      else
+%                          C.(spcfc_param_names{j}) = ...
+%                              spcfc_param_values{j};
+%                      end
+%		  end
+%              end
+%	  end	    		    
         else
             error(['DATE = %d < the earliest valid date specified in' ...
                   ' the halo_config.txt\nfor'' %s'' site.' ...
@@ -124,6 +147,7 @@ if exist('halo_config.txt','file') == 2
         error(['''%s'' is not specified in halo_config.txt.\nCheck' ...
             ' spelling or add your site to the halo_config.txt.'],site)
     end
+
 else
     error('Please check that halo_config.txt is in your path.')
 end

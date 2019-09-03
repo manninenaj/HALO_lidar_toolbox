@@ -79,10 +79,10 @@ iy = selection(1,2):selection(2,2);
 
 switch options
  case 'nopad'
-  result = nanmedian(largemat(ix,iy,:),3);
-  count = nansum(largemat(ix,iy,:),3);
+  result = squeeze(nanmedian(largemat(ix,iy,:),3));
+  count = squeeze(nansum(largemat(ix,iy,:),3));
  otherwise
-  result = median(largemat(ix,iy,:),3);
-  count = sum(largemat(ix,iy,:),3);
+  result = squeeze(median(largemat(ix,iy,:),3));
+  count = squeeze(sum(largemat(ix,iy,:),3));
 end
 end
