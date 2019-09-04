@@ -1,7 +1,7 @@
-function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file_type,daten,n_range_gates,range)
+function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file_type,daten,n_range_gates,range_m)
 
 
-irange=find(range<110,1,'first');
+irange=find(range_m<110,1,'first');
 
 % find co and cross background files
 dates=datestr(daten,'ddmmyy');
@@ -10,9 +10,7 @@ dates=datestr(daten,'ddmmyy');
 if isempty(files_bkg)
     bkg = nan(1,n_range_gates);
 else
-   length(files_bkg)
-   n_range_gates  
-   bkg = nan(length(files_bkg),n_range_gates); 
+    bkg = nan(length(files_bkg),n_range_gates); 
 end
 switch file_type
   %% read in backgrounds

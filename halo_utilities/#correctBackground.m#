@@ -148,6 +148,11 @@ else
 %     signal(:,1:4) = nan;
     signal(signal_orig == 0 | signal == 0) = nan;
     signal_orig(signal_orig == 0 | signal == 0) = nan;
+
+  
+
+
+
     fprintf('\nStarting HALO background correction. This might take a while.\n')
 
     %% SCREENING AND FILLING
@@ -163,7 +168,7 @@ else
     end
     
     fprintf('HALO background correction: filling signal for wavelet transformation...')
-    signal_filled = fillCloudScreenedSignal(signal_cld_scrd_outlr,range,parameters.ignore);
+      signal_filled = fillCloudScreenedSignal(signal_cld_scrd_outlr,range,parameters.ignore);
     fprintf('done.\n')    
 
     fprintf('HALO background correction: wavelet transformation...')    

@@ -1,5 +1,4 @@
-function [snr1,step_locations] = correctHALOripples(site,DATE,...
-    snr0,t_snr)
+function [snr1,step_locations] = correctHALOripples(site,DATE,snr0,t_snr,range_m)
 %correctHALOripples corrects the ripples in the HALO bakcground, see
 %Vakkari et al. (2019)
 
@@ -11,9 +10,6 @@ if isfield(C,'background_file_type')
 else
     bkg_file_type = 'txt';
 end
-
-C.background_file_type
-bkg_file_type
 
 [bkg_path, files_bkg] = getHALOfileList(site,DATE,'background',bkg_file_type);
 % [P_amp_path, files_P_amp] = getHALOfileList(site,DATE,'P_amp','txt');
@@ -32,7 +28,7 @@ end
 
 if ~isempty(files_bkg)
 % if exist(path_bkg,'dir') == 7 % if bkg files exist
-    [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,C.background_file_type,daten,C.num_range_gates);
+  [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,C.background_file_type,daten,C.num_range_gates,range_m);
 %     b_file(:,1:3) = nan; b_fit(:,1:3) = nan;
     P_bkg(all(isnan(P_bkg),2),:) = []; 
     P_fit(all(isnan(P_fit),2),:) = [];
