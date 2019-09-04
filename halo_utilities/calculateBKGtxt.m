@@ -2,7 +2,7 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file
 
 
 irange=find(range_m<110,1,'first');
-
+range_m(irange)
 % find co and cross background files
 dates=datestr(daten,'ddmmyy');
    
@@ -121,7 +121,7 @@ for i=1:length(bkg_raw(:,1));
         
        switch file_type
          case 'txt'
-           bkg_out(i,:) = bkg_raw(i,1:n_range_gates);
+           bkg_out(i,:) = bkg_raw(i,irange:n_range_gates);
          case 'nc'
            bkg_out(i,:) = bkg_raw(i,:);
        end
