@@ -2,7 +2,7 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file
 
 
 irange=find(range_m<110,1,'first');
-range_m(irange)
+
 % find co and cross background files
 dates=datestr(daten,'ddmmyy');
    
@@ -91,13 +91,18 @@ for i=1:length(bkg_raw(:,1));
     if ~isnan(bkg_raw(i,1)) % fit 1 and 2 order polynomial
         switch file_type
           case 'txt'
-    	    %fitti_1 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),1);
-            %fitti_2 = polyfit((4:n_range_gates-1),b_temp(4:n_range_gates-1),2);
-            
-            fitti_1 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),1);
-            fitti_2 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),2);
-            bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
-            bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
+            x = irange:n_range_gates-1; 
+            y = bkg_raw(i,irange:n_range_gates-1);
+            fitti_1 = my_robustfit(x(:),y(:));
+            fitti_2 = my_robustfit([x(:) x(:).^2],y(:));
+	    p1 = [fitti_1(2) fitti_1(1)];
+            p2 = [fitti_2(3) fitti_2(2) fitti_2(1)];
+            %fitti_1 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),1);
+            %fitti_2 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),2);
+            %bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
+            %bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
+            bkg_fitted_1 = polyval(p1, 1:n_range_gates);
+            bkg_fitted_2 = polyval(p2, 1:n_range_gates);          
             bkg_fitted_1 =  transpose(bkg_fitted_1(:));
             bkg_fitted_2 =  transpose(bkg_fitted_2(:));  
             rmse_1 = sqrt(mean((bkg_raw(i,irange:n_range_gates)-bkg_fitted_1(irange:n_range_gates)).^2,2));       

@@ -152,7 +152,7 @@ else
     fprintf('\nStarting HALO background correction. This might take a while.\n')
     if (length(range_m-parameters.ignore) / length(range_m) < .75
         warning(['Not enough range gates containing only noise to ' ...
-                 'do robust fitting. Skipping step change correction.']
+		'do robust fitting. Skipping step change correction.'])
         return
     end
     
