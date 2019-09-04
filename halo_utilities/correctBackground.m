@@ -150,7 +150,7 @@ else
     signal_orig(signal_orig == 0 | signal == 0) = nan;
     
     fprintf('\nStarting HALO background correction. This might take a while.\n')
-    if (length(range_m-parameters.ignore) / length(range_m) < .75
+    if (length(range_m)-parameters.ignore) / length(range_m) < .75
         warning(['Not enough range gates containing only noise to ' ...
 		'do robust fitting. Skipping step change correction.'])
         return
