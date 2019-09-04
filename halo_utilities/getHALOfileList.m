@@ -108,8 +108,11 @@ dir_to_folder = C.(cpmt);
 % find year, month, day wildcards
 dir_to_folder = strrep(dir_to_folder,'+YYYY+',thedate(1:4));
 dir_to_folder = strrep(dir_to_folder,'+MM+',thedate(5:6));
-dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
-
+if not(isempty(strfind(dir_to_folder,'+DOY+')))
+    dir_to_folder = strrep(dir_to_folder,'+DOY+',dayofyear(str2num(thedate(1:4)),str2num(thedate(5:6)),str2num(thedate(7:8)),0,0,0);
+else
+    dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
+end
 
 % Generate path
 switch processlev
