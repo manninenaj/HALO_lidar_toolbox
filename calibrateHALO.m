@@ -52,7 +52,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
     
     % Get default and site specific parameters
     [C,fnames] = getconfig(site,DATE);
-    
+   
+
     % initialize
     t_all_cell = cell(size(fnames,1),1);
     time_orig_measmode = cell(size(fnames,1),1);
@@ -116,7 +117,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
         %% Ripple removal & background correction
         snr_corr_1 = correctHALOripples(site,DATE,snr,time_hrs);
         snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
-            'correct_remnant','correct','ignore',80,'cloud_mask',logical(atm_mask));
+            'correct_remnant',C.opt_4_bkg_remnant_profiles,...
+            'ignore',C.first_gate_number_outside_abl,...
+            'cloud_mask',logical(atm_mask));
         
         %% Reorganize into original form and write out
         for i_out = 1:size(fnames,1)
