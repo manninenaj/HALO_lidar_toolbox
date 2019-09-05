@@ -94,6 +94,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         [tmp,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' ...
             halo_vad_files{i}]),{'time','range','azimuth','elevation',...
 				 'v_raw','signal','beta_error'});
+
+        % Clutter map, important especially in urban environments
+        
         
         % Wind retrieval
         Din.time      = tmp.time;

@@ -150,9 +150,13 @@ else
     signal_orig(signal_orig == 0 | signal == 0) = nan;
     
     fprintf('\nStarting HALO background correction. This might take a while.\n')
-    if (length(range_m)-parameters.ignore) / length(range_m) < .75
+    if (length(range_m)-parameters.ignore) / length(range_m) < .5
         warning(['Not enough range gates containing only noise to ' ...
 		'do robust fitting. Skipping step change correction.'])
+        signal_corr = signal;   
+        step_locations = [];
+        bitflags = [];
+        background = [];
         return
     end
     
@@ -753,7 +757,7 @@ end
         elseif not(isnumeric(params.ignore) && ...
                 isscalar(params.ignore) && ...
                 params.ignore <params.sizes(2) * .5)
-            error(['''ignore'' parameter has to be numeric scalar and' ...
+            warning(['''ignore'' parameter has to be numeric scalar and' ...
                 ' cannot be larger than 1/2 times the number of' ...
                 ' range gates. Default is %d'],3)
         end

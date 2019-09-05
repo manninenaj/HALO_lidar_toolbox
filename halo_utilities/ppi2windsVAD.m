@@ -221,7 +221,13 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         s_3 = (transpose(A(:,3))*A(:,3))^(-1/2);
         S = diag([s_1,s_2,s_3]);
         Z = A * S;
-        CN(i) = max(svd(Z))/min(svd(Z));
+
+        if any(isnan(Z(:))) | any(not(isfinite(Z(:))))
+	    CN(i) = nan;
+	else
+            CN(i) = max(svd(Z))/min(svd(Z));
+        end
+
         
         % As discussed by Newsom et al. (2017), radial velocity error is
         % comprised of instrumental noise and turbulent contribution since
