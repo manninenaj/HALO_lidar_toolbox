@@ -50,18 +50,18 @@ function [varargout] = polarPcolor(R,theta,Z,varargin)
 % Etienne Cheynet
 % https://se.mathworks.com/matlabcentral/fileexchange/49040-pcolor-in-polar-coordinates
 
-param.Ncircels = 5;
-param.Origin = 'auto';
-param.Nspokes = 8;
-param.labelR = '';
-param.RtickLabel = [];
-param.colbar = 1;
-param.Rscale = 'linear';
+params.Ncircles = 5;
+params.Origin = 'auto';
+params.Nspokes = 8;
+params.labelR = '';
+params.RtickLabel = [];
+params.colBar = 1;
+params.Rscale = 'linear';
 
 % Was the 'parameters' struct supplied?
 if ~isempty(varargin)
     % Check for overrides of the defaults
-    parameters = parsePropertyValuePairs(parameters, varargin);
+    params = parsePropertyValuePairs(params, varargin);
 end
 
 Ncircles = params.Ncircles;
@@ -377,5 +377,5 @@ end
             
         end
     end
-
+end
 

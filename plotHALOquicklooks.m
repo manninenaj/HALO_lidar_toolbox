@@ -74,6 +74,9 @@ else
             '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
+
+fontsize = 10;
+
 % Use datenum to accommodate leap years etc.
 for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         datenum(num2str(DATEend),'yyyymmdd')
@@ -275,6 +278,47 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         otherwise
                             continue
                     end
+                case 'vad'
+                     spokes = 15:30:345;
+                     circles = data.range(1:40:end)/1000;
+                     nspokes = length(spokes);
+                     ncircles = length(circles);
+                     rlabels = cellstr(num2str(circles));
+                     r = transpose(data.range(:)/1000);
+                     a = transpose(data.azimuth(:)); 
+                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 15 15];
+                     hf.Color = 'white'; hf.Visible = 'off';
+
+                     sp1 = subplot(221);
+                     s = transpose(10*real(log10(data.signal-1)));
+                     [h,c] = polarPcolor(r,a,s,...
+			  'labelR','range (km)','Ncircles',ncircles,...
+                          'Nspokes',nspokes,'Rticklabel',rlabels); 
+                     caxis([-30 0]); colormap(sp1,chilljet);
+                     ylabel(c,' uncorrected signal (dB)','FontSize',fontsize); 
+
+                     sp2 = subplot(222);
+                     v = transpose(data.v_raw);
+                     [h,c] = polarPcolor(r,a,data.v_raw,...
+			  'labelR','range (km)','Ncircles',ncircles,...
+                          'Nspokes',nspokes,'Rticklabel',rlabels); 
+                     caxis([-5 5]); colormap(sp2,cmocean('balance'));
+                     ylabel(c,'radial velocity (m s-1)'); 
+
+                     sp3 = subplot(223);
+                     b = transpose(real(log10(data.beta_raw)));
+                     [h,c] = polarPcolor(r,a,real(log10(data.beta_raw)),...
+			  'labelR','range (km)','Ncircles',ncircles,...
+                          'Nspokes',nspokes,'Rticklabel',rlabels); 
+                     caxis([-7 -4]); colormap(sp3,chilljet);
+                     ylabel(c,' attenuated beta (m-1 sr-1)'); 
+
+                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                     fname = fullfile([dir_out strrep(files{1},'.nc','.png')]);
+                     fprintf('Writing %s\n',fname)
+                     export_fig('-png','-m2',fname)
+                     close(hf)    
+                    
                 otherwise
                     continue
             end
