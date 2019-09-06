@@ -97,7 +97,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
         % Clutter map, important especially in urban environments
         
-        
         % Wind retrieval
         Din.time      = tmp.time;
         Din.range     = tmp.range;
@@ -161,7 +160,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     data.elevation = transpose(cell2mat(elevation_angle)); % deg
     data.mean_snr = cell2mat(transpose(mean_snr));
     data.height = height(:); % m
-    data.range = Din.range(:);
+    data.range = tmp.range(:);
     % Wind components
     data.u = transpose(cell2mat(uwind));
     data.v = transpose(cell2mat(vwind));
