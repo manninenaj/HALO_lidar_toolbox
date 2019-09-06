@@ -1,17 +1,21 @@
-function [xp,yp,zp,thpt,rpt] = pcolor2polar(time,range,azimuth,data)
+function [xp,yp,zp] = pcolor2polar(time,range,azimuth,data)
 
   % Original data (in cartesian space)
   x = time;
   y = range;
   z = data;
-
   % Convert to polar
   r = range;
   th = azimuth;
-  xp = r.*cosd(th);
-  yp = r.*sind(th);
-  zp = interp2(x,y,z,xp,yp);
-  [thpt, rpt] = cart2pol(xpt, ypt);
+  for i = 1:length(r)
+    for j = 1:length(th)
+      xp(i,j) = r(i).*cosd(th(j));
+      yp(i,j) = r(i).*sind(th(j));
+    end
+  end
+ whos 
+  zp = interp2(x,y,z,xp',yp');
+  %[thpt, rpt] = cart2pol(xpt, ypt);
   
   %% Plot in polar
   %ax(2) = subplot(1,2,2);

@@ -90,10 +90,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         [dirto,files] = getHALOfileList(site,DATE,processlev,measmode);
     end
     if isempty(files), continue; end
+                          
     
     % Get default and site/unit/period specific parameters
     C = getconfig(site,DATE);
-    data = load_nc_struct(fullfile([dirto files{1}]));
     
     switch processlev
         case 'calibrated'
@@ -101,6 +101,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                 case 'stare'
                     switch typeof
                         case 'co'
+                            data = load_nc_struct(fullfile([dirto files{1}]));
+
              	  	    ymax = round(data.range(end)/1000,0)+1;
                             tmax = ymax+.4;
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
@@ -172,18 +174,64 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
-                            [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
-                            X_out1 = [];
-
-                            fname = sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof);
-                          
-			    fprintf('Writing %s\n',fname)
-
+                           
+                            fname = fullfile([dirto strrep(files{1},'.nc','.png')]);                        
+                            fprintf('Writing %s\n',fname)
                             export_fig('-png','-m2',fname)
                             close(hf)
 		        otherwise
                             continue
                         end
+                case 'vad'
+
+		   for i = 1:length(files)
+	               %if i~=1, return; end
+                       data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
+                       r = transpose(data.range(:)/1000);
+                       a = transpose(data.azimuth(:));
+                       ncircles = 4;
+                       circles = linspace(round(r(1),1),round(r(end),1),ncircles);
+                       nspokes = 9;
+                       rticklabel = cellstr(num2str(circles(:)));
+      
+
+
+                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
+                       hf.Color = 'white'; hf.Visible = 'off';
+                       sp1 = subplot(131);
+                       s = transpose(10*real(log10(data.signal-1)));
+                       [~,c]= polarPcolor(r,a,s,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       ylabel(c,' signal intensity (dB)');
+                       set(gcf,'color','w')
+                       colormap(sp1,chilljet)
+                       caxis([-32 0])
+
+                       sp2 = subplot(132);
+                       b = transpose(real(log10(data.beta_raw)));
+                       [~,c]= polarPcolor(r,a,b,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       ylabel(c,' att. beta (m-1 sr-1)');
+                       set(gcf,'color','w')
+                       colormap(sp2,chilljet)
+                       caxis([-7 -4])
+
+                       sp3 = subplot(133);
+                       v = transpose(data.v_raw);
+                       [~,c]= polarPcolor(r,a,v,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       ylabel(c,' radial velocity (m s-1)');
+                       set(gcf,'color','w')
+                       colormap(sp3,cmocean('balance'))
+                       caxis([-5 5])
+
+
+		       set(findall(hf,'-property','FontSize'),'FontSize',8)
+
+
+                       fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
+                       fprintf('Writing %s\n',fname)
+                       export_fig('-png','-m1.5',fname)
+                       close(hf)
+                   end    
+
                 otherwise
                      continue
                 end
@@ -193,6 +241,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                 case 'stare'
                     switch typeof
                         case 'co'
+                            data = load_nc_struct(fullfile([dirto files{1}]));
+
              	  	    ymax = round(data.range(end)/1000,0)+1;
                             tmax = ymax+.4;
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
@@ -264,60 +314,64 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)'); xlabel('Time UTC')
-                            [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
-                            X_out1 = [];
 
-                            fname = sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof);
-                          
-			    fprintf('Writing %s\n',fname)
-
-                            export_fig('-png','-m.8',fname)
-                            close(hf)    
+                            fname = fullfile([dirto strrep(files{1},'.nc','.png')]);                        
+                            fprintf('Writing %s\n',fname)
+                            export_fig('-png','-m2',fname)
+                            close(hf)
                         
 
                         otherwise
                             continue
                     end
                 case 'vad'
-                     spokes = 15:30:345;
-                     circles = data.range(1:40:end)/1000;
-                     nspokes = length(spokes);
-                     ncircles = length(circles);
-                     rlabels = cellstr(num2str(circles));
-                     r = transpose(data.range(:)/1000);
-                     a = transpose(data.azimuth(:)); 
-                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 15 15];
-                     hf.Color = 'white'; hf.Visible = 'off';
+		   for i = 1:length(files)
+	               %if i~=1, return; end
+                       data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
+                       r = transpose(data.range(:)/1000);
+                       a = transpose(data.azimuth(:));
+                       ncircles = 4;
+                       circles = linspace(round(r(1),1),round(r(end),1),ncircles);
+                       nspokes = 9;
+                       rticklabel = cellstr(num2str(circles(:)));
+      
 
-                     sp1 = subplot(221);
-                     s = transpose(10*real(log10(data.signal-1)));
-                     [h,c] = polarPcolor(r,a,s,...
-			  'labelR','range (km)','Ncircles',ncircles,...
-                          'Nspokes',nspokes,'Rticklabel',rlabels); 
-                     caxis([-30 0]); colormap(sp1,chilljet);
-                     ylabel(c,' uncorrected signal (dB)','FontSize',fontsize); 
 
-                     sp2 = subplot(222);
-                     v = transpose(data.v_raw);
-                     [h,c] = polarPcolor(r,a,data.v_raw,...
-			  'labelR','range (km)','Ncircles',ncircles,...
-                          'Nspokes',nspokes,'Rticklabel',rlabels); 
-                     caxis([-5 5]); colormap(sp2,cmocean('balance'));
-                     ylabel(c,'radial velocity (m s-1)'); 
+                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
+                       hf.Color = 'white'; hf.Visible = 'off';
+                       sp1 = subplot(131);
+                       s = transpose(10*real(log10(data.signal-1)));
+                       [~,c]= polarPcolor(r,a,s,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       ylabel(c,' signal intensity (dB)');
+                       set(gcf,'color','w')
+                       colormap(sp1,chilljet)
+                       caxis([-32 0])
 
-                     sp3 = subplot(223);
-                     b = transpose(real(log10(data.beta_raw)));
-                     [h,c] = polarPcolor(r,a,real(log10(data.beta_raw)),...
-			  'labelR','range (km)','Ncircles',ncircles,...
-                          'Nspokes',nspokes,'Rticklabel',rlabels); 
-                     caxis([-7 -4]); colormap(sp3,chilljet);
-                     ylabel(c,' attenuated beta (m-1 sr-1)'); 
+                       sp2 = subplot(132);
+                       b = transpose(real(log10(data.beta_raw)));
+                       [~,c]= polarPcolor(r,a,b,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       ylabel(c,' att. beta (m-1 sr-1)');
+                       set(gcf,'color','w')
+                       colormap(sp2,chilljet)
+                       caxis([-7 -4])
 
-                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
-                     fname = fullfile([dir_out strrep(files{1},'.nc','.png')]);
-                     fprintf('Writing %s\n',fname)
-                     export_fig('-png','-m2',fname)
-                     close(hf)    
+                       sp3 = subplot(133);
+                       v = transpose(data.v_raw);
+                       [~,c]= polarPcolor(r,a,v,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       ylabel(c,' radial velocity (m s-1)');
+                       set(gcf,'color','w')
+                       colormap(sp3,cmocean('balance'))
+                       caxis([-5 5])
+
+
+		       set(findall(hf,'-property','FontSize'),'FontSize',8)
+
+
+                       fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
+                       fprintf('Writing %s\n',fname)
+                       export_fig('-png','-m1.5',fname)
+                       close(hf)
+                   end    
                     
                 otherwise
                     continue
@@ -325,6 +379,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         case 'product'
             switch measmode
                 case 'wstats'
+                    data = load_nc_struct(fullfile([dirto files{1}]));
+
                     beta_mean = data.beta_mean_3min;
                     snr_mean = data.signal_mean_3min;
                     velo_mean = data.radial_velocity_mean_3min;
@@ -429,6 +485,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     end
                     close(hf)
                 case 'TKE'
+                    data = load_nc_struct(fullfile([dirto files{1}]));
+
                     [dirsnr,filessnr] = getHALOfileList(site,DATE,'product' ,'wstats');
                     wstats = load_nc_struct(fullfile([dirsnr filessnr{1}]));
                     
@@ -509,9 +567,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
                     close(hf)
                 case 'windshear'
-%                    [dirto,files] = getHALOfileList(site,DATE,'product','windshear');
-%                    data = load_nc_struct(fullfile([dirto files{1}]));
-%                     
+                    data = load_nc_struct(fullfile([dirto files{1}]));
+
+                     
                     windhsear = data.vector_wind_shear_3min;
                     windhsear_e = data.vector_wind_shear_error_3min;
                     
@@ -586,8 +644,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     close(hf)              
                     
                 case 'windvad'
- %                   [dirt,files] = getHALOfileList(site,DATE,'product',measmode,typeof);
- %                   [data] = load_nc_struct(fullfile([dirt files{1}]));
+                   [data] = load_nc_struct(fullfile([dirto files{1}]));
                    
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
@@ -661,8 +718,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                    
                     
                 case 'winddbs'
-%                    [dirt,files] = getHALOfileList(site,DATE,'product',measmode,typeof);
-%                    [data] = load_nc_struct(fullfile([dirt files{1}]));
+                    [data] = load_nc_struct(fullfile([dirto files{1}]));
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
@@ -734,6 +790,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     close(hf)
                     
                 case 'wstats4precipfilter'
+                    data = load_nc_struct(fullfile([dirto files{1}]));
+
                     beta_mean = data.beta_mean_3min;
                     beta_var = data.beta_variance_3min;
                     snr_mean = data.signal_mean_3min;
