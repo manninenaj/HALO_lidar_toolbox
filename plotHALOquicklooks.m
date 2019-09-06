@@ -228,7 +228,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
                        fprintf('Writing %s\n',fname)
-                       export_fig('-png','-m1.5',fname)
+                       export_fig('-png','-m1',fname)
                        close(hf)
                    end    
 
@@ -369,7 +369,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
                        fprintf('Writing %s\n',fname)
-                       export_fig('-png','-m1.5',fname)
+                       export_fig('-png','-m1',fname)
                        close(hf)
                    end    
                     
