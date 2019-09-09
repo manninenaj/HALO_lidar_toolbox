@@ -2,6 +2,7 @@ function plotHALOquicklooks(site,DATES,processlev,measmode,typeof,varargin)
 % Check inputs
 
 p.masking = false;
+p.ymax = 99999;
 if ~isempty(varargin)
     p = parsePropertyValuePairs(p, varargin);
 end
@@ -112,23 +113,23 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                             hf.Color = 'white'; hf.Visible = 'off';
                             sp1 = subplot(321);
-                            s0 = 10*real(log10(data.signal0-1));
+                            s0 = data.signal0;
                             imagesc(data.time,data.range/1000,transpose(s0)); axis([0 24 0 ymax]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 7.3 11 2.2],'Color',[.75 .75 .75]);
-                            caxis([-30 0]); colormap(sp1,chilljet);
-                            cb = colorbar; cb.Label.String = 'dB'; text(0,tmax,'uncorrected signal');
+                            caxis([.99 1.01]); colormap(sp1,chilljet);
+                            cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'uncorrected signal');
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
                             
                             sp2 = subplot(322);
-                            s1 = 10*real(log10(data.signal-1));
+                            s1 = data.signal;
                             imagesc(data.time,data.range/1000,transpose(s1)); axis([0 24 0 ymax]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 7.3 11 2.2],'Color',[.75 .75 .75]);
-                            caxis([-30 0]); colormap(sp2,chilljet);
-                            cb = colorbar; cb.Label.String = 'dB'; text(0,tmax,'corrected signal')
+                            caxis([.99 1.01]); colormap(sp2,chilljet);
+                            cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'corrected signal')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
@@ -191,48 +192,64 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 		   for i = 1:length(files)
 	               %if i~=1, return; end
                        data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
+                       if p.masking
+		          smask = logical(zeros(size(data.signal)));
+		          for ia = 1:length(data.azimuth)
+			     ibegin = find(data.signal(ia,5:end)>1.2,1,'first');
+                             smask(ia,ibegin+4:end) = true;
+                          end
+			  smask(data.signal<1.008) = true;             
+                          smask(:,1:4) = true;
+                          data.beta_raw(smask) = nan;
+                          data.v_raw(smask) = nan;
+                          data.signal(smask) = nan;
+                       end
+                       if p.ymax~=99999 
+    		           cond = data.range>p.ymax; 
+                           data.signal(:,cond) = [];  
+                           data.beta_raw(:,cond) = [];  
+                           data.v_raw(:,cond) = [];  
+                           data.range(cond) = [];  
+                       end
                        r = transpose(data.range(:)/1000);
-                       a = transpose(data.azimuth(:));
+                       a = transpose(data.azimuth(:)) + C.home_point_azimuth;
+                       a(a>360) = a(a>360)-360;
+                       s = transpose(10*real(log10(data.signal-1)));
+		       b = transpose(data.beta_raw*1e6);
+                       v = transpose(data.v_raw);
                        ncircles = 4;
                        circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
                        rticklabel = cellstr(num2str(circles(:)));
-      
-
-
+    
                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
                        hf.Color = 'white'; hf.Visible = 'off';
                        sp1 = subplot(131);
-                       s = transpose(10*real(log10(data.signal-1)));
                        [~,c]= polarPcolor(r,a,s,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
-                       ylabel(c,' signal intensity (dB)');
+                       ylabel(c,' signal intensity (SNR+1)');
                        set(gcf,'color','w')
                        colormap(sp1,chilljet)
-                       caxis([-32 0])
+                       caxis([-30 -10])
 
                        sp2 = subplot(132);
-                       b = transpose(real(log10(data.beta_raw)));
                        [~,c]= polarPcolor(r,a,b,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
-                       ylabel(c,' att. beta (m-1 sr-1)');
+                       ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
                        colormap(sp2,chilljet)
-                       caxis([-7 -4])
+                       caxis([0 6])
 
                        sp3 = subplot(133);
-                       v = transpose(data.v_raw);
                        [~,c]= polarPcolor(r,a,v,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
                        caxis([-5 5])
 
-
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
-
 
                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
                        fprintf('Writing %s\n',fname)
-                       export_fig('-png','-m1',fname)
+                       export_fig('-png','-m2',fname)
                        close(hf)
                    end    
 
@@ -252,12 +269,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                             hf.Color = 'white'; hf.Visible = 'off';
                             sp1 = subplot(321);
-                            s0 = 10*real(log10(data.signal-1));
+                            s0 = data.signal;
                             imagesc(data.time,data.range/1000,transpose(s0)); axis([0 24 0 ymax]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:2:10,'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 7.3 11 2.2],'Color',[.75 .75 .75]);
-                            caxis([-30 0]); colormap(sp1,chilljet);
-                            cb = colorbar; cb.Label.String = 'dB'; text(0,tmax,'uncorrected signal');
+                            caxis([.99 1.01]); colormap(sp1,chilljet);
+                            cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'uncorrected signal');
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Height (km)')
@@ -321,7 +338,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                             fname = fullfile([dirto strrep(files{1},'.nc','.png')]);                        
                             fprintf('Writing %s\n',fname)
-                            export_fig('-png','-m2',fname)
+                            export_fig('-png','-m1',fname)
                             close(hf)
                         
 
@@ -332,37 +349,51 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 		   for i = 1:length(files)
 	               %if i~=1, return; end
                        data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
+                       if p.masking
+		          smask = logical(zeros(size(data.signal)));
+		          for ia = 1:length(data.azimuth)
+			     ibegin = find(data.signal(ia,5:end)>1.2,1,'first');
+                             smask(ia,4+ibegin:end) = true;
+                          end
+			  smask(data.signal<1.01) = true;
+                          smask(:,1:4) = true;
+                          data.beta_raw(smask) = nan;
+                          data.v_raw(smask) = nan;
+                          data.signal(smask) = nan;
+                       end 
+                       if p.ymax~=99999
+   		           cond = data.range>p.ymax; 
+                           data.signal(:,cond) = [];  
+                           data.beta_raw(:,cond) = [];  
+                           data.v_raw(:,cond) = [];  
+                           data.range(cond) = [];  
+                       end
                        r = transpose(data.range(:)/1000);
-                       a = transpose(data.azimuth(:));
+                       a = transpose(data.azimuth(:)) + C.home_point_azimuth;
+                       a(a>360) = a(a>360)-360;
                        s = transpose(10*real(log10(data.signal-1)));
-                       b = transpose(real(log10(data.beta_raw)));
+                       b = transpose(data.beta_raw*1e6);
                        v = transpose(data.v_raw);
                        ncircles = 4;
                        circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
                        rticklabel = cellstr(num2str(circles(:)));
-                       if p.masking
-                          smask = s>-7 % in dB
-                          b(smask) = nan;
-                          v(smask) = nan;
-                       end
                             
                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
                        hf.Color = 'white'; hf.Visible = 'off';
                        sp1 = subplot(131);
-		       s(smask) = nan;
                        [~,c]= polarPcolor(r,a,s,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
                        ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
                        colormap(sp1,chilljet)
-                       caxis([-32 0])
+                       caxis([-30 -10])
 
                        sp2 = subplot(132);
                        [~,c]= polarPcolor(r,a,b,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
-                       ylabel(c,' att. beta (m-1 sr-1)');
+                       ylabel(c,' att. beta (Mm-1 sr-1)');                      
                        set(gcf,'color','w')
                        colormap(sp2,chilljet)
-                       caxis([-7 -4])
+                       caxis([0 6])
 
                        sp3 = subplot(133);
                        [~,c]= polarPcolor(r,a,v,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
@@ -377,7 +408,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
                        fprintf('Writing %s\n',fname)
-                       export_fig('-png','-m1',fname)
+                       export_fig('-png','-m2',fname)
                        close(hf)
                    end    
                     
@@ -672,54 +703,70 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                       hlabel = 'height agl (km)';
                     end
 
-                    
+                    if p.ymax==99999
+		      p.ymax=4;
+		    else
+		      p.ymax = p.ymax/1000;
+                    end
+                    if p.masking
+                       cond = data.mean_snr<1.01;
+                       cond(:,1:3) = true;
+                       ws(cond) = nan;
+                       wd(cond) = nan;
+                       ws_e(cond) = nan;
+                       wd_e(cond) = nan;
+                       w(cond) = nan;
+                       snr(cond) = nan; 
+                    end
+
+
                     sp1 = subplot(321);
-                    pcolor(data.time,height,ws'); axis([0 24 0 4]); shading flat
+                    pcolor(data.time,height,ws'); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,4.45,'Wind speed');
+                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,p.ymax+.3,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel);
                     
                     sp2 = subplot(322);
-                    pcolor(data.time,height,ws_e'); axis([0 24 0 4]); shading flat
+                    pcolor(data.time,height,ws_e'); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,4.45,'Wind speed error')
+                    caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,p.ymax+.3,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.5:10; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel);
                     
                     sp3 = subplot(323);
-                    pcolor(data.time,height,wd'); axis([0 24 0 4]); shading flat
+                    pcolor(data.time,height,wd'); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,4.45,'Wind direction');
+                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,p.ymax+.3,'Wind direction');
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:90:360;
                     ylabel(hlabel);
                     
                     sp4 = subplot(324);
-                    pcolor(data.time,height,wd_e'); axis([0 24 0 4]); shading flat
+                    pcolor(data.time,height,wd_e'); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,4.45,'Wind direction error')
+                    caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,p.ymax+.3,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.5:2;
                     ylabel(hlabel);
                     
                     sp5 = subplot(325);
-                    pcolor(data.time,height,w'); axis([0 24 0 4]); shading flat
+                    pcolor(data.time,height,w'); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([-3 3]); colormap(sp5,cmocean('balance')); text(0,4.45,'w wind component')
+                    caxis([-3 3]); colormap(sp5,cmocean('balance')); text(0,p.ymax+.3,'w wind component')
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1:3;
                     ylabel(hlabel);
 
                     sp6 = subplot(326);
-                    pcolor(data.time,height,snr'); axis([0 24 0 4]); shading flat
+                    pcolor(data.time,height,snr'); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([.995 1.015]); colormap(sp6,chilljet); text(0,4.45,'Mean signal')
+                    caxis([.995 1.015]); colormap(sp6,chilljet); text(0,p.ymax+.3,'Mean signal')
                     cb = colorbar; cb.Label.String = 'SNR+1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = .995:.005:1.015;

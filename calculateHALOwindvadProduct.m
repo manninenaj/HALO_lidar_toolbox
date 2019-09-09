@@ -160,7 +160,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     data.elevation = transpose(cell2mat(elevation_angle)); % deg
     data.mean_snr = cell2mat(transpose(mean_snr));
     data.height = height(:); % m
-    data.range = tmp.range(:);
+    data.range = Din.range(:);
     % Wind components
     data.u = transpose(cell2mat(uwind));
     data.v = transpose(cell2mat(vwind));
@@ -512,7 +512,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     att.global.history = [current_date ' - Created by ' C.user ];
 
     % Create dimensions
-    dim = struct('time',length(data.time),'height',length(data.height));
+    dim = struct('time',length(data.time),'height',length(data.height),'range',length(data.range));
 
     data = orderfields(data);
     att = orderfields(att);

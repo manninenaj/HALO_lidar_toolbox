@@ -62,7 +62,7 @@ function [signal_corr, step_locations, bitflags, background] = ...
 % - 'correct_remnant'   determines how to handle the remnant outlier
 %                       profiles, which are not presented well by the
 %                       averaged  approach in section 3. DEFAULT:
-%                       ('correct_remnant', 'original')
+%                       ('correct_remnant', 'none')
 %                       'correct'   correct all of the profiles using
 %                                   robust linear regression including the
 %                                   remnant profiles
@@ -106,7 +106,7 @@ function [signal_corr, step_locations, bitflags, background] = ...
 %% SET DEFAULTS
 parameters.win_size        = [33 1];
 parameters.wavelet_level   = 5;
-parameters.correct_remnant = 'original';
+parameters.correct_remnant = 'none';
 parameters.ignore          = 3;
 parameters.sizes           = [length(time) length(range_m)];
 parameters.cloud_mask      = [];
@@ -150,9 +150,9 @@ else
     signal_orig(signal_orig == 0 | signal == 0) = nan;
     
     fprintf('\nStarting HALO background correction. This might take a while.\n')
-    if (length(range_m)-parameters.ignore) / length(range_m) < .5
+    if (length(range_m)-parameters.ignore) / length(range_m) < .70
         warning(['Not enough range gates containing only noise to ' ...
-		'do robust fitting. Skipping step change correction.'])
+		'do robust fitting! Skipping step change correction.'])
         signal_corr = signal;   
         step_locations = [];
         bitflags = [];
@@ -787,8 +787,8 @@ end
         % correct_remnant - must be one of 3 options
         valid = {'correct', 'remove', 'original', 'none'};
         if isempty(params.correct_remnant)
-            % default == 'original'
-            params.correct_remnant = 'original';
+            % default == 'none'
+            params.correct_remnant = 'none';
         end
         ind = find(strncmpi(params.correct_remnant,valid,...
             length(params.correct_remnant)));
