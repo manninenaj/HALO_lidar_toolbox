@@ -217,29 +217,29 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        s = transpose(10*real(log10(data.signal-1)));
 		       b = transpose(data.beta_raw*1e6);
                        v = transpose(data.v_raw);
-                       ncircles = 4;
-                       circles = linspace(round(r(1),1),round(r(end),1),ncircles);
+                       rstep = .2;
+                       %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
-                       rticklabel = cellstr(num2str(circles(:)));
+                       %rticklabel = cellstr(num2str(circles(:)));
     
                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
                        hf.Color = 'white'; hf.Visible = 'off';
                        sp1 = subplot(131);
-                       [~,c]= polarPcolor(r,a,s,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
-                       ylabel(c,' signal intensity (SNR+1)');
+                       [~,c]= polarPcolor(r,a,s,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
-                       colormap(sp1,chilljet)
-                       caxis([-30 -10])
+                       colormap(sp1,cmap_darkviolet_to_brickred)
+                       caxis([-20 0])
 
                        sp2 = subplot(132);
-                       [~,c]= polarPcolor(r,a,b,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       [~,c]= polarPcolor(r,a,b,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
-                       colormap(sp2,chilljet)
+                       colormap(sp2,cmap_darkviolet_to_brickred)
                        caxis([0 6])
 
                        sp3 = subplot(133);
-                       [~,c]= polarPcolor(r,a,v,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       [~,c]= polarPcolor(r,a,v,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
@@ -251,6 +251,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        fprintf('Writing %s\n',fname)
                        export_fig('-png','-m2',fname)
                        close(hf)
+
                    end    
 
                 otherwise
@@ -347,7 +348,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     end
                 case 'vad'
 		   for i = 1:length(files)
-	               %if i~=1, return; end
                        data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
                        if p.masking
 		          smask = logical(zeros(size(data.signal)));
@@ -372,46 +372,45 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        a = transpose(data.azimuth(:)) + C.home_point_azimuth;
                        a(a>360) = a(a>360)-360;
                        s = transpose(10*real(log10(data.signal-1)));
-                       b = transpose(data.beta_raw*1e6);
+		       b = transpose(data.beta_raw*1e6);
                        v = transpose(data.v_raw);
-                       ncircles = 4;
-                       circles = linspace(round(r(1),1),round(r(end),1),ncircles);
+                       rstep = .2;
+                       %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
-                       rticklabel = cellstr(num2str(circles(:)));
-                            
+                       %rticklabel = cellstr(num2str(circles(:)));
+    
                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
                        hf.Color = 'white'; hf.Visible = 'off';
                        sp1 = subplot(131);
-                       [~,c]= polarPcolor(r,a,s,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       [~,c]= polarPcolor(r,a,s,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
-                       colormap(sp1,chilljet)
-                       caxis([-30 -10])
+                       colormap(sp1,cmap_darkviolet_to_brickred)
+                       caxis([-20 0])
 
                        sp2 = subplot(132);
-                       [~,c]= polarPcolor(r,a,b,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
-                       ylabel(c,' att. beta (Mm-1 sr-1)');                      
+                       [~,c]= polarPcolor(r,a,b,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
-                       colormap(sp2,chilljet)
+                       colormap(sp2,cmap_darkviolet_to_brickred)
                        caxis([0 6])
 
                        sp3 = subplot(133);
-                       [~,c]= polarPcolor(r,a,v,'Ncircles',ncircles,'Nspokes',nspokes,'RtickLabel',rticklabel);
+                       [~,c]= polarPcolor(r,a,v,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
                        caxis([-5 5])
 
-
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
-
 
                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
                        fprintf('Writing %s\n',fname)
                        export_fig('-png','-m2',fname)
                        close(hf)
+
                    end    
-                    
+
                 otherwise
                     continue
             end
