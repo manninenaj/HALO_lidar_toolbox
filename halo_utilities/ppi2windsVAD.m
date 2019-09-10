@@ -213,7 +213,7 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         
         % Calculate sine wave fit and goodness-of-fit values
         [~,R_squared(i),RMSE(i)] = calculateSinusoidalFit(...
-            S_in.azimuth,S_in.velocity(:,i),S_in.snr(:,i));
+            S_in.azimuth,S_in.velocity(:,i));
         
         % Calculate condition number
         s_1 = (transpose(A(:,1))*A(:,1))^(-1/2);

@@ -1,10 +1,10 @@
-function [sine_fit,R_squared,RMSE] = calculateSinusoidalFit(azi,vr,snr)
+function [sine_fit,R_squared,RMSE] = calculateSinusoidalFit(azi,vr)
 %calculateSinusoidalFit fits a sine wave to data.
 
 [~,iazi] = sort(azi); % sort w.r.t. azi (w.r.t. time orginally)
 x = azi(iazi)*pi/180; % degrees to radians
 y = vr(iazi)-nanmean(vr); % shift by mean
-% y(snr<1.001)=nan;
+
 yu = nanmax(y);
 yl = nanmin(y);
 
