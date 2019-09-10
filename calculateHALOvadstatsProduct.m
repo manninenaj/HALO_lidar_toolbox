@@ -1,0 +1,98 @@
+function calculateHALOwindvadProduct(site,DATES,dt)
+%CALCULATEHALOWINDVADPRODUCT reads ppi files and calculates (u,v,w) wind
+% components, wind speed, wind direction, respective errors due to
+% random instumental noise, and overall errors using VAD tehcnique, and
+% writed wind retrieval into daily netcdf files.
+%
+% Usage:
+% calculateHALOwindvadProduct(site,DATES,elevangle)
+%
+% Inputs:
+% -site        String, site name, e.g. site = 'kuopio'
+% -DATES       Scalar or vector, numeric, e.g. DATES = 20170401
+%              or DATES = [20170401 20170431]
+% -elevangle   string, elevation angle 0-90
+%
+% Created 2017-10-29
+% Antti Manninen
+% Finnish Meteorological Institute
+% antti.manninen@fmi.fi
+
+if nargin < 3
+  error('''site'', ''DATES'', ''elevation'' are required inputs!')
+end
+  if ~ischar(site)
+  error('The first input ''site'' must be a string.')
+end
+  if length(DATES)>2
+  error('''DATES'' can have max. length of 2.')
+  elseif length(DATES)==1
+  DATEstart = DATES; DATEend = DATES;
+elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && length(num2str(DATES(2)))~=8)
+  error(['The value(s) in the second input ''DATES'' must be numerical date(s) in YYYYMMDD format.'])
+else
+  DATEstart = DATES(1); DATEend = DATES(2);
+end
+if (~ischar(elevangle) || length(elevangle) ~= 2 || (~isempty(str2num(elevangle)) && str2num(elevangle)<0 || str2num(elevangle)>90)) & not(strcmp(elevangle,'0'))
+  error('The 3rd input must be a string and no longer than 2 characters specifying the elevation angle 0-90 degrees.')
+end
+
+for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyyymmdd')
+
+  % Convert date into required formats
+  thedate = datestr(DATEi,'yyyymmdd');
+  DATE = str2double(thedate);
+
+  % Get default and site/unit/period specific parameters
+  C = getconfig(site,DATE);
+
+  % Get list of files
+  elevangle1 = ['ele' elevangle];
+  abc = ['vad_' elevangle1];
+  [dir_to_folder_in,halo_vad_files] = getHALOfileList(site,DATE,'calibrated','vad',elevangle1);
+  [dir_to_folder_out,~] = getHALOfileList(site,DATE,'product','windvad',elevangle1);
+ 
+  if isempty(halo_vad_files)
+     continue;
+  end
+
+  % Check path to write out
+  status = checkHALOpath(site,DATE,'product','windvad',elevangle1);
+  if isempty(status)
+    fprintf('Can''t write %s - %s.',num2str(DATE),site);
+    continue;
+  end
+
+  % Initialise
+  signal = cell(length(halo_vad_files));
+  for i = 1:length(halo_vad_files)
+    % Load
+    [data,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' halo_vad_files{i}]),{'time','v_raw','signal','beta_raw'});
+
+    % Clutter & noise map, important especially in urban environments
+    myfilter = data.signal > 1.2 | data.signal < 1.008;  
+    data.signal(myfilter) = nan;
+    data.beta_raw(myfilter) = nan;
+    data.v_raw(myfilter) = nan;
+    
+    % Collect to cells  
+    signal_cell{i} = permute(data.signal, [3 1 2]);
+    beta_cell{i} = permute(data.beta_raw, [3 1 2]);
+    v_raw_cell{i} = permute(data.v_raw, [3 1 2]);
+  end
+    
+  % dims: scantime x azimuth x range
+  signal = cell2mat(signal_cell(:));
+  beta = cell2mat(beta_cell(:)); 
+  velo = cell2mat(velo_cell(:));
+
+  % average and with mean wind
+
+
+
+
+
+
+
+
+

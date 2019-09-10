@@ -243,7 +243,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
-                       caxis([-5 5])
+                       caxis([-15 15]))
 
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
 
@@ -400,7 +400,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
-                       caxis([-5 5])
+                       caxis([-15 15])
 
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
 
