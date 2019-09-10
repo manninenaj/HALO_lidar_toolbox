@@ -67,10 +67,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
   signal = cell(length(halo_vad_files));
   for i = 1:length(halo_vad_files)
     % Load
-    [data,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' halo_vad_files{i}]),{'time','v_raw','signal','beta_raw'});
+    [data,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' halo_vad_files{i}]));
 
     % Clutter & noise map, important especially in urban environments
-    myfilter = data.signal > 1.2 | data.signal < 1.008;  
+    myfilter = data.signal > 1.2 | data.signal < 1.01;  
     data.signal(myfilter) = nan;
     data.beta_raw(myfilter) = nan;
     data.v_raw(myfilter) = nan;
@@ -79,14 +79,25 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
     signal_cell{i} = permute(data.signal, [3 1 2]);
     beta_cell{i} = permute(data.beta_raw, [3 1 2]);
     v_raw_cell{i} = permute(data.v_raw, [3 1 2]);
+    time_cell{i} = nanmedian(decimal2daten(data.time,DATEi));
+    azi_cell{i} = data.azimuth; 
   end
     
   % dims: scantime x azimuth x range
   signal = cell2mat(signal_cell(:));
   beta = cell2mat(beta_cell(:)); 
   velo = cell2mat(velo_cell(:));
+  time = cell2mat(time_cel);
+  azi = nanmedian(cell2mat(azi_cell));
 
   % average and with mean wind
+  for idt = 1:length(dt)
+    starttime = DATEi;
+    endtime = DATEi + datenum(0,0,0,0,dt(idt),0);
+    inds = find(time>=starttime && time<=endtime);
+    velo_mean = nanmean(velo(inds,:,:));
+    [sine_fit,R2,RMSE] = calculateSinusoidalFit(azi(:),velo_mean(:));
+
 
 
 
