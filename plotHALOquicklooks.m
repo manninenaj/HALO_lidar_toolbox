@@ -9,10 +9,10 @@ end
 
 if nargin < 4
     error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
-        ' are required for the products: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
+        ' are required for the products: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
         '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',...
+if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'epsilon',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
         strcmp(processlev,'background'))
     if ~ischar(site)
@@ -34,24 +34,24 @@ if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',..
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
-if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
         ~strcmp(processlev,'background'))
     error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
+        ' are required for ANY OTHER products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
         ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if nargin == 4 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+if nargin == 4 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
         ~strcmp(processlev,'background'))
     error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
+        ' are required for ANY OTHER products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
         ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 else
     if ~ischar(site)
@@ -73,10 +73,10 @@ else
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
+            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
     end
 end
 
@@ -191,7 +191,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
 		   for i = 1:length(files)
 	               %if i~=1, return; end
-                       data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
+                       data = load_nc_struct(fullfile([dirto files{i}]));
                        if p.masking
 		          smask = logical(zeros(size(data.signal)));
 		          for ia = 1:length(data.azimuth)
@@ -203,47 +203,76 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                           data.beta_raw(smask) = nan;
                           data.v_raw(smask) = nan;
                           data.signal(smask) = nan;
+                          data.beta_error(smask) = nan;  
+                          data.v_error(smask) = nan;  
                        end
                        if p.ymax~=99999 
     		           cond = data.range>p.ymax; 
                            data.signal(:,cond) = [];  
                            data.beta_raw(:,cond) = [];  
                            data.v_raw(:,cond) = [];  
+                           data.beta_error(:,cond) = [];  
+                           data.v_error(:,cond) = [];  
                            data.range(cond) = [];  
                        end
                        r = transpose(data.range(:)/1000);
-                       a = transpose(data.azimuth(:)) + C.home_point_azimuth;
+                       a = transpose(data.azimuth(:));
                        a(a>360) = a(a>360)-360;
                        s = transpose(10*real(log10(data.signal-1)));
+                       s_e = transpose(data.beta_error * 100);
 		       b = transpose(data.beta_raw*1e6);
-                       v = transpose(data.v_raw);
-                       rstep = .2;
+                       b_e = transpose(data.beta_error * 100);
+		       v = transpose(data.v_raw);
+                       v_e = transpose(data.v_error);
+
+		       rstep = .2;
                        %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
                        %rticklabel = cellstr(num2str(circles(:)));
     
-                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
+                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 10];
                        hf.Color = 'white'; hf.Visible = 'off';
-                       sp1 = subplot(131);
+                       sp1 = subplot(231);
                        [~,c]= polarPcolor(r,a,s,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
                        colormap(sp1,cmap_darkviolet_to_brickred)
                        caxis([-20 0])
 
-                       sp2 = subplot(132);
+                       sp2 = subplot(232);
                        [~,c]= polarPcolor(r,a,b,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
                        colormap(sp2,cmap_darkviolet_to_brickred)
                        caxis([0 6])
 
-                       sp3 = subplot(133);
+                       sp3 = subplot(233);
                        [~,c]= polarPcolor(r,a,v,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
-                       caxis([-15 15]))
+                       caxis([-15 15])
+
+                       sp4 = subplot(234);
+                       [~,c]= polarPcolor(r,a,s_e,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' signal error (%)');
+                       set(gcf,'color','w')
+                       colormap(sp4,cmap_darkviolet_to_brickred)
+                       caxis([0 100])
+
+                       sp5 = subplot(235);
+                       [~,c]= polarPcolor(r,a,b_e,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' att. beta error (%)');
+                       set(gcf,'color','w')
+                       colormap(sp5,cmap_darkviolet_to_brickred)
+                       caxis([0 100])
+
+                       sp6 = subplot(236);
+                       [~,c]= polarPcolor(r,a,v_e,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' radial velocity error (m s-1)');
+                       set(gcf,'color','w')
+                       colormap(sp6,cmap_darkviolet_to_brickred)
+                       caxis([0 .5])
 
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
 
@@ -369,38 +398,63 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                            data.range(cond) = [];  
                        end
                        r = transpose(data.range(:)/1000);
-                       a = transpose(data.azimuth(:)) + C.home_point_azimuth;
+                       a = transpose(data.azimuth(:));
                        a(a>360) = a(a>360)-360;
                        s = transpose(10*real(log10(data.signal-1)));
+                       s_e = transpose(data.beta_error * 100);
 		       b = transpose(data.beta_raw*1e6);
-                       v = transpose(data.v_raw);
-                       rstep = .2;
+                       b_e = transpose(data.beta_error * 100);
+		       v = transpose(data.v_raw);
+                       v_e = transpose(data.v_error);
+
+		       rstep = .2;
                        %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
                        %rticklabel = cellstr(num2str(circles(:)));
     
-                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 15];
+                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 10];
                        hf.Color = 'white'; hf.Visible = 'off';
-                       sp1 = subplot(131);
+                       sp1 = subplot(231);
                        [~,c]= polarPcolor(r,a,s,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
                        colormap(sp1,cmap_darkviolet_to_brickred)
                        caxis([-20 0])
 
-                       sp2 = subplot(132);
+                       sp2 = subplot(232);
                        [~,c]= polarPcolor(r,a,b,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
                        colormap(sp2,cmap_darkviolet_to_brickred)
                        caxis([0 6])
 
-                       sp3 = subplot(133);
+                       sp3 = subplot(233);
                        [~,c]= polarPcolor(r,a,v,'rStep',rstep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
                        caxis([-15 15])
+
+                       sp4 = subplot(234);
+                       [~,c]= polarPcolor(r,a,s_e,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' signal error (%)');
+                       set(gcf,'color','w')
+                       colormap(sp4,cmap_darkviolet_to_brickred)
+                       caxis([0 100])
+
+                       sp5 = subplot(235);
+                       [~,c]= polarPcolor(r,a,b_e,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' att. beta error (%)');
+                       set(gcf,'color','w')
+                       colormap(sp5,cmap_darkviolet_to_brickred)
+                       caxis([0 100])
+
+                       sp6 = subplot(236);
+                       [~,c]= polarPcolor(r,a,v_e,'rStep',rstep,'Nspokes',nspokes);
+                       ylabel(c,' radial velocity error (m s-1)');
+                       set(gcf,'color','w')
+                       colormap(sp6,cmap_darkviolet_to_brickred)
+                       caxis([0 .5])
 
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
 
@@ -412,6 +466,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                    end    
 
                 otherwise
+
                     continue
             end
         case 'product'
@@ -522,7 +577,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             '-%s.png'], dir_out,num2str(DATE),site,measmode))
                     end
                     close(hf)
-                case 'TKE'
+                case 'epsilon'
                     data = load_nc_struct(fullfile([dirto files{1}]));
 
                     [dirsnr,filessnr] = getHALOfileList(site,DATE,'product' ,'wstats');
@@ -693,8 +748,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ws_e = data.wind_speed_error;
                     wd_e = data.wind_direction_error;
                     w = data.w;
-
-                    if all(data.height(:) == 0)
+                    if all(data.height(:)-C.altitude_in_meters == 0)
                       height = data.range/1000;
                       hlabel = 'range (km)';
       	            else
@@ -721,24 +775,24 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                     sp1 = subplot(321);
                     pcolor(data.time,height,ws'); axis([0 24 0 p.ymax]); shading flat
-                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,p.ymax+.3,'Wind speed');
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,p.ymax+p.ymax*.1,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel);
                     
                     sp2 = subplot(322);
                     pcolor(data.time,height,ws_e'); axis([0 24 0 p.ymax]); shading flat
-                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,p.ymax+.3,'Wind speed error')
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,p.ymax+p.ymax*.1,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.5:10; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel);
                     
                     sp3 = subplot(323);
                     pcolor(data.time,height,wd'); axis([0 24 0 p.ymax]); shading flat
-                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,p.ymax+.3,'Wind direction');
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,p.ymax+p.ymax*.1,'Wind direction');
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:90:360;
@@ -746,8 +800,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     
                     sp4 = subplot(324);
                     pcolor(data.time,height,wd_e'); axis([0 24 0 p.ymax]); shading flat
-                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,p.ymax+.3,'Wind direction error')
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,p.ymax+p.ymax*.1,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.5:2;
@@ -755,8 +809,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     
                     sp5 = subplot(325);
                     pcolor(data.time,height,w'); axis([0 24 0 p.ymax]); shading flat
-                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([-3 3]); colormap(sp5,cmocean('balance')); text(0,p.ymax+.3,'w wind component')
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([-3 3]); colormap(sp5,cmocean('balance')); text(0,p.ymax+p.ymax*.1,'w wind component')
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1:3;
@@ -764,8 +818,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                     sp6 = subplot(326);
                     pcolor(data.time,height,snr'); axis([0 24 0 p.ymax]); shading flat
-                    set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([.995 1.015]); colormap(sp6,chilljet); text(0,p.ymax+.3,'Mean signal')
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
+                    caxis([.995 1.015]); colormap(sp6,chilljet); text(0,p.ymax+p.ymax*.1,'Mean signal')
                     cb = colorbar; cb.Label.String = 'SNR+1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = .995:.005:1.015;

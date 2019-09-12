@@ -481,8 +481,8 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             velo_instr_uncertainty_mean(velo_instr_uncertainty_mean == 0) = nan;
             velo_instr_uncertainty_var(velo_instr_uncertainty_var == 0) = nan;
             % beta noise
-            signal_instr_uncertainty_mean(lbob_signal_instrumental_precision_mean == 0) = nan;
-            signal_instr_uncertainty_var(lbob_signal_instrumental_precision_var == 0) = nan;
+            signal_instr_uncertainty_mean(signal_instr_uncertainty_mean == 0) = nan;
+            signal_instr_uncertainty_var(signal_instr_uncertainty_var == 0) = nan;
             
             % Collect
             data.(['time_' tres 'min']){ichunk} = atime(chunktime == ichunk);

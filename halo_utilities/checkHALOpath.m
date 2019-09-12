@@ -10,7 +10,7 @@ function status = checkHALOpath(site,DATE,processlev,measmode,typeof)
 % - DATE        scalar, numerical date, e.g. 20171231
 % - processlev  string, 'corrected','calibrated','product'
 % - measmode    string, 'stare','ppi','rhi','co','windvad','winddbs',
-%               'velostats','TKE','sigma2vad','BLclassification','cloudmask'
+%               'velostats','epsilon','sigma2vad','BLclassification','cloudmask'
 %
 % Outputs:
 % - status      1 if path exits or was created succesfully, empty otherwise
@@ -21,10 +21,10 @@ function status = checkHALOpath(site,DATE,processlev,measmode,typeof)
 % University of Helsinki, Finland
 
 % Check inputs
-if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'})))
     error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for any other products than: \n''TKE'', ''wstats'', ''wstats4precipfilter''', ...
+        ' are required for any other products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter''', ...
         ' ''sigma2vad'',''windshear'', ''LLJ'', ''ABLclassification'', ''cloud'',''betavelocovariance''']))
     if ~ischar(site)
         error('The 1st input ''site'' must be a string.')
@@ -38,15 +38,15 @@ if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',.
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
+            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''rhi'',''dbs'',''co'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'', ''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
+            '''wstats4precipfilter'', ''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
     end
 else
     if nargin < 4
         error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'''...
-            ' are required for the products: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
+            ' are required for the products: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
             '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud'',''betavelocovariance''']))
     end
     if ~ischar(site)
@@ -61,10 +61,10 @@ else
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
+            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
             '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
+            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
     end
 end
 

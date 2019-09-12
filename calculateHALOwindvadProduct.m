@@ -95,8 +95,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             halo_vad_files{i}]),{'time','range','azimuth','elevation',...
 				 'v_raw','signal','beta_error'});
 
-        % Clutter map, important especially in urban environments
-        
+        % Quick & dirty clutter-noise map, important especially in urban environments
+        if nanmedian(tmp.elevation) == 0
+          tmp.v_raw(tmp.signal > 1.2 | tmp.signal < 1.01) = nan;
+        end
+
         % Wind retrieval
         Din.time      = tmp.time;
         Din.range     = tmp.range;

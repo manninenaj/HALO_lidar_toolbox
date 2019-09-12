@@ -60,8 +60,9 @@ end
 %% Assign new values, save old data
 % elevation
 data1.elevation = data0.(C.field_name_original_elevation)(:);
-% azimuth
-data1.azimuth = data0.(C.field_name_original_azimuth)(:);
+% azimuth, convert to degree from North
+if ~isfield(C,'home_point_azimuth'), C.home_point_azimuth = 0; end
+data1.azimuth = data0.(C.field_name_original_azimuth)(:) + C.home_point_azimuth;
 data1.azimuth(data1.azimuth<0) = 360+data1.azimuth(data1.azimuth<0);
 % altitude
 % if specified
