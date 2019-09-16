@@ -64,6 +64,7 @@ data1.elevation = data0.(C.field_name_original_elevation)(:);
 if ~isfield(C,'home_point_azimuth'), C.home_point_azimuth = 0; end
 data1.azimuth = data0.(C.field_name_original_azimuth)(:) + C.home_point_azimuth;
 data1.azimuth(data1.azimuth<0) = 360+data1.azimuth(data1.azimuth<0);
+data1.home_point_azimuth = C.home_point_azimuth;
 % altitude
 % if specified
 if isfield(C,'field_name_original_altitude')
@@ -73,6 +74,8 @@ elseif isfield(C,'altitude_in_meters')
 else
     error('Altitude for the site %s not specified in the halo config!',site)
 end
+if ~isfield(C,'altitude_agl_in_meters'), C.altitude_agl_in_meters = 0; end
+data1.altitude_agl = C.altitude_agl_in_meters = 0;
 % latitude
 if isfield(C,'field_name_original_latitude')
     data1.latitude = data0.(C.field_name_original_latitude);
@@ -155,16 +158,8 @@ data1.beta = data1.beta_raw;
 data1.beta(data1.signal < double(data1.noise_threshold)) = nan;
 data1.v = data1.v_raw;
 data1.v(data1.signal < double(data1.noise_threshold)) = nan;
-% % clean lowest most range bins
-% data1.v(:,1:3) = nan;
-% data1.v_raw(:,1:3) = nan;
-% data1.beta(:,1:3) = nan;
-% data1.beta_raw(:,1:3) = nan;
-% data1.signal(:,1:3) = nan;
-% data1.signal0(:,1:3) = nan;
 
 %% Create attributes
-%
 att1.v_error0.comments = 'Uncertainty of radial velocity estimated from original signal';
 att1.v_error.comments = 'Uncertainty of radial velocity estimated from corrected signal';
 % radial velocity (raw)
@@ -220,16 +215,32 @@ att1.longitude = create_attributes(...
     'Longitude of lidar', ...
     'degrees_east');
 att1.longitude.standard_name = 'longitude';
-% altitude
+% altitude asl
 att1.altitude = create_attributes(...
     {},...
     'Height of instrument above mean sea level', ...
+    'm');
+% altitude agl
+att1.altitude_agl = create_attributes(...
+    {},...
+    'Height of instrument above ground level', ...
     'm');
 % azimuth
 att1.azimuth = create_attributes(...
     {'time'},...
     'Azimuth from North', ...
-    'degrees');
+    'degrees',...
+    [],...
+    ['Takes into account the home point azimuth heading, if given. ' ...
+     'By default assumes home point azimuth to be 0 degrees.']);
+% home point azimuth
+att1.home_point_azimuth = create_attributes(...
+    {'time'},...
+    'Home point azimuth from North', ...
+    'degrees',...
+    [],...
+    ['The heading, which is used to align the instrument. Default ' ...
+     'is 0 degrees']);
 % elevation
 att1.elevation = create_attributes(...
     {'time'},...
@@ -369,4 +380,3 @@ att1  = orderfields(att1);
 dim1 = struct('time',length(data1.time),'range',length(data1.range));
 
 end
-
