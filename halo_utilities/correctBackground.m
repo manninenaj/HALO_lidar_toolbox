@@ -1,5 +1,5 @@
 function [signal_corr, step_locations, bitflags, background] = ...
-    correctBackground(signal, signal_orig, range, time, varargin)
+    correctBackground(signal, signal_orig, range_m, time, varargin)
 %CORRECTBACKGROUND function corrects the background signal of the HALO
 %Doppler lidar instrument. The background is corrected for step-changes and
 %for the shape of the background within the step-changes respectively.
@@ -18,7 +18,7 @@ function [signal_corr, step_locations, bitflags, background] = ...
 %                       removal cant be done, should be the same as
 %                       'signal'.
 %
-% - range               row or column vector, distances of each range bin
+% - range_m               row or column vector, distances of each range bin
 %                       from the instrument, length equals the number of
 %                       range bins
 %
@@ -62,7 +62,7 @@ function [signal_corr, step_locations, bitflags, background] = ...
 % - 'correct_remnant'   determines how to handle the remnant outlier
 %                       profiles, which are not presented well by the
 %                       averaged  approach in section 3. DEFAULT:
-%                       ('correct_remnant', 'original')
+%                       ('correct_remnant', 'none')
 %                       'correct'   correct all of the profiles using
 %                                   robust linear regression including the
 %                                   remnant profiles
@@ -106,9 +106,9 @@ function [signal_corr, step_locations, bitflags, background] = ...
 %% SET DEFAULTS
 parameters.win_size        = [33 1];
 parameters.wavelet_level   = 5;
-parameters.correct_remnant = 'original';
+parameters.correct_remnant = 'none';
 parameters.ignore          = 3;
-parameters.sizes           = [length(time) length(range)];
+parameters.sizes           = [length(time) length(range_m)];
 parameters.cloud_mask      = [];
 
 bit_constrained_fit = zeros(size(signal,1),1);
@@ -133,26 +133,36 @@ end
 parameters = checkParameters(parameters);
 
 % Check the dimensions of the first three inputs
-if ~ismatrix(signal) && ~isvector(time) && ~isvector(range) &&...
+if ~ismatrix(signal) && ~isvector(time) && ~isvector(range_m) &&...
         length(time)  ~= size(signal,1) &&...
-        length(range) ~= size(signal,2)
+        length(range_m) ~= size(signal,2)
     error 'Check the input dimensions!'
 else
     
     %% PREPARE THE DATA
     signal_0 = signal;
-    range = range(:);
+    range_m = range_m(:);
     time = time(:);
-    % By default, ignore three of the lowest range gates due to
+    % By default, ignore three of the lowest range_m gates due to
     % incontamination by the emitted pulse.
 %     signal(:,1:4) = nan;
     signal(signal_orig == 0 | signal == 0) = nan;
     signal_orig(signal_orig == 0 | signal == 0) = nan;
+    
     fprintf('\nStarting HALO background correction. This might take a while.\n')
-
+    if (length(range_m)-parameters.ignore) / length(range_m) < .70
+        warning(['Not enough range gates containing only noise to ' ...
+		'do robust fitting! Skipping step change correction.'])
+        signal_corr = signal;   
+        step_locations = [];
+        bitflags = [];
+        background = [];
+        return
+    end
+    
     %% SCREENING AND FILLING
     if isempty(parameters.cloud_mask)
-        [cloud_mask,~] = atmHALOsignalMasking(signal,range,parameters.win_size);
+        [cloud_mask,~] = atmHALOsignalMasking(signal,range_m,parameters.win_size);
         % Use the original signal with ripples UNremoved, for the step detection 
         signal_cld_scrd_outlr = signal_orig;
         signal_cld_scrd_outlr(cloud_mask) = nan;
@@ -163,7 +173,7 @@ else
     end
     
     fprintf('HALO background correction: filling signal for wavelet transformation...')
-    signal_filled = fillCloudScreenedSignal(signal_cld_scrd_outlr,range,parameters.ignore);
+    signal_filled = fillCloudScreenedSignal(signal_cld_scrd_outlr,range_m,parameters.ignore);
     fprintf('done.\n')    
 
     fprintf('HALO background correction: wavelet transformation...')    
@@ -314,7 +324,7 @@ else
             
             % Correct the drift with a step
             signal_drift_corrtd = signal_0(i_start_stp:i_end_stp,:) -...
-                repmat(step_fitted(:),1,length(range)) +...
+                repmat(step_fitted(:),1,length(range_m)) +...
                 p_coeff_drift(end);
             
             %% CORRECT BACKGROUND SHAPE AND STEP CHANGES
@@ -334,11 +344,11 @@ else
             % are too few data points OR if the data points arent
             % distributed sparsely enough, set flag --> no higher order
             % fit
-            Signal_MedStep_ySel = signal_med_bin(1:length(range)*.5);
-            range_cld_scrd_outlr_sel = range(1:length(range)*.5);
+            Signal_MedStep_ySel = signal_med_bin(1:length(range_m)*.5);
+            range_m_cld_scrd_outlr_sel = range_m(1:length(range_m)*.5);
             if sum(~isnan(Signal_MedStep_ySel)) < 5 || ...
-                    mean(range_cld_scrd_outlr_sel(...
-                    ~isnan(Signal_MedStep_ySel))) > prctile(range,45)
+                    mean(range_m_cld_scrd_outlr_sel(...
+                    ~isnan(Signal_MedStep_ySel))) > prctile(range_m,45)
                 
                 % Set flag
                 flag_fit_step = 1;
@@ -348,7 +358,7 @@ else
             
             % Select only non nans
             ysel = signal_drift_corrtd;
-            xsel = transpose(repmat(range(:),1,size(ysel,1)));
+            xsel = transpose(repmat(range_m(:),1,size(ysel,1)));
             [xsel_sort,isort] = sort(xsel(:));
             ysel = ysel(:); ysel_sort = ysel(isort);
             y_final_valid = ysel_sort(~isnan(ysel_sort));
@@ -362,8 +372,8 @@ else
             p_1deg_prof = [B_prof_1deg(2) B_prof_1deg(1)];
             p_2deg_prof = [B_prof_2deg(3) B_prof_2deg(2) B_prof_2deg(1)];
             % Evaluate coefficients
-            y_fit_prof_1deg = polyval(p_1deg_prof, range);
-            y_fit_prof_2deg = polyval(p_2deg_prof, range);
+            y_fit_prof_1deg = polyval(p_1deg_prof, range_m);
+            y_fit_prof_2deg = polyval(p_2deg_prof, range_m);
 
             % If 1st degree polynomial fit is better
             if stats_1deg.ols_s/stats_2deg.ols_s < 1.2 || ...
@@ -383,7 +393,7 @@ else
 
                 % Combine corrections to form corrected background
                 background(i_start_stp:i_end_stp,:) = ...
-                    (repmat(step_fitted(:),1,length(range)) - ...
+                    (repmat(step_fitted(:),1,length(range_m)) - ...
                     p_coeff_drift(end))...
 	      + repmat(transpose(y_fit_prof_1deg(:)), ...
                     length(i_start_stp:i_end_stp), 1);
@@ -404,7 +414,7 @@ else
                     ones(length(i_start_stp:i_end_stp), 1);
                 % Combine corrections to form corrected background
                 background(i_start_stp:i_end_stp,:) = ...
-                    (repmat(step_fitted(:),1,length(range)) - ...
+                    (repmat(step_fitted(:),1,length(range_m)) - ...
                     p_coeff_drift(end))...
 	            + repmat(transpose(y_fit_prof_2deg(:)), ...
                     length(i_start_stp:i_end_stp), 1);
@@ -455,7 +465,7 @@ else
                 y_remn(1:parameters.ignore) = nan;
                 if sum(isnan(y_remn)) ~= length(y_remn)
                     y_r_val = y_remn(~isnan(y_remn));
-                    x_r_val = range(~isnan(y_remn));
+                    x_r_val = range_m(~isnan(y_remn));
                     
                     % Calculate robust bisquare linear fit
                     b_remn = my_robustfit(x_r_val(:),y_r_val(:));
@@ -465,7 +475,7 @@ else
                         bit_remnant_fit_failed_did_nothing(i_remn) = 1;
                     else
                         p_c_remn = [b_remn(2) b_remn(1)];
-                        y_f_r = polyval(p_c_remn,range);
+                        y_f_r = polyval(p_c_remn,range_m);
                         signal_remn(i_remn,:) = signal_shape_corrtd(i_remn,:)-transpose(y_f_r(:))+1;
                         bit_remnant_fit_success(i_remn) = 1;
                     end
@@ -478,20 +488,20 @@ else
 %             signal_SpinalTap(parameters.cloud_mask) = nan;
 %             signal_SpinalTap(:,1:parameters.ignore) = nan;
 %             signal_SpinalTap_mean = nanmedian(signal_SpinalTap);
-%             i_outliers = findOutliers(range(:), signal_SpinalTap_mean(:), 1);
+%             i_outliers = findOutliers(range_m(:), signal_SpinalTap_mean(:), 1);
 %             signal_SpinalTap_mean(:,i_outliers) = nan;
 %             
 %             % Convert to column vectors
-%             signal_SpinalTap_mean = signal_SpinalTap_mean(:); range = range(:);
+%             signal_SpinalTap_mean = signal_SpinalTap_mean(:); range_m = range_m(:);
 %             
 %             % Select non nan from the data
 %             i_notnan = find(~isnan(signal_SpinalTap_mean)); % to be used later on
 %             signal_SpinalTap_mean_val = signal_SpinalTap_mean(i_notnan);
-%             range_val = range(i_notnan);
+%             range_m_val = range_m(i_notnan);
 %             
 %             % Calculate the coefficients
-%             [coeffs_1deg_SpinalTap,stats_1deg_SpinalTap] = my_robustfit(range_val(:),signal_SpinalTap_mean_val(:));
-%             [coeffs_2deg_SpinalTap,stats_2deg_SpinalTap] = my_robustfit([range_val(:) range_val(:).^2],signal_SpinalTap_mean_val(:));
+%             [coeffs_1deg_SpinalTap,stats_1deg_SpinalTap] = my_robustfit(range_m_val(:),signal_SpinalTap_mean_val(:));
+%             [coeffs_2deg_SpinalTap,stats_2deg_SpinalTap] = my_robustfit([range_m_val(:) range_m_val(:).^2],signal_SpinalTap_mean_val(:));
 %                         
 %             [~, mID] = lastwarn; % iteration limit warning turned off
 %             if ~isempty(mID)
@@ -500,9 +510,9 @@ else
 %             coeffs_1deg_SpinalTap = [coeffs_1deg_SpinalTap(2) coeffs_1deg_SpinalTap(1)];
 %             coeffs_2deg_SpinalTap = [coeffs_2deg_SpinalTap(3) coeffs_2deg_SpinalTap(2) coeffs_2deg_SpinalTap(1)];
 %             
-%             % Evaluate polynomial along the whole range
-%             y_fit_1deg_SpinalTap = polyval(coeffs_1deg_SpinalTap,range);
-%             y_fit_2deg_SpinalTap = polyval(coeffs_2deg_SpinalTap,range);
+%             % Evaluate polynomial along the whole range_m
+%             y_fit_1deg_SpinalTap = polyval(coeffs_1deg_SpinalTap,range_m);
+%             y_fit_2deg_SpinalTap = polyval(coeffs_2deg_SpinalTap,range_m);
 %             
 %             % If 1st degree polynomial fit is better
 %             if stats_1deg_SpinalTap.ols_s/stats_2deg_SpinalTap.ols_s < 1.2
@@ -525,12 +535,12 @@ else
                 y_remn(1:parameters.ignore) = nan;
                 if sum(isnan(y_remn)) ~= length(y_remn)
                     y_r_val = y_remn(~isnan(y_remn));
-                    x_r_val = range(~isnan(y_remn));
+                    x_r_val = range_m(~isnan(y_remn));
                     
                     % Calculate robust bisquare linear fit
                     b_remn = my_robustfit(x_r_val(:),y_r_val(:));
                     p_c_remn = [b_remn(2) b_remn(1)];
-                    y_f_r = polyval(p_c_remn,range);
+                    y_f_r = polyval(p_c_remn,range_m);
                     signal_remn(i_remn,:) = ...
                         signal_shape_corrtd(i_remn,:) - transpose(y_f_r(:)) + 1;
                 end
@@ -575,14 +585,14 @@ else
                 y_remn(1:parameters.ignore) = nan;
                 if sum(isnan(y_remn)) ~= length(y_remn)
                     y_r_val = y_remn(~isnan(y_remn));
-                    x_r_val = range(~isnan(y_remn));
+                    x_r_val = range_m(~isnan(y_remn));
                     
                     % Calculate robust bisquare linear fit
                     b_remn = my_robustfit(x_r_val(:),y_r_val(:));
                     [~, mID_r] = lastwarn; % iteration limit warning off
                     if ~isempty(mID_r), warning('off',mID_r), end
                     p_c_remn = [b_remn(2) b_remn(1)];
-                    y_f_r = polyval(p_c_remn,range);
+                    y_f_r = polyval(p_c_remn,range_m);
                     signal_remn(i_remn,:) = ...
                         signal_shape_corrtd(i_remn,:) - transpose(y_f_r(:)) + 1;
                 end
@@ -747,7 +757,7 @@ end
         elseif not(isnumeric(params.ignore) && ...
                 isscalar(params.ignore) && ...
                 params.ignore <params.sizes(2) * .5)
-            error(['''ignore'' parameter has to be numeric scalar and' ...
+            warning(['''ignore'' parameter has to be numeric scalar and' ...
                 ' cannot be larger than 1/2 times the number of' ...
                 ' range gates. Default is %d'],3)
         end
@@ -777,8 +787,8 @@ end
         % correct_remnant - must be one of 3 options
         valid = {'correct', 'remove', 'original', 'none'};
         if isempty(params.correct_remnant)
-            % default == 'original'
-            params.correct_remnant = 'original';
+            % default == 'none'
+            params.correct_remnant = 'none';
         end
         ind = find(strncmpi(params.correct_remnant,valid,...
             length(params.correct_remnant)));

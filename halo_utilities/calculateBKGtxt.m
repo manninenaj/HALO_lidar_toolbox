@@ -1,26 +1,35 @@
-function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,n_range_gates)
+function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file_type,daten,n_range_gates,range_m)
 
+irange=find(range_m<110,1,'first');
 % find co and cross background files
-
-%dates=datestr(daten,'ddmmyy');
-
+dates=datestr(daten,'ddmmyy');
+   
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
+
 
 %switch file_type
  % case 'txt'
-    filess = files_bkg;
-    bkg_times = nan(length(filess),1); % col1: time
-    for i = 1:length(filess)
-        %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
-        b_daten = datenum([filess{i}(12:17) filess{i}(19:24)],'ddmmyyHHMMSS');
-        bkg_times(i,:) = b_daten;
+filess = files_bkg;
+bkg_times = nan(length(filess),1); % col1: time
+for i = 1:length(filess)
+    if isempty(files_bkg)
+        bkg = nan(1,n_range_gates);
+    else
+        bkg = nan(length(files_bkg),n_range_gates);
     end
+switch file_type
+  %% read in backgrounds
+  case 'txt'
     
-    %% read in backgrounds
-    bkg = nan(length(filess),n_range_gates);
-    for j=1:length(filess)
+    bkg_times = nan(length(files_bkg),1); % col1: time
+    for i = 1:length(files_bkg)
+        %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
+        b_daten = datenum([files_bkg{i}(12:17) files_bkg{i}(19:24)],'ddmmyyHHMMSS');
+        bkg_times(i,:) = b_daten;
+    
+        %for j=1:length(filess)
         %%%fn=[bkg_path filess(j).name];
-        fn = [bkg_path filess{j}];
+        fn = [bkg_path files_bkg{i}];
         fid=fopen(fn,'r');
         bk=fscanf(fid,'%s');
         fclose(fid);
@@ -29,17 +38,17 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,n_ra
         end_j=[1;transpose(dot_j+7)];
         
         bj=1;
-        %         for ii=2:length(end_i)
+        %for ii=2:length(end_i)
         for jj=2:n_range_gates+1
-            bkg(j,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
+            bkg(i,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
             bj=bj+1;
         end
       end
-  %case 'nc' % blindly assume only one file, only ARM uses this..
-   % tmp = load_nc_struct([bkg_path,files_bkg{1}]);
-   % bkg_times = decimal2daten(tmp.time/3600,daten);
-   % bkg = tmp.background;
-%end
+  case 'nc' % blindly assume only one file, only ARM uses this..
+    tmp = load_nc_struct([bkg_path,files_bkg{1}]);
+    bkg_times = decimal2daten(tmp.time/3600,daten);
+    bkg = tmp.background;
+end
 
 %% gapfilling
 
@@ -59,7 +68,7 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,n_ra
 %    dd=(diff(bkg(:,1)-daten))*24;
 %    for i=1:length(dd)
 %        if dd(i)>1.5
-%            new_t=transpose((bkg(i,1)+1/24):1/24:(bkg(i,1)+floor(dd(i))/24));
+%            new_t=trnspose((bkg(i,1)+1/24):1/24:(bkg(i,1)+floor(dd(i))/24));
 %            bkg=[[bkg(:,1); new_t] [bkg(:,2:end);repmat(bkg(1,2:end)*nan,length(new_t),1)]];
 %        end
 %    end
@@ -68,7 +77,7 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,n_ra
 %        bkg=sortrows(bkg,1);
 %    end
 %end
-    
+   
 bkg_raw=bkg;
 %clear bkg;
 %% to SNR
@@ -79,20 +88,50 @@ fits_2=bkg_raw(:,1:4)*nan; % p(1) p(2) p(3) rmse
 
 fit_out = nan(length(bkg_raw(:,1)),n_range_gates);
 bkg_out = nan(length(bkg_raw(:,1)),n_range_gates);
-for i=1:length(bkg_raw(:,1))
-    b_temp=bkg_raw(i,:);
-    if ~isnan(b_temp(1)) % fit 1 and 2 order polynomial
-        fitti_1 = polyfit((4:n_range_gates),b_temp(4:n_range_gates),1);
-        bkg_fitted_1 = (1:n_range_gates).*fitti_1(1)+fitti_1(2);
-        fitti_2=polyfit((4:n_range_gates),b_temp(4:n_range_gates),2);
-        bkg_fitted_2=((1:n_range_gates).^2).*fitti_2(1)+(1:n_range_gates).*fitti_2(2)+fitti_2(3);
-        rmse_1=sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_1(4:n_range_gates)).^2,2));
-        rmse_2=sqrt(mean((b_temp(4:n_range_gates)-bkg_fitted_2(4:n_range_gates)).^2,2));
-                    if rmse_2<(0.9*rmse_1)
-                        fit_out(i,:) = bkg_fitted_2;
-                    else
-                        fit_out(i,:) = bkg_fitted_1;
-                    end       
-        bkg_out(i,:) = b_temp;
+for i=1:length(bkg_raw(:,1));
+    %b_temp=bkg_raw(i,2:end);
+    %b_temp = b_temp(:);
+    if ~isnan(bkg_raw(i,1)) % fit 1 and 2 order polynomial
+        switch file_type
+          case 'txt'
+            x = irange:n_range_gates-1; 
+            y = bkg_raw(i,irange:n_range_gates-1);
+            fitti_1 = my_robustfit(x(:),y(:));
+            fitti_2 = my_robustfit([x(:) x(:).^2],y(:));
+	    p1 = [fitti_1(2) fitti_1(1)];
+            p2 = [fitti_2(3) fitti_2(2) fitti_2(1)];
+            %fitti_1 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),1);
+            %fitti_2 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),2);
+            %bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
+            %bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
+            bkg_fitted_1 = polyval(p1, 1:n_range_gates);
+            bkg_fitted_2 = polyval(p2, 1:n_range_gates);          
+            bkg_fitted_1 =  transpose(bkg_fitted_1(:));
+            bkg_fitted_2 =  transpose(bkg_fitted_2(:));  
+            rmse_1 = sqrt(mean((bkg_raw(i,irange:n_range_gates)-bkg_fitted_1(irange:n_range_gates)).^2,2));       
+            rmse_2 = sqrt(mean((bkg_raw(i,irange:n_range_gates)-bkg_fitted_2(irange:n_range_gates)).^2,2));
+          case 'nc'
+            x = 1:length(bkg_raw(i,5:end)); x = transpose(x(:));
+            fitti_1 = polyfit(x,bkg_raw(i,irange:end),1);
+            fitti_2 = polyfit(x,bkg_raw(i,irange:end),2);
+            bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
+            bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
+            bkg_fitted_1 =  bkg_fitted_1(:);
+            bkg_fitted_2 =  bkg_fitted_2(:);
+            rmse_1 = sqrt(mean((bkg_raw(i,irange:end)-bkg_fitted_1(irange:end)).^2,2));       
+            rmse_2 = sqrt(mean((bkg_raw(i,irange:end)-bkg_fitted_2(irange:end)).^2,2));
+        end            
+        if rmse_2<(0.9*rmse_1)
+            fit_out(i,:) = bkg_fitted_2;
+        else
+            fit_out(i,:) = bkg_fitted_1;
+        end
+        
+       switch file_type
+         case 'txt'
+           bkg_out(i,:) = bkg_raw(i,irange:n_range_gates);
+         case 'nc'
+           bkg_out(i,:) = bkg_raw(i,:);
+       end
     end
 end

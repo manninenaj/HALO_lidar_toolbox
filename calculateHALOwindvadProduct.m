@@ -35,7 +35,7 @@ elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && ...
 else
     DATEstart = DATES(1); DATEend = DATES(2);
 end
-if ~ischar(elevangle) || length(elevangle) ~= 2 || (~isempty(str2num(elevangle)) && str2num(elevangle)<0 || str2num(elevangle)>90) 
+if (~ischar(elevangle) || length(elevangle) ~= 2 || (~isempty(str2num(elevangle)) && str2num(elevangle)<0 || str2num(elevangle)>90)) & not(strcmp(elevangle,'0'))
     error('The 3rd input must be a string and no longer than 2 characters specifying the elevation angle 0-90 degrees.')
 end
 for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
@@ -93,8 +93,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         % Load
         [tmp,~,~] = load_nc_struct(fullfile([dir_to_folder_in '/' ...
             halo_vad_files{i}]),{'time','range','azimuth','elevation',...
-            'v_raw','signal','beta_error'});
-        
+				 'v_raw','signal','beta_error'});
+
+        % Quick & dirty clutter-noise map, important especially in urban environments
+        if nanmedian(tmp.elevation) == 0
+          tmp.v_raw(tmp.signal > 1.2 | tmp.signal < 1.01) = nan;
+        end
+
         % Wind retrieval
         Din.time      = tmp.time;
         Din.range     = tmp.range;
@@ -148,7 +153,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
     
     % Calculate height above ground level (m)
-    height = sind(nanmedian(Din.elevation(:))).*Din.range;
+    height = sind(nanmedian(Din.elevation(:))).*Din.range + C.altitude_in_meters;
 
     %%--- Create variables ---%%
     data.time = transpose(cell2mat(time)); % hrs
@@ -158,6 +163,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     data.elevation = transpose(cell2mat(elevation_angle)); % deg
     data.mean_snr = cell2mat(transpose(mean_snr));
     data.height = height(:); % m
+    data.range = Din.range(:);
     % Wind components
     data.u = transpose(cell2mat(uwind));
     data.v = transpose(cell2mat(vwind));
@@ -210,7 +216,15 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         'Height above ground', ...
         'm',...
         [],...
-        'This variable is range from lidar * sin(elevation)');
+        'This variable is range from lidar * sin(elevation) + altitude');
+    att.height.axis = 'Z';
+    % range
+    att.range = create_attributes(...
+        {'range'},...
+        'Range from instrument', ...
+        'm',...
+        [],...
+        'This variable is range from lidar');
     att.height.axis = 'Z';
     % u-wind component
     att.u = create_attributes(...
@@ -501,7 +515,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     att.global.history = [current_date ' - Created by ' C.user ];
 
     % Create dimensions
-    dim = struct('time',length(data.time),'height',length(data.height));
+    dim = struct('time',length(data.time),'height',length(data.height),'range',length(data.range));
 
     data = orderfields(data);
     att = orderfields(att);

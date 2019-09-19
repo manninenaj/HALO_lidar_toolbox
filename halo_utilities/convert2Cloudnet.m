@@ -60,8 +60,9 @@ end
 %% Assign new values, save old data
 % elevation
 data1.elevation = data0.(C.field_name_original_elevation)(:);
-% azimuth
-data1.azimuth = data0.(C.field_name_original_azimuth)(:);
+% azimuth, convert to degree from North
+if ~isfield(C,'home_point_azimuth'), C.home_point_azimuth = 0; end
+data1.azimuth = data0.(C.field_name_original_azimuth)(:) + C.home_point_azimuth;
 data1.azimuth(data1.azimuth<0) = 360+data1.azimuth(data1.azimuth<0);
 % altitude
 % if specified
@@ -98,8 +99,8 @@ data1.pulse_length = C.pulse_length;
 data1.prf = C.prf;
 % wavelength
 data1.wavelength = C.wavelength;
-% energy
-data1.energy = C.energy;
+% beam energy
+data1.beam_energy = C.beam_energy;
 % focus
 data1.focus = C.(['focus_' abc]);
 % divergence
@@ -308,8 +309,8 @@ att1.noise_threshold = create_attributes(...
     {},...
     'noise threshold, in arbitrary units, used to remove background noise',...
     '');
-% energy
-att1.energy = create_attributes(...
+% beam energy
+att1.beam_energy = create_attributes(...
     {},...
     'Laser energy', ...
     'J');

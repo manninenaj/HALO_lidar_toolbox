@@ -194,8 +194,8 @@ if isa(lbob.score_func, 'function_handle') | strcmp(lbob.score_func,'covariance'
     %     lbob.scores = scores;
     lbob.best_estimate = nanmean(lbob.scores); % best estimate
     lbob.standard_error = nanstd(lbob.scores); % standard error
-    lbob.confidence_interval_low = prctile(lbob.scores, 5);
-    lbob.confidence_interval_high = prctile(lbob.scores, 95);
+    lbob.confidence_interval_25 = prctile(lbob.scores, 25);
+    lbob.confidence_interval_75 = prctile(lbob.scores, 75);
 else
     switch lbob.score_func
         case {'wstats','wstats-weighted'}
@@ -217,15 +217,15 @@ else
             %     lbob.skewness_standard_error = nanstd(scores_skewness); % standard error
             %     lbob.kurtosis_standard_error = nanstd(scores_kurtosis); % standard error
             
-            lbob.mean_confidence_interval_low = prctile(lbob.mean_scores, 5);
-            lbob.std_confidence_interval_low = prctile(lbob.std_scores, 5);
-            lbob.var_confidence_interval_low = prctile(lbob.var_scores, 5);
+            lbob.mean_confidence_interval_25 = prctile(lbob.mean_scores, 25);
+            lbob.std_confidence_interval_25 = prctile(lbob.std_scores, 25);
+            lbob.var_confidence_interval_25 = prctile(lbob.var_scores, 25);
             %     lbob.skewness_confidence_interval_low = prctile(scores_skewness, 5);
             %     lbob.kurtosis_confidence_interval_low = prctile(scores_kurtosis, 5);
             
-            lbob.mean_confidence_interval_high = prctile(lbob.mean_scores, 95);
-            lbob.std_confidence_interval_high = prctile(lbob.std_scores, 95);
-            lbob.var_confidence_interval_high = prctile(lbob.var_scores, 95);
+            lbob.mean_confidence_interval_75 = prctile(lbob.mean_scores, 75);
+            lbob.std_confidence_interval_75 = prctile(lbob.std_scores, 75);
+            lbob.var_confidence_interval_75 = prctile(lbob.var_scores, 75);
             %     lbob.skewness_confidence_interval_high = prctile(scores_skewness, 95);
             %     lbob.kurtosis_confidence_interval_high = prctile(scores_kurtosis, 95);
     end

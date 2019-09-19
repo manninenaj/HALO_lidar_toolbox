@@ -113,30 +113,7 @@ if exist('halo_config.txt','file') == 2
               C.(spcfc_param_names{j}) = spcfc_param_values{j};
             end
           end
-        end       
-
-
-
-
-
-%	  for i = 1:length(iperiods)
-%              %
-%
-%              if datenum(num2str(DATE),'yyyymmdd') >= ...
-%	          datenum(spcfc_param_values(iperiods(i)),'yyyymmdd')
-%		  for j = 1:length(spcfc_param_values)
-%                      % number
-%                      if ~isnan(str2double(spcfc_param_values{j}))
-%	                  C.(spcfc_param_names{j}) = ...
-%		              str2double(spcfc_param_values{j});
-%                      % string
-%                      else
-%                          C.(spcfc_param_names{j}) = ...
-%                              spcfc_param_values{j};
-%                      end
-%		  end
-%              end
-%	  end	    		    
+        end         		    
         else
             error(['DATE = %d < the earliest valid date specified in' ...
                   ' the halo_config.txt\nfor'' %s'' site.' ...

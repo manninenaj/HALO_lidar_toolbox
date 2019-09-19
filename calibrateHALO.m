@@ -52,7 +52,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
     
     % Get default and site specific parameters
     [C,fnames] = getconfig(site,DATE);
-    
+   
+
     % initialize
     t_all_cell = cell(size(fnames,1),1);
     time_orig_measmode = cell(size(fnames,1),1);
@@ -114,9 +115,17 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
         time_orig_measmode = time_orig_measmode(isort);
         
         %% Ripple removal & background correction
-        snr_corr_1 = correctHALOripples(site,DATE,snr,time_hrs);
-        snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
-            'correct_remnant','correct','ignore',80,'cloud_mask',logical(atm_mask));
+        snr_corr_1 = correctHALOripples(site,DATE,snr,time_hrs,range_m);
+        if isfield(C,'opt_4_bkg_remnant_profiles') & isfield(C,'num_gates_to_ignore_4bkg_corr')
+            snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
+                'correct_remnant',C.opt_4_bkg_remnant_profiles,...
+                'ignore',C.num_gates_to_ignore_4bkg_corr,...
+                'cloud_mask',logical(atm_mask));
+	else
+	    snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
+	        'cloud_mask',logical(atm_mask));
+        end
+
         
         %% Reorganize into original form and write out
         for i_out = 1:size(fnames,1)
@@ -288,7 +297,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                 data1.time(end) = data1.time(end)+24;
                             end
                             
-                            % correct focus TBS
+                            % correct focus
                             data1 = correctHALOfocus(site,DATE,abc,data1);
                             
                             % Dimensions

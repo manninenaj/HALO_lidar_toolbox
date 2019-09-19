@@ -12,8 +12,8 @@ function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measm
 % - site            string, name of the site, e.g. 'kuopio'
 % - DATE            scalar, numerical date, e.g. 20171231
 % - processlev      string, 'corrected','original','calibrated','background','product'
-% - measmode        string, 'stare','vad','rhi','co','custom','windvad','winddbs','txt','wstats',
-%                   'TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud'
+% - measmode        string, 'stare','vad','rhi','co','custom','windvad','winddbs','txt','nc','wstats',
+%                   'epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'
 % - typeof          string, 'co', 'eleXX', 'aziXXX'
 %
 % Outputs:
@@ -29,10 +29,10 @@ function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measm
 % Check inputs
 if nargin < 4
     error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
-        ' are required for the products: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
+        ' are required for the products: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
         '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
 end
-if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',...
+if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'epsilon',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'})) || ...
         strcmp(processlev,'background'))
     if ~ischar(site)
@@ -47,17 +47,17 @@ if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'TKE',..
             ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
     end
     if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
+            'txt','nc','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
         error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-            '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
+            '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''nc'',''wstats''\n'...
+            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
     end
 end
-if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'TKE',...
+if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
         'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'})) && ...
         ~strcmp(processlev,'background'))
         error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-            ' are required for ANY OTHER products than: \n''TKE'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
+            ' are required for ANY OTHER products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
             ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud'',''betavelocovariance''']))
 end
 if nargin == 5
@@ -73,10 +73,10 @@ if nargin == 5
                 ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
         end
         if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
-                'txt','wstats','wstats4precipfilter','TKE','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
+                'txt','nc','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
             error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-                '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-                '''wstats4precipfilter'',''TKE'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
+                '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''nc'',''wstats''\n'...
+                '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
         end        
 end
 % Get default and site/unit specific parameters
@@ -90,10 +90,10 @@ thedate = num2str(DATE);
 
 % check if path for given combination of 'processlev' and 'measmode' exist
 switch nargin
-    case 5
-        cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
-    case 4
-        cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+  case 5
+    cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+  case 4
+    cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
 end
 if ~isfield(C,cpmt)
     error(['Can''t find parameter ''%s'' for the site ''%s'' \nand'...
@@ -108,8 +108,11 @@ dir_to_folder = C.(cpmt);
 % find year, month, day wildcards
 dir_to_folder = strrep(dir_to_folder,'+YYYY+',thedate(1:4));
 dir_to_folder = strrep(dir_to_folder,'+MM+',thedate(5:6));
-dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
-
+if not(isempty(strfind(dir_to_folder,'+DOY+')))
+    dir_to_folder = strrep(dir_to_folder,'+DOY+', my_doy(thedate));
+else
+    dir_to_folder = strrep(dir_to_folder,'+DD+',thedate(7:8));
+end
 
 % Generate path
 switch processlev
@@ -126,17 +129,22 @@ switch processlev
          file_names_2look4 = ['*' file_naming '*' thedate '*' file_format];
      end
      %    end
- case 'background'
-  file_format = '.txt';
-  file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' file_format];
+  case 'background'
+    switch measmode
+      case 'txt'
+        file_format = '.txt';
+        file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' ...
+                            file_format];
+      case 'nc'
+        file_format = '.nc';
+        file_names_2look4 = ['*' thedate '*' file_format];
+    end
  otherwise
   % blindly assume that there are no other type of files
-  % with the same naming in the same directory (default in cloudnet) 
+  % with the same naming in the same directory
   file_format = '.nc';
   file_names_2look4 = ['*' thedate '*' file_format];
 end
-
-
 
 direc = dir([dir_to_folder,file_names_2look4]);
 if isempty(direc)

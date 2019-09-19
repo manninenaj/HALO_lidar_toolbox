@@ -52,17 +52,17 @@ end
 if nargin < 4
     % Temporal resolutions, min/60 = hrs
     dtskewn = 30; %dtskewn = dtskewn./60;
-    if ~isnumeric(dt) || int16(dt)~=(dt)
+    if ~isnumeric(dt) | int16(dt)~=(dt)
         error(['The 3rd input must a numerical scalar or vector'...
             ' specifying the temporal resolution in full minutes.'])
     end
     weighting = false;
 elseif nargin == 4
-    if ~isnumeric(dt) || int16(dt)~=(dt)
+    if ~isnumeric(dt) | int16(dt)~=(dt)
         error(['The 3rd input must a numerical scalar or vector'...
             ' specifying the temporal resolution in full minutes.'])
     end
-    if ~isnumeric(dtskewn) || int16(dtskewn)~=(dtskewn)
+    if ~isnumeric(dtskewn) | int16(dtskewn)~=(dtskewn)
         error(['The 4th input must a numerical scalar or vector'...
             ' specifying the temporal resolution for skewness in full minutes.'])
     end
@@ -104,10 +104,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
         
      % Get list of tke files
-    [dir_tke_in, tke_files] = getHALOfileList(site,DATE,'product','TKE');
+    [dir_tke_in, tke_files] = getHALOfileList(site,DATE,'product','epsilon');
     % If no files for today, skip the day
     if isempty(tke_files)
-        fprintf('\nNo ''TKE'' files found for ''%s'' at ''%s'', skipping...\n',thedate,site)
+        fprintf('\nNo ''epsilon'' files found for ''%s'' at ''%s'', skipping...\n',thedate,site)
         continue
     end
     

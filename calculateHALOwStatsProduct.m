@@ -368,28 +368,28 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_beta_var = littleBagOfBootstraps(lbob,X,Y,Y_errors,'unweighted',false);
             fprintf('done.')
             
-            fprintf('\n  velocity instrumental precision unweighted mean...')
+            fprintf('\n  velocity instrumental uncertainty unweighted mean...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
-            lbob_velo_instrumental_precision_mean = nanmean(Y);
+            velo_instr_uncertainty_mean = nanmean(Y);
             fprintf('done.')
             
-            fprintf('\n  velocity instrumental precision unweighted variance...')
+            fprintf('\n  velocity instrumental uncertainty unweighted variance...')
             X = []; % assign X as empty
             Y = ref_v_error(iv); % re-assign Y as beta
-            lbob_velo_instrumental_precision_var = nanvar(Y);
+            velo_instr_uncertainty_var = nanvar(Y);
             fprintf('done.')
             
-            fprintf('\n  signal instrumental precision unweighted mean...')
+            fprintf('\n  signal instrumental uncertainty unweighted mean...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
-            lbob_signal_instrumental_precision_mean = nanmean(Y);
+            signal_instr_uncertainty_mean = nanmean(Y);
             fprintf('done.')
             
-            fprintf('\n  signal instrumental precision unweighted variance...')
+            fprintf('\n  signal instrumental uncertainty unweighted variance...')
             X = []; % assign X as empty
             Y = ref_beta_error(iv); % re-assign Y as beta
-            lbob_signal_instrumental_precision_var = nanvar(Y);
+            signal_instr_uncertainty_var = nanvar(Y);
             fprintf('done.\n')
             
             %%--- WEIGHTED STATISTICS ---%%
@@ -478,11 +478,11 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             lbob_beta_mean.standard_error(lbob_beta_mean.standard_error == 0) = nan;
             lbob_beta_var.standard_error(lbob_beta_var.standard_error == 0) = nan;
             % velo noise
-            lbob_velo_instrumental_precision_mean(lbob_velo_instrumental_precision_mean == 0) = nan;
-            lbob_velo_instrumental_precision_var(lbob_velo_instrumental_precision_var == 0) = nan;
+            velo_instr_uncertainty_mean(velo_instr_uncertainty_mean == 0) = nan;
+            velo_instr_uncertainty_var(velo_instr_uncertainty_var == 0) = nan;
             % beta noise
-            lbob_signal_instrumental_precision_mean(lbob_signal_instrumental_precision_mean == 0) = nan;
-            lbob_signal_instrumental_precision_var(lbob_signal_instrumental_precision_var == 0) = nan;
+            signal_instr_uncertainty_mean(signal_instr_uncertainty_mean == 0) = nan;
+            signal_instr_uncertainty_var(signal_instr_uncertainty_var == 0) = nan;
             
             % Collect
             data.(['time_' tres 'min']){ichunk} = atime(chunktime == ichunk);
@@ -513,10 +513,10 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             data.(['beta_mean_error_' tres 'min']){ichunk} = reshape(lbob_beta_mean.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             data.(['beta_variance_error_' tres 'min']){ichunk} = reshape(lbob_beta_var.standard_error,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
-            data.([bn '_instrumental_precision_mean_' tres 'min']){ichunk} = reshape(lbob_velo_instrumental_precision_mean,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.([bn '_instrumental_precision_variance_' tres 'min']){ichunk} =reshape(lbob_velo_instrumental_precision_var,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_instrumental_precision_mean_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_precision_mean,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
-            data.(['signal_instrumental_precision_variance_' tres 'min']){ichunk} = reshape(lbob_signal_instrumental_precision_var,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_instrumental_uncertainty_mean_' tres 'min']){ichunk} = reshape(velo_instr_uncertainty_mean,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.([bn '_instrumental_uncertainty_variance_' tres 'min']){ichunk} =reshape(velo_instr_uncertainty_var,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_instrumental_uncertainty_mean_' tres 'min']){ichunk} = reshape(signal_instr_uncertainty_mean,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
+            data.(['signal_instrumental_uncertainty_variance_' tres 'min']){ichunk} = reshape(signal_instr_uncertainty_var,size(ref_v_raw,1)/(dt(idt)*3600),size(ref_v_raw,2));
             
             if weighting
                 % wstats weighted
@@ -834,32 +834,32 @@ end
             C.missing_value,...
             '',...
             {[0.01 10], 'logarithmic'});
-        % velo instrumental precision mean
-        att.([bn '_instrumental_precision_mean_' tres 'min']) = create_attributes(...
+        % velo instrumental uncertainty mean
+        att.([bn '_instrumental_uncertainty_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
             ['Mean of the Doppler velocity instrumental precision estimate(' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'See Rye and Hardesty (1993). No correction for bias due to noise and sample size) correction.',...
             {[0 1], 'linear'});
-        % velo instrumental precision variance
-        att.([bn '_instrumental_precision_variance_' tres 'min']) = create_attributes(...
+        % velo instrumental uncertainty variance
+        att.([bn '_instrumental_uncertainty_variance_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
             ['Variance of the Doppler velocity instrumental precision estimate(' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'See Rye and Hardesty (1993). No correction for bias due to noise and sample size) correction.',...
             {[0 1], 'log'});
-        % signal instrumental precision mean
-        att.(['signal_instrumental_precision_mean_' tres 'min']) = create_attributes(...
+        % signal instrumental uncertainty mean
+        att.(['signal_instrumental_uncertainty_mean_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
             ['Mean of fractional instrumental precision in beta (' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...
             C.missing_value,...
             'Mean of fractional error in beta. No correction for bias due to noise and sample size) correction.',...
             {[0 1], 'linear'});
-        % signal instrumental precision variance
-        att.(['signal_instrumental_precision_variance_' tres 'min']) = create_attributes(...
+        % signal instrumental uncertainty variance
+        att.(['signal_instrumental_uncertainty_variance_' tres 'min']) = create_attributes(...
             {['time_' tres 'min'],'height'},...
             ['Variance of fractional instrumental precision in beta (' tres ' min)'],...
             {'m s-1','m s<sup>-1</sup>'},...

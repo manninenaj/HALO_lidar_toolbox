@@ -86,7 +86,7 @@ end
 if ~isnumeric(S_in.elevation) || isscalar(S_in.elevation) || ...
         any(~isfinite(S_in.elevation(:))) || ...
         any(isnan(S_in.elevation(:))) || size(S_in.elevation,2)>1 || ...
-        ~isreal(S_in.elevation) || any(S_in.elevation(:)<0) || ...
+        ~isreal(S_in.elevation) ||  ...
         any(S_in.elevation(:)>90) || ...
         length(S_in.elevation)~=length(S_in.time)
     error(sprintf(['The field ''elevation'' in ''S_in'' has to be a' ...
@@ -213,7 +213,7 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         
         % Calculate sine wave fit and goodness-of-fit values
         [~,R_squared(i),RMSE(i)] = calculateSinusoidalFit(...
-            S_in.azimuth,S_in.velocity(:,i),S_in.snr(:,i));
+            S_in.azimuth,S_in.velocity(:,i));
         
         % Calculate condition number
         s_1 = (transpose(A(:,1))*A(:,1))^(-1/2);
@@ -221,7 +221,13 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         s_3 = (transpose(A(:,3))*A(:,3))^(-1/2);
         S = diag([s_1,s_2,s_3]);
         Z = A * S;
-        CN(i) = max(svd(Z))/min(svd(Z));
+
+        if any(isnan(Z(:))) | any(not(isfinite(Z(:))))
+	    CN(i) = nan;
+	else
+            CN(i) = max(svd(Z))/min(svd(Z));
+        end
+
         
         % As discussed by Newsom et al. (2017), radial velocity error is
         % comprised of instrumental noise and turbulent contribution since
@@ -244,6 +250,11 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
             tmp_PSI_all = tmp_PSI_all + tmp_PSI;
         end
         C_newsom = inv(tmp_C_all);
+        [~, mID] = lastwarn; % 'Matrix is singular to working precision' warning turned off
+        if ~isempty(mID)
+          warning('off',mID)
+        end
+
         PSI = sqrt(tmp_PSI_all);
         u_error(i) = PSI * sqrt(C_newsom(1,1) / ...
             (length(S_in.azimuth) - 3));

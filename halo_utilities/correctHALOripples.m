@@ -1,172 +1,71 @@
-function [snr1,steps] = correctHALOripples(site,DATE,snr0,t_snr)   
-%correctHALOripples corrects the ripples in the HALO Doppler lidar
-% background, see Vakkari et al. (2019).
-%
-% Usage:
-% snr1 = correctHALOripples(site,DATE,snr0,t_snr)
-% [snr1,steps] = correctHALOripples(site,DATE,snr0,t_snr)
-%
-% Inputs:
-% - site     string, name of the site, e.g. 'kuopio'
-% - DATE     scalar, numerical date, e.g. 20171231
-% - snr0     array (time,height), uncalibrated SNR profiles
-% - t_snr    array (time,1), timestamps for SNR profiles,
-%
-% Outputs:
-% - snr1     array (time,height), ripple corrected SNR
-% - steps    array, locations of expected steps in SNR
-%
-% Modified 2019-06-25
-% Antti Manninen
-% antti.manninen(at)fmi.fi
-% Finnish Meteorological Institute
+function [snr1,step_locations] = correctHALOripples(site,DATE,snr0,t_snr,range_m)
+%correctHALOripples corrects the ripples in the HALO bakcground, see
+%Vakkari et al. (2019)
 
 C = getconfig(site,DATE);
-% In case bkg directory is not specified, skip ripple correction
-if ~isfield(C,'dir_background_txt') || ...
-        length(C.dir_background_txt)<=2
-    snr1 = snr0;
-    steps = [];
-    return
+daten = datenum(num2str(DATE),'yyyymmdd');
+
+if isfield(C,'background_file_type')
+    bkg_file_type = C.background_file_type;
+else
+    bkg_file_type = 'txt';
 end
 
-% Set dates
-daten = datenum(num2str(DATE),'yyyymmdd');
-time_snr_dnum = decimal2daten(t_snr,daten);
+[bkg_path, files_bkg] = getHALOfileList(site,DATE,'background',bkg_file_type);
+% [P_amp_path, files_P_amp] = getHALOfileList(site,DATE,'P_amp','txt');
+
 thedate = num2str(DATE);
 
-% Get path and list of files
-[bkg_path, files_bkg] = getHALOfileList(site, DATE, 'background', ...
-                                            'txt');
-bkg_path_tday = bkg_path; % for later use
-files_bkg_tday = files_bkg; % for later use
-
-bkg_time1 = nan; % initialize
-if ~isempty(files_bkg)
-    % Get the timestamp of the first bkg file from today
-    bkg_time1 = datenum([files_bkg{1}(12:17) files_bkg{1}(19:24)], ...
-                        'ddmmyyHHMMSS');
-end
-
-% Go back in time to get the timestamp of the last bkg profile
-% Hopefully the last bkg file is not too far back in time...
-fprintf("Looking for a background profile recorded before '%s'.\n", ...
-        datestr(time_snr_dnum(1),'yyyy-mm-dd HH:MM:SS'));
-bkg_time_last = bkg_time1;
-files_bkg_yday = [];
-daten_yday = daten;
-while isnan(bkg_time1) | bkg_time_last > time_snr_dnum(1)
-    daten_yday = daten_yday-1;
-    DATE_yday = str2double(datestr(daten_yday,'yyyymmdd'));
-    if DATE_yday >= C.parameters_valid_from_including
-        fprintf("Checking '%s'.\n", datestr(daten_yday,'yyyy-mm-dd'));
-        [bkg_path_yday, files_bkg_yday] = getHALOfileList(site, ...
-                                                          DATE_yday, ...
-                                                          'background', ...
-                                                          'txt');
-        if isempty(files_bkg_yday)
-            continue
-        else
-            % Check the last bkg profile
-            bkg_time_last = datenum([files_bkg{end}(12:17) ...
-                                files_bkg{end}(19:24)], 'ddmmyyHHMMSS');
-            break
-        end
-    else
-        if isempty(files_bkg)
-            snr1 = snr0;
-            steps = [];
-            msg_1 = ["No background files found for site '%s' that" ...
-                     " exist before '%s'.\n"];
-            fprintf(msg_1,site,thedate);
-            return
-        else
-            msg_2 = "No older background files found than '%s'.\n";
-            fprintf(msg_2,[bkg_path files_bkg{1}]);
-            break
-        end
-    end
-end
-
-% Skip ripple removal if no bkg files for the site
-if isempty(files_bkg_tday) && isempty(files_bkg_yday)
-    snr1 = snr0;
-    steps = [];
-    return
-end
-
-% Calculate P_bkg and P_fit for todays and/or previous bkg profiles
-% Initialize
-P_bkg_yday = [];
-P_fit_yday = [];
-bkg_times_yday = [];
-P_bkg_tday = [];
-P_fit_tday = [];
-bkg_times_tday = [];
-if ~isempty(files_bkg_yday)
-    [P_bkg_yday, P_fit_yday, bkg_times_yday] = calculateBKGtxt(bkg_path_yday, ...
-                                                files_bkg_yday, ...
-                                                C.num_range_gates);    
-end
-if ~isempty(files_bkg_tday)
-    [P_bkg_tday, P_fit_tday, bkg_times_tday] = calculateBKGtxt(bkg_path_tday, ...
-                                                files_bkg_tday, ...
-                                                C.num_range_gates);
-end
-
-% Put all together
-P_bkg = [P_bkg_yday;P_bkg_tday];
-P_fit = [P_fit_yday;P_fit_tday];
-bkg_times = [bkg_times_yday(:);bkg_times_tday(:)];
-
-% Scale to the snr time resolution, assing matching bkg profile
-P_bkg_scl = nan(size(snr0));
-P_fit_scl = nan(size(snr0));
-for ib = 1:length(bkg_times)
-    iscl = find(bkg_times(ib)<=time_snr_dnum);
-    P_bkg_scl(iscl,:) = repmat(P_bkg(ib,:),length(iscl),1);
-    P_fit_scl(iscl,:) = repmat(P_fit(ib,:),length(iscl),1);
-end
-
-% Remove bkg profiles that contain only nans
-P_bkg_scl(all(isnan(P_bkg_scl),2),:) = 0; 
-P_fit_scl(all(isnan(P_fit_scl),2),:) = 0;
-
-% Find steps
-steps = nan(1,length(bkg_times)-1);
-for i = 2:length(bkg_times)
-    if ~isempty(find(time_snr_dnum>bkg_times(i),1,'first'))
-        steps(i-1) = find(time_snr_dnum>bkg_times(i),1, ...
-                                   'first');
-    end    
-end
-
-% For now, P_amp is calculated only for few test sites
 if isfield(C,'dir_housekeeping')
-    path_to_P_amp = [C.dir_housekeeping thedate(1:4) ...
-                     '_amp_ave_resp.mat'];
-    if exist(path_to_P_amp,'file')==2
-        P_amp = load(path_to_P_amp);
-        P_amp = P_amp.P_amp;
-        P_amp_exists = true;
-    else
-        P_amp_exists = false;
-    end
+    path_to_P_amp = [C.dir_housekeeping thedate(1:4) '_amp_ave_resp.mat'];
+    P_amp = load(path_to_P_amp);
+    P_amp = P_amp.P_amp;
+    P_amp_exists = true;
 else
     P_amp_exists = false;
 end
 
-% Remove ripples by using P_fit (and P_amp if available)
-if P_amp_exists
-    P_noise = P_fit_scl + repmat(transpose(P_amp(:)),size(P_fit_scl,1),1);
-else
-    P_noise = P_fit_scl;
-end
-% In case some SNR profiles cannot be associated with bkg
-% profiles, set P_bkg and P_fit to '1' so SNR will not be
-% affected in those cases 
-P_noise(P_noise==0)= 1;
-P_bkg_scl(P_bkg_scl==0) = 1;
 
-% Remove ripples
-snr1 = snr0 .* (P_bkg_scl ./ P_noise);
+if ~isempty(files_bkg)
+% if exist(path_bkg,'dir') == 7 % if bkg files exist
+  [P_bkg, P_fit, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,C.background_file_type,daten,C.num_range_gates,range_m);
+%     b_file(:,1:3) = nan; b_fit(:,1:3) = nan;
+    P_bkg(all(isnan(P_bkg),2),:) = []; 
+    P_fit(all(isnan(P_fit),2),:) = [];
+    
+    % Find steps
+    [time_snr_dnum] = decimal2daten(t_snr,daten);
+    step_locations = nan(1,length(bkg_times)-1);
+    for i = 2:length(bkg_times)
+        if ~isempty(find(time_snr_dnum>bkg_times(i),1,'first'))
+            step_locations(i-1) = find(time_snr_dnum>bkg_times(i),1,...
+                'first');
+        end
+    end
+    
+    % Correct ripples
+    istep = 1;
+    snr1 = nan(size(snr0));
+    for i = 1:size(snr0,1)
+        if istep < size(P_bkg,1)
+            if i >= step_locations(istep)
+                istep = istep + 1;
+            end
+        end
+        %         P_snr = P_bkg(istep,:) - P_fit(istep,:);
+        if P_amp_exists
+            P_noise = P_fit + repmat(transpose(P_amp),size(P_fit,1),1);
+        else
+            P_noise = P_fit;
+        end
+        
+        %         b_snr = b_file(istep,:) ./ b_fit(istep,:);
+        %         snr1(i,:) = snr0(i,:) + P_snr - 1;
+        snr1(i,:) = snr0(i,:) .* (P_bkg(istep,:) ./ P_noise(istep,:));
+    end
+else
+    snr1 = snr0;
+    step_locations = [];
+end
+end
+
