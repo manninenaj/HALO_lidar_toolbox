@@ -1,12 +1,12 @@
-function calculateHALOverticalTKEproduct(site,DATES,windproduct,typeof,weighting)
-%calculateHALOverticalTKEproduct calculates the dissipation rate of 
+function calculateHALOepsilonProduct(site,DATES,windproduct,typeof,weighting)
+%calculateHALOepsilonProduct calculates the dissipation rate of 
 %turbulent kinetic energy directly from vertical velocity variance with
 %temporal resolution the Halo wstats product is given, and writes the 
 %results into a daily *.nc file.
 %
 % Usage:
-% calculateHALOverticalTKEproduct(site,DATES,windproduct,typeof)
-% calculateHALOverticalTKEproduct(site,DATES,windproduct,typeof,weighting)
+% calculateHALOverticalepsilonproduct(site,DATES,windproduct,typeof)
+% calculateHALOverticalepsilonproduct(site,DATES,windproduct,typeof,weighting)
 %
 % Inputs:
 % -site          String, site name, e.g. site = 'kuopio'
@@ -18,10 +18,10 @@ function calculateHALOverticalTKEproduct(site,DATES,windproduct,typeof,weighting
 %                '3beams', '4beams'
 % -weighting     logical 'true' or 'false'
 %
-% Created 2018-01-18
+% Created 2018-01-18, modified last 2019-09-17
 % Antti Manninen
-% University of Helsinki, Finland
-% antti.j.manninen@helsinki.fi
+% Finnish Meteorological Institute
+% antti.manninen@fmi.fi
 
 if nargin < 4
   error('''site'', ''DATES'', ''windproduct'', and ''typeof'' are required inputs!')
@@ -112,16 +112,20 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     dt_raw = median(diff(data_co.time));
 
     % Get & check output path, can the file be written? 
-    [dir_TKE_out,~] = getHALOfileList(site,DATE,'product','TKE');    
-    status = checkHALOpath(site,DATE,'product','TKE');
+    [dir_epsilon_out,~] = getHALOfileList(site,DATE,'product','epsilon');    
+    status = checkHALOpath(site,DATE,'product','epsilon');
     if isempty(status)
-        fprintf('Cannot write product TKE for the site %s and date %s.',site,num2str(DATE));
+        fprintf('Cannot write product epsilon for the site %s and date %s.',site,num2str(DATE));
         continue;
     end
 
     % Load, assume only one *.nc file per day
     wstats = load_nc_struct(fullfile([dir_wstats_in '/' wstats_files{1}]));
     wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]));
+
+    % Create common attribues, fields, and dimensions
+    [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
+
     if strcmp(windproduct,'winddbs')
         if not(isfield(wind_tday,'height'))
             wind_tday.height = wind_tday.range(:).*sind(nanmedian(wind_tday.elevation(:)));
@@ -159,15 +163,23 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
     ifs_false = strmatch('radial_velocity_simple_variance_error',fnames_var);
     fnames_var(ifs_false) = [];
-        
-    switch isempty(strmatch('radial_velocity_instrumental_error_mean', fnames))
-        case 0
-            ifs_e_mean = strmatch('radial_velocity_instrumental_error_mean', fnames);
-            ifs_e_var = strmatch('radial_velocity_instrumental_error_variance', fnames);
-        case 1
-            ifs_e_mean = strmatch('radial_velocity_instrumental_precision_mean', fnames);
-            ifs_e_var = strmatch('radial_velocity_instrumental_precision_variance', fnames);
+
+    % The naming of this variable has changed over the iterations. For existing data all versions are checked.
+    name_options = cellstr(strvcat('radial_velocity_instrumental_error_mean',...
+                                   'radial_velocity_instrumental_precision_mean',...
+                                   'radial_velocity_instrumental_uncertainty_mean'));
+    switch find(ismember(name_options,fnames))
+      case 1 % error
+          ifs_e_mean = strmatch('radial_velocity_instrumental_error_mean', fnames);
+          ifs_e_var = strmatch('radial_velocity_instrumental_error_variance', fnames);
+      case 2 % precision
+          ifs_e_mean = strmatch('radial_velocity_instrumental_precision_mean', fnames);
+          ifs_e_var = strmatch('radial_velocity_instrumental_precision_variance', fnames);       
+      case 3 % uncertainty
+          ifs_e_mean = strmatch('radial_velocity_instrumental_uncertainty_mean', fnames);
+          ifs_e_var = strmatch('radial_velocity_instrumental_uncertainty_variance', fnames);               
     end
+    
     fnames_mean_e = fnames(ifs_e_mean);
     fnames_var_e = fnames(ifs_e_var);
     
@@ -180,14 +192,22 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         ifs_wfalse = strmatch('radial_velocity_weighted_variance_error',fnames_wvar);
         fnames_wvar(ifs_wfalse) = [];
 
-        switch isempty(strmatch('radial_velocity_instrumental_error_weighted_mean', fnames))
-            case 0
-                ifs_e_wmean = strmatch('radial_velocity_instrumental_error_weighted_mean', fnames);
-                ifs_e_wvar = strmatch('radial_velocity_instrumental_error_weighted_variance', fnames);
-            case 1
-                ifs_e_wmean = strmatch('radial_velocity_instrumental_precision_weighted_mean', fnames);
-                ifs_e_wvar = strmatch('radial_velocity_instrumental_precision_weighted_variance', fnames);
+        % The naming of this variable has changed over the iterations. For existing data all versions are checked.
+        wname_options = cellstr(strvcat('radial_velocity_instrumental_error_mean',...
+                                        'radial_velocity_instrumental_precision_mean',...
+                                        'radial_velocity_instrumental_uncertainty_mean'));
+        switch find(ismember(wname_options,fnames_wvar))
+          case 1
+              ifs_e_mean = strmatch('radial_velocity_instrumental_error_weighted_mean', fnames_wvar);
+              ifs_e_var = strmatch('radial_velocity_instrumental_error_weighted_variance', fnames_wvar);
+          case 2
+              ifs_e_mean = strmatch('radial_velocity_instrumental_precision_weighted_mean', fnames_wvar);
+              ifs_e_var = strmatch('radial_velocity_instrumental_precision_weighted_variance', fnames_wvar);       
+          case 3
+              ifs_e_mean = strmatch('radial_velocity_instrumental_uncertainty_weighted_mean', fnames_wvar);
+              ifs_e_var = strmatch('radial_velocity_instrumental_uncertainty_weighted_variance', fnames_wvar);               
         end
+
         fnames_wmean_e = fnames(ifs_e_wmean);    
         fnames_wvar_e = fnames(ifs_e_wvar);
     end
@@ -195,14 +215,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     ifs_t = strmatch('time', fnames);
     fnames_time = fnames(ifs_t);
 
-    fprintf('\nGenerating the Halo TKE product.\n')
+    fprintf('\nGenerating the Halo epsilon product.\n')
     
     % Just to check how many time resolutions there are
     for ii = 1:length(fnames_var)
         dt_hrs = median(diff((wstats.(fnames_time{ii}))));
         tres = num2str(dt_hrs*60); % time reso in string       
 
-        fprintf(['TKE: estimating epsilon at ' tres ' min resolution...'])
+        fprintf(['epsilon: estimating epsilon at ' tres ' min resolution...'])
 
         % true variance = variance - noise variance
         true_variance = wstats.(fnames_var{ii}) - ...
@@ -217,11 +237,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             end
         end
 
-%         % Filter by using number of samples
-%         true_variance( wstats.( fnames_nsamples{ii} ) < round( max( ...
-%             wstats.(fnames_nsamples{ii})(:) )*.75 ) ) = nan;
-%         true_wvariance( wstats.( fnames_nsamples{ii}) < round( max( ...
-%             wstats.(fnames_nsamples{ii})(:) )*.75 ) ) = nan;
+        % Filter by using number of samples
+        nsamples_in_wstats = wstats.(fnames_nsamples{ii});
         
         % Re-grid the winds
         [Xr,Yr] = meshgrid(wstats.height, wstats.(fnames_time{ii}));
@@ -331,7 +348,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         att.(['time_' tres 'min']).axis = 'T';
         % epsilon
         att.(['epsilon_' tres 'min']) = create_attributes(...
-            {['time_' tres 'min'],'height'},...
+            {['time_' tres 'min'].'range'},...
             'Dissipation rate of turbulent kinetic energy',...
             {'m2 s-3',''},...
             C.missing_value,...
@@ -339,8 +356,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             {[-6 -1], 'logarithmic'});
         % epsilon error
         att.(['epsilon_error_' tres 'min']) = create_attributes(...
-            {['time_' tres 'min'],'height'},...
-            'Fractional error in the dissipation rate of turbulent kinetic energy (TKE)',...
+            {['time_' tres 'min'].'range'},...
+            'Fractional error in the dissipation rate of turbulent kinetic energy (epsilon)',...
             'unitless',...
             C.missing_value,...
             'Absolute error in epsilon divided by epsilon, OConnor et al. (2010).',...
@@ -348,7 +365,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         if weighting
         % epsilon_w
         att.(['epsilon_w_' tres 'min']) = create_attributes(...
-            {['time_' tres 'min'],'height'},...
+            {['time_' tres 'min'].'range'},...
             'Dissipation rate of turbulent kinetic energy',...
             {'m2 s-3',''},...
             C.missing_value,...
@@ -356,8 +373,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             {[-6 -1], 'logarithmic'});
         % epsilon_w error
         att.(['epsilon_w_error_' tres 'min']) = create_attributes(...
-            {['time_' tres 'min'],'height'},...
-            'Fractional error in the dissipation rate of turbulent kinetic energy (TKE) estimated from weighted radial velocity variance',...
+            {['time_' tres 'min'].'range'},...
+            'Fractional error in the dissipation rate of turbulent kinetic energy (epsilon) estimated from weighted radial velocity variance',...
             'unitless',...
             C.missing_value,...
             'Absolute error in epsilon divided by epsilon. Epsilon estimated from weighted radial velocity variance, OConnor et al. (2010).',...
@@ -365,7 +382,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         end
         % L1
         att.(['L_' tres 'min']) = create_attributes(...
-            {['time_' tres 'min'],'height'},...
+            {['time_' tres 'min'].'range'},...
             'Length scale of the largest eddies that pass completely through the lidar beam during the averaging window.',...
             {'m',''},...
             C.missing_value,...
@@ -373,7 +390,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             {[0 4000], 'linear'});
         % L2
         att.(['L1_' tres 'min']) = create_attributes(...
-            {['time_' tres 'min'],'height'},...
+            {['time_' tres 'min'].'range'},...
             'Length scale of the scattering volume dimension per single sample in the averaging window.',...
             {'m',''},...
             C.missing_value,...
@@ -385,53 +402,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         fprintf('done.\n')    
 
     end   
-    
-    % latitude, longitude, altitude, elevation
-    if isfield(wstats,'latitude')
-        data.latitude = wstats.latitude;
-        data.longitude = wstats.longitude;
-        data.altitude = wstats.altitude;
-    elseif isfield(C,'latitude')
-        data.latitude = C.latitude;
-        data.longitude = C.longitude;
-        data.altitude = C.altitude_in_meters;
-    else
-        data.latitude = 0;
-        data.longitude = 0;
-        data.altitude = 0;
-    end
 
-    % latitude
-    att.latitude = create_attributes(...
-        {},...
-        'Latitude of lidar', ...
-        'degrees_north');
-    att.latitude.standard_name = 'latitude';
-    % longitude
-    att.longitude = create_attributes(...
-        {},...
-        'Longitude of lidar', ...
-        'degrees_east');
-    att.longitude.standard_name = 'longitude';
-    % altitude
-    att.altitude = create_attributes(...
-        {},...
-        'Height of instrument above mean sea level', ...
-        'm');
-    
-    % Height
-    data.height = wstats.height;
-    att.height = create_attributes(...
-        {'height'},...
-        'Height above ground', ...
-        'm',...
-        [],...
-        ['Range*sin(elevation), assumes lidar is at ground level, if'...
-        ' not add the height of lidar to the height of variables.']);
 
-    % Add height dim
-    dim.height = length(data.height);
-    
     % Create global attributs
     att.global.Conventions = 'CF-1.0';
     att.global.system = C.system;
@@ -450,7 +422,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     att  = orderfields(att);
     
     % Write into new netcdf
-    write_nc_silent(fullfile([dir_TKE_out '/' thedate ...
+    write_nc_silent(fullfile([dir_epsilon_out '/' thedate ...
         '_' site '_halo-doppler-lidar_epsilon.nc']), dim, data, att)
 end
 

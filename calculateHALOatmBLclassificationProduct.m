@@ -140,13 +140,17 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     
     %% Load supplementary data - TBD
 
+    % load signal and beta
+    wstats = load_nc_struct(fullfile([dir_wstats_in '/' wstats_files{1}]));
+
+    % Create common attribues, fields, and dimensions
+    [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
+
     for it = 1:length(dt)
         
         % temporal resolutions
         dt_i = [num2str(dt(it)) 'min'];
         
-        % load signal and beta
-        wstats = load_nc_struct(fullfile([dir_wstats_in '/' wstats_files{1}]));
         signal_it = wstats.(['signal_mean_' dt_i]); 
         beta_it = real(log10(wstats.(['beta_mean_' dt_i])));
         
@@ -213,7 +217,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             C.missing_value,...
             'Last range gate with a certain aerosol backscatter signal (also used for plots).');
         att.(['aerosol_layer_mask_' dt_i]) = create_attributes(...
-            {['time_' dt_i],'height'},...
+            {['time_' dt_i],'range'},...
             'Aerosol_Layer_Mask',...
             [],...
             C.missing_value,...
@@ -293,70 +297,18 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             createHALOatmBLclassificationMasks(wstats.(['time_' dt_i]),wstats.height,...
             bitfield.(['bits_' dt_i]),fubarfield.(['coupled_' dt_i]),dt_i);
         
+        % Copy fields
         fnames = fieldnames(product);
         for ifn = 1:length(fnames)
-            if not(strcmp(fnames{ifn},'height'))
-                data.(fnames{ifn}) = product.(fnames{ifn});
-                att.(fnames{ifn}) = product_attribute.(fnames{ifn});
-            end
+            data.(fnames{ifn}) = product.(fnames{ifn});
+            att.(fnames{ifn}) = product_attribute.(fnames{ifn});
         end
+        % Copy dims
         fnames_d = fieldnames(product_dimensions);
         for ifn_d = 1:length(fnames_d)
-            if not(strcmp(fnames_d{ifn_d},'height'))
-                dim.(fnames_d{ifn_d}) = product_dimensions.(fnames_d{ifn_d});
-            end
+            dim.(fnames_d{ifn_d}) = product_dimensions.(fnames_d{ifn_d});
         end
     end
-    
-    
-    % latitude, longitude, altitude, elevation
-    if isfield(wstats,'latitude')
-        data.latitude = wstats.latitude;
-        data.longitude = wstats.longitude;
-        data.altitude = wstats.altitude;
-    elseif isfield(C,'latitude')
-        data.latitude = C.latitude;
-        data.longitude = C.longitude;
-        data.altitude = C.altitude_in_meters;
-    else
-        data.latitude = 0;
-        data.longitude = 0;
-        data.altitude = 0;
-    end
-
-    
-    % latitude
-    att.latitude = create_attributes(...
-        {},...
-        'Latitude of lidar', ...
-        'degrees_north');
-    att.latitude.standard_name = 'latitude';
-    % longitude
-    att.longitude = create_attributes(...
-        {},...
-        'Longitude of lidar', ...
-        'degrees_east');
-    att.longitude.standard_name = 'longitude';
-    % altitude
-    att.altitude = create_attributes(...
-        {},...
-        'Height of instrument above mean sea level', ...
-        'm');
-    
-    data.height = wstats.height;
-    
-    % Add height attribute
-    att.height = create_attributes(...
-        {'height'},...
-        'Height above ground', ...
-        'm',...
-        [],...
-        ['Range*sin(elevation), assumes that the instrument is at' ...
-        ' ground level! If not, add the height of the instrument' ...
-        ' from the ground to the height variable.']);
-    
-    % Height dimensions
-    dim.height = length(wstats.height);
     
     % Create global attributs
     att.global.Conventions = 'CF-1.0';
