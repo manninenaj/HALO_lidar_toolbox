@@ -9,41 +9,35 @@ dates=datestr(daten,'ddmmyy');
 
 %switch file_type
  % case 'txt'
-filess = files_bkg;
-bkg_times = nan(length(filess),1); % col1: time
-for i = 1:length(filess)
-    if isempty(files_bkg)
-        bkg = nan(1,n_range_gates);
-    else
-        bkg = nan(length(files_bkg),n_range_gates);
-    end
+bkg_times = nan(length(files_bkg),1); % col1: time
+if isempty(files_bkg)
+    bkg = nan(1,n_range_gates);
+else
+    bkg = nan(length(files_bkg),n_range_gates);
+end
+
 switch file_type
-  %% read in backgrounds
-  case 'txt'
-    
-    bkg_times = nan(length(files_bkg),1); % col1: time
-    for i = 1:length(files_bkg)
+    case 'txt'   
+        bkg_times = nan(length(files_bkg),1); % col1: time
+        for i = 1:length(files_bkg)
         %%%b_daten=datenum([filess(i).name(12:17) filess(i).name(19:24)],'ddmmyyHHMMSS');
-        b_daten = datenum([files_bkg{i}(12:17) files_bkg{i}(19:24)],'ddmmyyHHMMSS');
-        bkg_times(i,:) = b_daten;
+            b_daten = datenum([files_bkg{i}(12:17) files_bkg{i}(19:24)],'ddmmyyHHMMSS');
+            bkg_times(i,:) = b_daten;
     
-        %for j=1:length(filess)
-        %%%fn=[bkg_path filess(j).name];
-        fn = [bkg_path files_bkg{i}];
-        fid=fopen(fn,'r');
-        bk=fscanf(fid,'%s');
-        fclose(fid);
+            fn = [bkg_path files_bkg{i}];
+            fid=fopen(fn,'r');
+            bk=fscanf(fid,'%s');
+            fclose(fid);
         
-        dot_j=find(bk=='.');
-        end_j=[1;transpose(dot_j+7)];
+            dot_j=find(bk=='.');
+            end_j=[1;transpose(dot_j+7)];
         
-        bj=1;
-        %for ii=2:length(end_i)
-        for jj=2:n_range_gates+1
-            bkg(i,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
-            bj=bj+1;
-        end
-      end
+            bj=1;
+            for jj=2:n_range_gates+1
+                bkg(i,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
+                bj=bj+1;
+            end
+         end
   case 'nc' % blindly assume only one file, only ARM uses this..
     tmp = load_nc_struct([bkg_path,files_bkg{1}]);
     bkg_times = decimal2daten(tmp.time/3600,daten);
@@ -85,7 +79,6 @@ bkg_raw=bkg;
 % bkg_snr(:,2:end)=nan;
 fits_1=bkg_raw(:,1:3)*nan; % p(1) p(2) rmse
 fits_2=bkg_raw(:,1:4)*nan; % p(1) p(2) p(3) rmse
-
 fit_out = nan(length(bkg_raw(:,1)),n_range_gates);
 bkg_out = nan(length(bkg_raw(:,1)),n_range_gates);
 for i=1:length(bkg_raw(:,1));
@@ -94,21 +87,17 @@ for i=1:length(bkg_raw(:,1));
     if ~isnan(bkg_raw(i,1)) % fit 1 and 2 order polynomial
         switch file_type
           case 'txt'
-            x = irange:n_range_gates-1; 
+            x = irange:n_range_gates-1;
             y = bkg_raw(i,irange:n_range_gates-1);
             fitti_1 = my_robustfit(x(:),y(:));
             fitti_2 = my_robustfit([x(:) x(:).^2],y(:));
 	    p1 = [fitti_1(2) fitti_1(1)];
             p2 = [fitti_2(3) fitti_2(2) fitti_2(1)];
-            %fitti_1 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),1);
-            %fitti_2 = polyfit((irange:n_range_gates-1),bkg_raw(i,irange:n_range_gates-1),2);
-            %bkg_fitted_1 = (1:n_range_gates)*fitti_1(1)+fitti_1(2);
-            %bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
             bkg_fitted_1 = polyval(p1, 1:n_range_gates);
-            bkg_fitted_2 = polyval(p2, 1:n_range_gates);          
+            bkg_fitted_2 = polyval(p2, 1:n_range_gates);
             bkg_fitted_1 =  transpose(bkg_fitted_1(:));
-            bkg_fitted_2 =  transpose(bkg_fitted_2(:));  
-            rmse_1 = sqrt(mean((bkg_raw(i,irange:n_range_gates)-bkg_fitted_1(irange:n_range_gates)).^2,2));       
+            bkg_fitted_2 =  transpose(bkg_fitted_2(:)); 
+            rmse_1 = sqrt(mean((bkg_raw(i,irange:n_range_gates)-bkg_fitted_1(irange:n_range_gates)).^2,2));
             rmse_2 = sqrt(mean((bkg_raw(i,irange:n_range_gates)-bkg_fitted_2(irange:n_range_gates)).^2,2));
           case 'nc'
             x = 1:length(bkg_raw(i,5:end)); x = transpose(x(:));
@@ -118,7 +107,7 @@ for i=1:length(bkg_raw(:,1));
             bkg_fitted_2 = ((1:n_range_gates).^2)*fitti_2(1)+(1:n_range_gates)*fitti_2(2)+fitti_2(3);
             bkg_fitted_1 =  bkg_fitted_1(:);
             bkg_fitted_2 =  bkg_fitted_2(:);
-            rmse_1 = sqrt(mean((bkg_raw(i,irange:end)-bkg_fitted_1(irange:end)).^2,2));       
+            rmse_1 = sqrt(mean((bkg_raw(i,irange:end)-bkg_fitted_1(irange:end)).^2,2));
             rmse_2 = sqrt(mean((bkg_raw(i,irange:end)-bkg_fitted_2(irange:end)).^2,2));
         end            
         if rmse_2<(0.9*rmse_1)
