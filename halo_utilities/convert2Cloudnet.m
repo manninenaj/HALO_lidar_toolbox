@@ -75,7 +75,7 @@ else
     error('Altitude for the site %s not specified in the halo config!',site)
 end
 if ~isfield(C,'altitude_agl_in_meters'), C.altitude_agl_in_meters = 0; end
-data1.altitude_agl = C.altitude_agl_in_meters = 0;
+data1.altitude_agl = C.altitude_agl_in_meters;
 % latitude
 if isfield(C,'field_name_original_latitude')
     data1.latitude = data0.(C.field_name_original_latitude);

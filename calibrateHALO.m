@@ -152,7 +152,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                     data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{1}));
                      
                     % Check order of time stamps and reorder if needed
-                    data0 = checkHALOtimeStamps(data0);
+                    % Check order of time stamps and reorder if needed
+                    % Sometimes the last time stamp(s) is(are) in the next day
+                    if data0.time(end)<data0.time(end-1)
+                        data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
+                    end                           
+ %                   data0 = checkHALOtimeStamps(data0);
                     
                     % Check number of range gates
                     if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
@@ -236,8 +241,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         end
                         
                         dim1 = struct('time',length(data1.time),'range',length(data1.range));
-                        % If more than one file per day
-                        fndate = thedate;                        
+                        fndate = loadinfo.(abc).files{1}(1:8);
+                        if ~strcmp(fndate,thedate)
+			    fndate = thedate;
+                        end
                         
                         % correct focus TBD
                         data1 = correctHALOfocus(site,DATE,abc,data1);
@@ -252,7 +259,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{i}));
 
                         % Check order of time stamps and reorder if needed
-                        data0 = checkHALOtimeStamps(data0);
+                        % Sometimes the last time stamp(s) is(are) in the next day
+                        if data0.time(end)<data0.time(end-1)
+			    data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
+                        end                           
+%                        data0 = checkHALOtimeStamps(data0);
                         
                         % Check number of range gates
                         if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
@@ -286,16 +297,23 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             [data1,att1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
                             
                             % If more than one file per day
-                            if length(loadinfo.(abc).files)>1
-                                fndate = [thedate '_' datestr(decimal2daten(data1.time(1),datenum(thedate,'yyyymmdd')),'HHMMSS')];
+                            check_time = [thedate '_' datestr(decimal2daten(data0.time(1),datenum(thedate,'yyyymmdd')),'HHMMSS')];
+                            if length(loadinfo.(abc).files)>1                
+                                fndate = loadinfo.(abc).files{i}(1:15);
+                                if ~strcmp(fndate,check_time)
+			            fndate = check_time;
+                                end
                             else
-                                fndate = thedate;
+                                fndate = loadinfo.(abc).files{i}(1:8);
+                                if ~strcmp(fndate,thedate)
+   			            fndate = thedate;
+                                end
                             end
                             
-                            % Sometimes the last time stamp is from the next day
-                            if data1.time(end)<data1.time(end-1)
-                                data1.time(end) = data1.time(end)+24;
-                            end
+                            %% Sometimes the last time stamp is from the next day
+                            %if data1.time(end)<data1.time(end-1)
+                            %    data1.time(end) = data1.time(end)+24;
+                            %end
                             
                             % correct focus
                             data1 = correctHALOfocus(site,DATE,abc,data1);

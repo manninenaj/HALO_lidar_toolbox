@@ -13,7 +13,7 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 %           ___|____|___         |   |   |
 %           | __ __ __ |         |   |   |
 %           | || || || |         |   |   |
-%  building | __ __ __ |         |   |   |
+%   building| __ __ __ |         |   |   |
 %           | || || || |         |   |   |altitude_instrument 
 %           | __ __ __ |         |   |   |
 %           | || || || |         |   |   |
@@ -38,6 +38,8 @@ if ~isfield(data_in,'height_agl') % check from input 'data_in'
         % If add range if it does not exist
     	if ~isfield(data_in,'range')
             data_out.range = data_in.height;
+        else
+	    data_out.range = data_in.range;
         end
         att_out.range = create_attributes(...
             {'range'},...
@@ -104,8 +106,8 @@ if ~isfield(data_in,'height_agl') % check from input 'data_in'
                 'm');
 
             % altitude of instrument, assume at ground level, so the same as altitude
-            data_out.altitude_instrument = data_in.altitude;
-            att_out.altitude_instrument = att_in.altitude;
+            data_out.altitude_instrument = data_out.altitude;
+            att_out.altitude_instrument = att_out.altitude;
 	end
 end
 

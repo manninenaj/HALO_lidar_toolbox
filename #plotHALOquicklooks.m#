@@ -764,12 +764,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        snr(cond) = nan; 
                     end
 
-                    if ~isfield(data,'height_agl')
-		        height = data.height/1000;
+                    if ~isfield(data.height_agl)
+		        height = data.height_agl;
                     else
-		        height = data.height_agl/1000;
+		        height = data.height;
                     end
-                    hlabel = 'Height agl (km)';
+                    y_label_str = 'Height agl (km)';
                                  
                     sp1 = subplot(321);
                     pcolor(data.time,height,ws); axis([0 24 0 p.ymax]); shading flat

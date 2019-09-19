@@ -158,6 +158,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     
      
     [data,att,dim] = createORcopyCommonAttsDims(Din,C);
+    
 
     %%--- Create variables ---%%
     data.time = transpose(cell2mat(time)); % hrs
