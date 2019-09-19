@@ -6,8 +6,8 @@ function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,n_ra
 
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
 
-switch file_type
-  case 'txt'
+%switch file_type
+ % case 'txt'
     filess = files_bkg;
     bkg_times = nan(length(filess),1); % col1: time
     for i = 1:length(filess)
@@ -35,11 +35,11 @@ switch file_type
             bj=bj+1;
         end
       end
-  case 'nc' % blindly assume only one file, only ARM uses this..
-    tmp = load_nc_struct([bkg_path,files_bkg{1}]);
-    bkg_times = decimal2daten(tmp.time/3600,daten);
-    bkg = tmp.background;
-end
+  %case 'nc' % blindly assume only one file, only ARM uses this..
+   % tmp = load_nc_struct([bkg_path,files_bkg{1}]);
+   % bkg_times = decimal2daten(tmp.time/3600,daten);
+   % bkg = tmp.background;
+%end
 
 %% gapfilling
 
