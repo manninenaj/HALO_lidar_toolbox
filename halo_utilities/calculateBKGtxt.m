@@ -1,17 +1,22 @@
 function [bkg_out, fit_out, bkg_times] = calculateBKGtxt(bkg_path,files_bkg,file_type,daten,n_range_gates,range_m)
 
-
 irange=find(range_m<110,1,'first');
-
 % find co and cross background files
 dates=datestr(daten,'ddmmyy');
    
 %%%filess=dir([bkg_path 'Background_' dates '*.txt']);
-if isempty(files_bkg)
-    bkg = nan(1,n_range_gates);
-else
-    bkg = nan(length(files_bkg),n_range_gates); 
-end
+
+
+%switch file_type
+ % case 'txt'
+filess = files_bkg;
+bkg_times = nan(length(filess),1); % col1: time
+for i = 1:length(filess)
+    if isempty(files_bkg)
+        bkg = nan(1,n_range_gates);
+    else
+        bkg = nan(length(files_bkg),n_range_gates);
+    end
 switch file_type
   %% read in backgrounds
   case 'txt'
@@ -33,20 +38,18 @@ switch file_type
         end_j=[1;transpose(dot_j+7)];
         
         bj=1;
-        %         for ii=2:length(end_i)
+        %for ii=2:length(end_i)
         for jj=2:n_range_gates+1
             bkg(i,bj)=str2num(bk(end_j(jj-1):end_j(jj)-1));
             bj=bj+1;
         end
       end
   case 'nc' % blindly assume only one file, only ARM uses this..
-    
     tmp = load_nc_struct([bkg_path,files_bkg{1}]);
-    tmp
     bkg_times = decimal2daten(tmp.time/3600,daten);
     bkg = tmp.background;
 end
-      
+
 %% gapfilling
 
 %if isempty(bkg) % no data for a day
@@ -65,7 +68,7 @@ end
 %    dd=(diff(bkg(:,1)-daten))*24;
 %    for i=1:length(dd)
 %        if dd(i)>1.5
-%            new_t=transpose((bkg(i,1)+1/24):1/24:(bkg(i,1)+floor(dd(i))/24));
+%            new_t=trnspose((bkg(i,1)+1/24):1/24:(bkg(i,1)+floor(dd(i))/24));
 %            bkg=[[bkg(:,1); new_t] [bkg(:,2:end);repmat(bkg(1,2:end)*nan,length(new_t),1)]];
 %        end
 %    end
@@ -74,7 +77,7 @@ end
 %        bkg=sortrows(bkg,1);
 %    end
 %end
-    
+   
 bkg_raw=bkg;
 %clear bkg;
 %% to SNR
