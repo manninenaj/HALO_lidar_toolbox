@@ -242,9 +242,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         
                         dim1 = struct('time',length(data1.time),'range',length(data1.range));
                         fndate = loadinfo.(abc).files{1}(1:8);
-                        if ~strcmp(fndate,thedate)
-			    fndate = thedate;
-                        end
+                        %if ~strcmp(fndate,thedate)
+			%    fndate = thedate;
+                        %end
                         
                         % correct focus TBD
                         data1 = correctHALOfocus(site,DATE,abc,data1);
@@ -300,14 +300,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             check_time = [thedate '_' datestr(decimal2daten(data0.time(1),datenum(thedate,'yyyymmdd')),'HHMMSS')];
                             if length(loadinfo.(abc).files)>1                
                                 fndate = loadinfo.(abc).files{i}(1:15);
-                                if ~strcmp(fndate,check_time)
-			            fndate = check_time;
-                                end
+                                %if ~strcmp(fndate,check_time)
+			        %    fndate = check_time;
+                                %end
                             else
                                 fndate = loadinfo.(abc).files{i}(1:8);
-                                if ~strcmp(fndate,thedate)
-   			            fndate = thedate;
-                                end
+                                %if ~strcmp(fndate,thedate)
+   			        %    fndate = thedate;
+                                %end
                             end
                             
                             %% Sometimes the last time stamp is from the next day
