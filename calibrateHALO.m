@@ -78,7 +78,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
             if isempty(data_tmp), continue; end
   
             % Check order of time stamps and reorder if needed
-            data_tmp = checkHALOtimeStamps(data_tmp);
+            %data_tmp = checkHALOtimeStamps(data_tmp);
+            if data_tmp.time(end)<data_tmp.time(end-1)
+                data_tmp.time(find(diff(data_tmp.time)<0)+1:end) = data_tmp.time(find(diff(data_tmp.time)<0)+1:end) + 24;
+            end 
             
             if isempty(data_tmp)
                 continue
@@ -121,9 +124,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                 'correct_remnant',C.opt_4_bkg_remnant_profiles,...
                 'ignore',C.num_gates_to_ignore_4bkg_corr,...
                 'cloud_mask',logical(atm_mask));
-	else
-	    snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
-	        'cloud_mask',logical(atm_mask));
+        else
+	        snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
+	            'cloud_mask',logical(atm_mask));
         end
 
         
@@ -145,7 +148,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
             
             % If stare, create one file per day, otherwise keep the original number of files per day
             switch abc
-                case {'stare_co','stare_cross'}
+                case {'stare_co','stare_cross','stare_co12'}
                     
                     % load first
                     if isempty(loadinfo.(abc).files), continue; end
@@ -155,7 +158,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                     % Check order of time stamps and reorder if needed
                     % Sometimes the last time stamp(s) is(are) in the next day
                     if data0.time(end)<data0.time(end-1)
-                        data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
+                        data0.time(find(diff(data0.time)<0)+1:end) = data0.time(find(diff(data0.time)<0)+1:end) + 24;
                     end                           
  %                   data0 = checkHALOtimeStamps(data0);
                     
@@ -261,9 +264,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         % Check order of time stamps and reorder if needed
                         % Sometimes the last time stamp(s) is(are) in the next day
                         if data0.time(end)<data0.time(end-1)
-			    data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
+			                data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
                         end                           
-%                        data0 = checkHALOtimeStamps(data0);
+                        % data0 = checkHALOtimeStamps(data0);
                         
                         % Check number of range gates
                         if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))

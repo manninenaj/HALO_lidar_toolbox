@@ -152,13 +152,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         end
     end
     
-    % Calculate height above ground level (m)
-%    height = sind(nanmedian(Din.elevation(:))) .* Din.range + C.altitude_in_meters; % For London Southbank
-    Din.height = sind(nanmedian(Din.elevation(:))) .* Din.range(:);
-    
-     
-    [data,att,dim] = createORcopyCommonAttsDims(Din,C);
-    
+    % Create and copy common attributes and fields
+    [data,att,dim] = createORcopyCommonAttsDims(Din,'calibrated',C);  
 
     %%--- Create variables ---%%
     data.time = transpose(cell2mat(time)); % hrs
@@ -481,11 +476,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     current_date = datestr(now,'yyyy-mm-dd HH:MM:SS');
     att.global.history = [current_date ' - Created by ' C.user ];
 
-    % Create dimensions
-    dim = struct('time',length(data.time),'range',length(data.range));
-
     data = orderfields(data);
     att = orderfields(att);
+    dim.time = length(data.time);
     
     % Write into new netcdf
     write_nc_silent(fullfile([dir_to_folder_out '/' thedate '_' site '_halo-doppler-lidar_wind-vad-' elevangle1  '.nc']), dim, data, att)

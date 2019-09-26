@@ -1,4 +1,4 @@
-function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
+function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,processlev,C)
 %createORcopyCommonAttsDims creates common attirubutes for all Doppler lidar products
 %                 
 %         - - - - - - - - - - - - - - - - - - 
@@ -31,84 +31,75 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 
 
 % Add dims
-dim_out.range = length(data_in.height);
+if ~isfield(data_in,'range')
+    dim_out.range = length(data_in.height);
+else
+    dim_out.range = length(data_in.range);
+end
+
+if any(strcmp(processlev,{'original','calibrated'}))
+    elev = sind(nanmedian(data_in.elevation(:)));
+else
+    elev = 1;
+end
 
 % NOTE: With old data, height = range and assumes instrument at ground level
 if ~isfield(data_in,'height_agl') % check from input 'data_in' 
-        % If add range if it does not exist
-    	if ~isfield(data_in,'range')
-            data_out.range = data_in.height;
-        else
-	    data_out.range = data_in.range;
-        end
-        att_out.range = create_attributes(...
-            {'range'},...
-            'Range from instrument', ...
-    	    'm');
-        att_out.range.axis = 'Z';
-        % height agl
-	data_out.height_agl = data_in.height;
-	att_out.height_agl = create_attributes(...
-    	    {'range'},...
-	    'Height above ground level', ...
-	    'm',...
-	    [],...
-	    ['Height_agl = range (vertically pointing), assumes instrument is at ground level']);
+    % Add range if it does not exist, possible with products (old version)
+    % where products were always calculated w.r.t. height agl
+    if ~isfield(data_in,'range')
+        data_out.range = data_in.height;
+    else
+        data_out.range = data_in.range;
+    end
+    att_out.range = create_attributes(...
+        {'range'},...
+        'Range from instrument', ...
+        'm');
+    att_out.range.axis = 'Z';
+    % height agl
+    if isfield(C,'altitude_instrument_level_m_asl') && isfield(C,'altitude_ground_level_m_asl')
+        actual_height_above_ground = C.altitude_instrument_level_m_asl - C.altitude_ground_level_m_asl;
+        actual_instrument_altitude_asl = C.altitude_instrument_level_m_asl;
+        actual_site_altitude_asl = C.altitude_ground_level_m_asl;
+        cmnt = [];
+    else
+        actual_height_above_ground = 0; % assumes instrument at ground level
+        actual_instrument_altitude_asl = C.altitude_in_meters;
+        cmnt = ', assumes instrument at ground level, no information given.';
+        actual_site_altitude_asl = C.altitude_in_meters;
+    end
+    data_out.height_agl = data_in.range .* elev + actual_height_above_ground;
+    att_out.height_agl = create_attributes(...
+        {'range'},...
+        'Height above ground level', ...
+        'm',...
+        [],...
+        ['Height_agl = range * sin(elevation) + height of instrument above ground' cmnt]);
         att_out.height_agl.axis = 'Z';
 
-        
-        % height
-	att_out.height = create_attributes(...
-	    {'range'},...
-	    'Height above mean sea level', ...
-	    'm',...
-	    [],...
-	    ['Height above mean sea level']);
-	att_out.height.axis = 'Z';
+    % height
+    data_out.height_asl = data_in.range .* elev + actual_instrument_altitude_asl;
+    att_out.height_asl = create_attributes(...
+        {'range'},...
+        'Height above mean sea level', ...
+        'm',...
+        [],...
+        ['Height above mean sea level' cmnt]);
+    att_out.height_asl.axis = 'Z';
 
-        % If height_agl did not exist, but if instruments and ground altitudes are specified 
-        % in halo_config.txt, correct height_agl
-	if isfield(C,'altitude_ground_level_m_asl') && isfield(C,'altitude_instrument_level_m_asl') % check from config
-	    % create height_agl
-	    actual_height_above_ground = C.altitude_instrument_level_m_asl - C.altitude_ground_level_m_asl;
-	    data_out.height_agl = data_in.height + actual_height_above_ground;
-	    att_out.height_agl.comment = 'Height above ground level';
-
-	    % old height = range --> correct to height asl
-	    data_out.height = data_in.height + C.altitude_instrument_level_m_asl;
-
-            % altitude
-            data_out.altitude = C.altitude_ground_level_m_asl;
-            att_out.altitude = create_attributes(...
-                {},...
-                'Altitude of site above mean sea level', ...
-                'm');
-            % altitude of instrument
-            data_out.altitude_instrument = C.altitude_instrument_level_m_asl;
-            att_out.altitude_instrument = create_attributes(...
-                {},...
-                'Altitude of instrument above mean sea level', ...
-                'm');
-
-	else         
-            % Leave height_agl as is, added for brevity (but commented out)
-    	    %% data.height_agl = data.height_agl;
- 
-	    % Use old altitude in meters parameter for correcting height asl, assume instrument at ground
-	    data_out.height = data_in.height + C.altitude_in_meters;
-	    att_out.height.comment = 'Height above mean sea level, assumes instrument is at ground level';
-
-            % altitude
-            data_out.altitude = C.altitude_in_meters;
-            att_out.altitude = create_attributes(...
-                {},...
-                'Altitude of site above mean sea level', ...
-                'm');
-
-            % altitude of instrument, assume at ground level, so the same as altitude
-            data_out.altitude_instrument = data_out.altitude;
-            att_out.altitude_instrument = att_out.altitude;
-	end
+    % altitude
+    data_out.altitude_site = actual_site_altitude_asl;
+    att_out.altitude_site = create_attributes(...
+        {},...
+         ['Altitude of site above mean sea level' cmnt], ...
+        'm');
+    % altitude of instrument
+    data_out.altitude_instrument = actual_instrument_altitude_asl;
+    att_out.altitude_instrument = create_attributes(...
+        {},...
+        ['Altitude of instrument above mean sea level' cmnt], ...
+        'm');     
 end
 
 % latitude

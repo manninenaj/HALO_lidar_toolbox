@@ -107,6 +107,7 @@ p.Rrange = p.rMax - p.rMin; % get the range for the radius
 [rNorm] = getRnorm(R,p); % getRnorm is a nested function
 YY = (rNorm)'*cosd(theta);
 XX = (rNorm)'*sind(theta);
+
 h = pcolor(XX,YY,Z,'parent',cax);
 % disp([max(R/p.Rrange),max(rNorm)])
 shading flat
@@ -121,7 +122,9 @@ end
 %% PLot colorbar if specified
 if p.colBar==1,
     c=colorbar('location','WestOutside');
-    caxis([quantile(Z(:),0.01),quantile(Z(:),0.99)])
+    if ~all(isnan(Z(:))) && numel(unique(Z(:)))~=1
+        caxis([prctile(Z(:),0.01),prctile(Z(:),99.99)])
+    end
 
 else
     c = [];
@@ -131,7 +134,7 @@ axpos = get(gca,'Position');
 if ~isempty(c)
     cpos = c.Position;
     cpos(3) = .01;
-    cpos(1) = cpos(1) + .02; 
+    cpos(1) = cpos(1); 
     c.Position = cpos;
 end
 pause(.2)
@@ -174,14 +177,14 @@ end
             if and(p.thetaMin==0,p.thetaMax == 360),
                 if spokeMesh(kk)<360,
                     
-                    text(1.15.*contourD(end).*cost(kk),...
-                        1.15.*contourD(end).*sint(kk),...
+                    text(1.25.*contourD(end).*cost(kk),...
+                        1.25.*contourD(end).*sint(kk),...
                         [num2str(spokeMesh(kk),3),char(176)],...
                         'horiz', 'center', 'vert', 'middle');
                 end
             else
-                text(1.15.*contourD(end).*cost(kk),...
-                    1.15.*contourD(end).*sint(kk),...
+                text(1.25.*contourD(end).*cost(kk),...
+                    1.25.*contourD(end).*sint(kk),...
                     [num2str(spokeMesh(kk),3),char(176)],...
                     'horiz', 'center', 'vert', 'middle');
             end

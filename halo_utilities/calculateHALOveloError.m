@@ -32,9 +32,9 @@ if ~isnumeric(DATE) || length(num2str(DATE))~=8
     error(['The 2nd input ''DATE'' must be a numerical date in' ...
         ' YYYYMMDD format.'])
 end
-if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom'}))
+if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','sector'}))
     error(sprintf(['The 3rd input ''measmode'' must be a string and can be:\n'...
-        '''stare'',''vad'',''rhi'',''dbs'',''custom''.']))
+        '''stare'',''vad'',''rhi'',''dbs'',''custom'',''sector''.']))
 end
 if isscalar(signal) || ~isnumeric(signal)
     error('The 5th input ''signal'' must a numerical matrix.')

@@ -34,9 +34,9 @@ if ~isnumeric(DATE) || length(num2str(DATE))~=8
     error(['The second input ''DATE'' must be a numerical date in' ...
         ' YYYYMMDD format.'])
 end
-if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom'}))
-    error(['The third input ''measmode'' must be a string and can be:'...
-        ' ''stare'', ''vad'', ''dbs'', ''rhi'', or ''custom''.'])
+if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','sector'}))
+  error(['The third input ''measmode'' must be a string and can be:'...
+          ' ''stare'', ''vad'', ''dbs'', ''rhi'', ''custom'', or ''sector''.'])
 end
 
 % Get default and site/unit specific parameters

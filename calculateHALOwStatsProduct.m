@@ -8,7 +8,8 @@ function calculateHALOwStatsProduct(site,DATES,dt,timeStep,weighting)
 % Usage:
 % calculateHALOwStatsProduct(site,DATES)
 % calculateHALOwStatsProduct(site,DATES,dt)
-% calculateHALOwStatsProduct(site,DATES,dt,weighting)
+% calculateHALOwStatsProduct(site,DATES,dt,timeStep)
+% calculateHALOwStatsProduct(site,DATES,dt,timeStep,weighting)
 %
 % Inputs:
 % -site        string, site name, e.g. site = 'kuopio'
@@ -133,7 +134,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
     fprintf('\nGenerating the Halo wstats product.\n')
     
     % Read range, time, alt, lat, lon
-    co = load_nc_struct([fullfile([dir_tofolder_in halo_files{1}]),{'time','range','latitude','longitude','altitude'});
+    co = load_nc_struct(fullfile([dir_to_folder_in halo_files{1}]),{'time','range','latitude','longitude','altitude'});
     time_info = co.time;
     range_len = length(co.range);
     %ncid = netcdf.open([dir_to_folder_in halo_files{1}],'NC_NOWRITE');
@@ -144,7 +145,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
     %netcdf.close(ncid)
     
     % Create common fields and attributes
-    [data,att,dim] = createORcopyCommonAttsDims(co,C)
+    [data,att,dim] = createORcopyCommonAttsDims(co,'calibrated',C);
 
     % Define groups, which are used to process the data in chunks     
     ref.time_info = transpose((1:1:86400)/3600);
@@ -226,7 +227,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             num2str(numel(unique(ref.time_block_indices))))
         
         % Extract data
-        in_vars = {'v_raw','v_error','signal','beta_raw','beta_error'}
+        in_vars = {'v_raw','v_error','signal','beta_raw','beta_error'};
         istarts = [0,ibegin-1];
         icounts = [range_len,iend-ibegin];       
         ncid = netcdf.open([dir_to_folder_in halo_files{1}],'NC_NOWRITE');
@@ -322,7 +323,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             iv_himoments = [iv; iv+size(ref.v_raw_4himoments,1); iv+size(ref.v_raw_4himoments,1)*2];
             
             %%--- UNWEIGHTED STATISTICS ---%%
-            for ibob = 1:length(quantities)
+
             fprintf('\n  radial velocity unweighted mean, std.dev. and variance ...')
             X = []; % assign X as empty
             Y = ref.v_raw(iv); % assign Y as vertical velocity
@@ -503,7 +504,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             signal_instr_uncertainty_mean(signal_instr_uncertainty_mean == 0) = nan;
             signal_instr_uncertainty_var(signal_instr_uncertainty_var == 0) = nan;
             
-            % Collect
+            % Collect and add time dimension
             data.(['time_' tres 'min']){ichunk} = atime(chunktime == ichunk);
             dim.(['time_' tres 'min']){ichunk} = length(atime(chunktime == ichunk));
             
@@ -623,9 +624,11 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Write into new netcdf
     write_nc_struct(fullfile([dir_to_folder_out '/' thedate ...
         '_' site '_halo-doppler-lidar_wstats.nc']), dim, data, att)
+
 end
 
-    function [att] = addAttributes(C,tres,bn,weighting,att)
+
+function [att] = addAttributes(C,tres,bn,weighting,att)
         
         %%-- ATTRIBUTES --%%
         % time
@@ -984,7 +987,7 @@ end
                 '',...
                 {[0.01 10], 'logarithmic'});
         end
-    end
+end    
 end
 
 

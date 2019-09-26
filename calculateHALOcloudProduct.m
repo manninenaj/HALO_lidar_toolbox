@@ -63,7 +63,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     wstats = load_nc_struct([dir_to_folder_in halo_files{1}]);
 
     % Create common attribues, fields, and dimensions
-    [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
+    [data,att,dim] = createORcopyCommonAttsDims(wstats,'prodcut',C);
     
     fprintf('\nGenerating the Halo cloud product.\n')
 

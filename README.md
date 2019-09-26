@@ -14,30 +14,30 @@ Please note that the toolbox requires that the original hpl files are converted 
 Height - range - height_agl - altitude - altitude_instrument notation:
 -----------------------------------------------------------------------
                  
-         - - - - - - - - - - - - - - - - - - 
-          \     |               |   |
-      range\    |range          |   |
-            \   |               |   |
-             \  |     height_agl|   |height
-              \ |               |   |  
-               ____             |   |
-              _|__|_ - - - - - -|- -|- - -
-        lidar |    |            |   |   |
-           ___|____|___         |   |   |
-           | __ __ __ |         |   |   |
-           | || || || |         |   |   |
-  building | __ __ __ |         |   |   |
-           | || || || |         |   |   |altitude_instrument 
-           | __ __ __ |         |   |   |
-           | || || || |         |   |   |
-      _____|__________|_________|_  |   | 
-      ground level          |       |   |                           
-                    altitude|       |   |  
-                            |       |   |  
-                           ~~~~~~~~~~~~~~~~~~~ 
-                           mean sea level
+             - - - - - - - - - - - - - - - - - - 
+              \     |               |   |
+          range\    |range          |   |
+                \   |               |   |
+                 \  |     height_agl|   |height
+                  \ |               |   |  
+                   ____             |   |
+                  _|__|_ - - - - - -|- -|- - -
+             lidar|    |            |   |   |
+               ___|____|___         |   |   |
+               | __ __ __ |         |   |   |
+               | || || || |         |   |   |
+       building| __ __ __ |         |   |   |
+               | || || || |         |   |   |altitude_instrument 
+               | __ __ __ |         |   |   |
+               | || || || |         |   |   |
+          _____|__________|_________|_  |   | 
+          ground level          |       |   |                           
+                        altitude|       |   |  
+                                |       |   |  
+                               ~~~~~~~~~~~~~~~~~~~ 
+                               mean sea level
 ________________________________ 
-Created 2019-11-08, last modified 2019-09-17  
+Created 2019-11-08, last modified 2019-09-23  
 Antti J Manninen  
 Finnish Meteorological Institute  
 antti.manninen(at)fmi.fi  

@@ -124,7 +124,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]));
 
     % Create common attribues, fields, and dimensions
-    [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
+    [data,att,dim] = createORcopyCommonAttsDims(wstats,'product',C);
 
     if strcmp(windproduct,'winddbs')
         if not(isfield(wind_tday,'height'))

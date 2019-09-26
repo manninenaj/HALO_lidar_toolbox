@@ -3,16 +3,13 @@ function plotHALOquicklooks(site,DATES,processlev,measmode,typeof,varargin)
 
 p.masking = false;
 p.ymax = 99999;
+p.ystep = 1;
 if ~isempty(varargin)
     p = parsePropertyValuePairs(p, varargin);
     p.ymax = p.ymax/1000;
+    p.ystep = p.ystep/1000;
 end
 
-if p.ymax < 10
-   ystep = 1;
- else
-   ystep = 2;
-end
 
 if nargin < 4
     error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
@@ -112,7 +109,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             switch measmode
                 case 'stare'
                     switch typeof
-                        case 'co'
+                        case {'co','cross','co12'}
                             data = load_nc_struct(fullfile([dirto files{1}]));
 
                              
@@ -122,7 +119,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             sp1 = subplot(321);
                             s0 = data.signal0;
                             imagesc(data.time,data.range/1000,transpose(s0)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([.99 1.01]); colormap(sp1,chilljet);
                             cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'uncorrected signal');
@@ -133,7 +130,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             sp2 = subplot(322);
                             s1 = data.signal;
                             imagesc(data.time,data.range/1000,transpose(s1)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([.99 1.01]); colormap(sp2,chilljet);
                             cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'corrected signal')
@@ -143,7 +140,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp3 = subplot(323);
                             imagesc(data.time,data.range/1000,transpose(real(log10(data.beta_raw)))); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-7.1 -4]); colormap(sp3,chilljet);
                             cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,tmax,'beta');
@@ -156,7 +153,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp4 = subplot(324);
                             imagesc(data.time,data.range/1000,transpose(data.beta_error)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 1]); colormap(sp4,chilljet);
                             cb = colorbar; cb.Label.String = 'Fraction'; text(0,tmax,'beta error')
@@ -166,7 +163,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp5 = subplot(325);
                             imagesc(data.time,data.range/1000,transpose(data.v_raw)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
                             cb = colorbar; cb.Label.String = 'm s-1'; text(0,tmax,'vertical velocity')
@@ -177,7 +174,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp6 = subplot(326);
                             imagesc(data.time,data.range/1000,transpose(data.v_error)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 .5]); colormap(sp6,chilljet);
                             cb = colorbar; cb.Label.String = 'm s-1'; text(0,tmax,'vertical velocity error')
@@ -192,7 +189,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 		        otherwise
                             continue
                         end
-                case 'vad'
+                case {'vad','sector'}
 
 		   for i = 1:length(files)
 	               %if i~=1, return; end
@@ -211,8 +208,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                           data.beta_error(smask) = nan;  
                           data.v_error(smask) = nan;  
                        end
-                       if p.ymax~=99999 
-    		           cond = data.range>p.ymax; 
+ 
+                       if p.ymax~=99999 % default 
+			   cond = data.range/1000>p.ymax;
+                           
                            data.signal(:,cond) = [];  
                            data.beta_raw(:,cond) = [];  
                            data.v_raw(:,cond) = [];  
@@ -230,9 +229,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 		       v = transpose(data.v_raw);
                        v_e = transpose(data.v_error);
 
-                       whos
-
-		       rstep = .2;
                        %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
                        %rticklabel = cellstr(num2str(circles(:)));
@@ -240,42 +236,42 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 10];
                        hf.Color = 'white'; hf.Visible = 'off';
                        sp1 = subplot(231);
-                       [~,c]= polarPcolor(r,a,s,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
                        colormap(sp1,cmap_darkviolet_to_brickred)
                        caxis([-20 0])
 
                        sp2 = subplot(232);
-                       [~,c]= polarPcolor(r,a,b,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
                        colormap(sp2,cmap_darkviolet_to_brickred)
                        caxis([0 6])
 
                        sp3 = subplot(233);
-                       [~,c]= polarPcolor(r,a,v,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,v,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
                        caxis([-15 15])
 
                        sp4 = subplot(234);
-                       [~,c]= polarPcolor(r,a,s_e,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,s_e,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' signal error (%)');
                        set(gcf,'color','w')
                        colormap(sp4,cmap_darkviolet_to_brickred)
                        caxis([0 100])
 
                        sp5 = subplot(235);
-                       [~,c]= polarPcolor(r,a,b_e,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,b_e,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' att. beta error (%)');
                        set(gcf,'color','w')
                        colormap(sp5,cmap_darkviolet_to_brickred)
                        caxis([0 100])
 
                        sp6 = subplot(236);
-                       [~,c]= polarPcolor(r,a,v_e,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,v_e,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity error (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp6,cmap_darkviolet_to_brickred)
@@ -284,7 +280,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 		       set(findall(hf,'-property','FontSize'),'FontSize',8)
 
                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
-                       fprintf('Writing %s\n',fname)
+                       fprintf('Writing \n    %s\n',fname)
                        export_fig('-png','-m2',fname)
                        close(hf)
 
@@ -307,7 +303,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             sp1 = subplot(321);
                             s0 = data.signal;
                             imagesc(data.time,data.range/1000,transpose(s0)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([.99 1.01]); colormap(sp1,chilljet);
                             cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'uncorrected signal');
@@ -318,7 +314,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             sp2 = subplot(322);
                             s1 = nan(size(data.signal));
                             imagesc(data.time,data.range/1000,transpose(s1)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 7.3 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-30 0]); colormap(sp2,chilljet);
                             cb = colorbar; cb.Label.String = 'dB'; text(0,tmax,'corrected signal')
@@ -328,7 +324,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp3 = subplot(323);
                             imagesc(data.time,data.range/1000,transpose(real(log10(data.beta_raw)))); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-7.1 -4]); colormap(sp3,chilljet);
                             cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,tmax,'beta');
@@ -341,7 +337,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp4 = subplot(324);
                             imagesc(data.time,data.range/1000,transpose(data.beta_error)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 4.2 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 1]); colormap(sp4,chilljet);
                             cb = colorbar; cb.Label.String = 'Fraction'; text(0,tmax,'beta error')
@@ -351,7 +347,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp5 = subplot(325);
                             imagesc(data.time,data.range/1000,transpose(data.v_raw)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([-1.5 1.5]); colormap(sp5,cmocean('balance'));
                             cb = colorbar; cb.Label.String = 'm s-1'; text(0,tmax,'vertical velocity')
@@ -362,7 +358,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             sp6 = subplot(326);
                             imagesc(data.time,data.range/1000,transpose(data.v_error)); axis([0 24 0 p.ymax]); shading flat;
-                            set(gca,'YDir','normal','Ytick',0:ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
+                            set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[13.5 1.1 11 2.2],'Color',[.75 .75 .75]);
                             caxis([0 .5]); colormap(sp6,chilljet);
                             cb = colorbar; cb.Label.String = 'm s-1'; text(0,tmax,'vertical velocity error')
@@ -411,7 +407,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 		       v = transpose(data.v_raw);
                        v_e = transpose(data.v_error);
 
-		       rstep = .2;
                        %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
                        nspokes = 9;
                        %rticklabel = cellstr(num2str(circles(:)));
@@ -419,42 +414,42 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 10];
                        hf.Color = 'white'; hf.Visible = 'off';
                        sp1 = subplot(231);
-                       [~,c]= polarPcolor(r,a,s,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' signal intensity (dB)');
                        set(gcf,'color','w')
                        colormap(sp1,cmap_darkviolet_to_brickred)
                        caxis([-20 0])
 
                        sp2 = subplot(232);
-                       [~,c]= polarPcolor(r,a,b,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' att. beta (Mm-1 sr-1)');
                        set(gcf,'color','w')
                        colormap(sp2,cmap_darkviolet_to_brickred)
                        caxis([0 6])
 
                        sp3 = subplot(233);
-                       [~,c]= polarPcolor(r,a,v,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,v,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp3,cmocean('balance'))
                        caxis([-15 15])
 
                        sp4 = subplot(234);
-                       [~,c]= polarPcolor(r,a,s_e,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,s_e,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' signal error (%)');
                        set(gcf,'color','w')
                        colormap(sp4,cmap_darkviolet_to_brickred)
                        caxis([0 100])
 
                        sp5 = subplot(235);
-                       [~,c]= polarPcolor(r,a,b_e,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,b_e,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' att. beta error (%)');
                        set(gcf,'color','w')
                        colormap(sp5,cmap_darkviolet_to_brickred)
                        caxis([0 100])
 
                        sp6 = subplot(236);
-                       [~,c]= polarPcolor(r,a,v_e,'rStep',rstep,'Nspokes',nspokes);
+                       [~,c]= polarPcolor(r,a,v_e,'rStep',p.ystep,'Nspokes',nspokes);
                        ylabel(c,' radial velocity error (m s-1)');
                        set(gcf,'color','w')
                        colormap(sp6,cmap_darkviolet_to_brickred)

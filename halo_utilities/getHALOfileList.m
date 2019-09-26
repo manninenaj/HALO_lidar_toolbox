@@ -12,9 +12,11 @@ function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measm
 % - site            string, name of the site, e.g. 'kuopio'
 % - DATE            scalar, numerical date, e.g. 20171231
 % - processlev      string, 'corrected','original','calibrated','background','product'
-% - measmode        string, 'stare','vad','rhi','co','custom','windvad','winddbs','txt','nc','wstats',
+% - measmode        string, 'stare','vad','rhi','co','custom','cross','sector','windvad','winddbs','txt','nc','wstats',
 %                   'epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'
-% - typeof          string, 'co', 'eleXX', 'aziXXX'
+% - typeof          string, 'co', 'cross','eleXX', 'aziXXX','coXX', where 'XX' is elevation angle (e.g. 'ele15'), 
+%                   or number of rays (e.g. 'co12'), and 'XXX' is azimuth angle (e.g. 'azi023' or 'azi270')
+%                                           
 %
 % Outputs:
 % - dir_to_folder   full path to the folder 
@@ -72,10 +74,10 @@ if nargin == 5
             error(['The 3rd input ''processlev'' must be a string and can be:'...
                 ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
         end
-        if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','windvad','winddbs',...
+  if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','sector','windvad','winddbs',...
                 'txt','nc','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
             error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-                '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''nc'',''wstats''\n'...
+                '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''sector'',''windvad'',''winddbs'',''txt'',''nc'',''wstats''\n'...
                 '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
         end        
 end
