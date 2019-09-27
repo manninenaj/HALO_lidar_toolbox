@@ -58,40 +58,17 @@ switch C.time_format_original
 end
 
 %% Assign new values, save old data
+[data1,att1,dim1] = createORcopyCommonAttsDims(data0,measmode,C);
+
+
 % elevation
 data1.elevation = data0.(C.field_name_original_elevation)(:);
 % azimuth, convert to degree from North
 if ~isfield(C,'home_point_azimuth'), C.home_point_azimuth = 0; end
 data1.azimuth = data0.(C.field_name_original_azimuth)(:) + C.home_point_azimuth;
-data1.azimuth(data1.azimuth<0) = 360+data1.azimuth(data1.azimuth<0);
+data1.azimuth(data1.azimuth<0) = data1.azimuth(data1.azimuth<0) + 360;
 data1.home_point_azimuth = C.home_point_azimuth;
-% altitude
-% if specified
-if isfield(C,'field_name_original_altitude')
-    data1.altitude = data0.(C.field_name_original_altitude);
-elseif isfield(C,'altitude_in_meters')
-    data1.altitude = C.altitude_in_meters;
-else
-    error('Altitude for the site %s not specified in the halo config!',site)
-end
-if ~isfield(C,'altitude_agl_in_meters'), C.altitude_agl_in_meters = 0; end
-data1.altitude_agl = C.altitude_agl_in_meters;
-% latitude
-if isfield(C,'field_name_original_latitude')
-    data1.latitude = data0.(C.field_name_original_latitude);
-elseif isfield(C,'latitude')
-    data1.latitude = C.latitude;
-else
-    error('Latitude for the site %s not specified in the halo config!',site)
-end
-% longitude
-if isfield(C,'field_name_original_longitude')
-    data1.longitude = data0.(C.field_name_original_longitude);
-elseif isfield(C,'longitude')
-    data1.longitude = C.longitude;
-else
-    error('Longitude for the site %s not specified in the halo config!',site)
-end
+
 % noise threshold
 data1.noise_threshold = C.(['snr_threshold_for_' abc]);
 % bandwidth
@@ -220,28 +197,6 @@ att1.range = create_attributes(...
     [],...
     'This variable is range from lidar * sin(elevation)');
 att1.range.axis = 'Z';
-% latitude
-att1.latitude = create_attributes(...
-    {},...
-    'Latitude of lidar', ...
-    'degrees_north');
-att1.latitude.standard_name = 'latitude';
-% longitude
-att1.longitude = create_attributes(...
-    {},...
-    'Longitude of lidar', ...
-    'degrees_east');
-att1.longitude.standard_name = 'longitude';
-% altitude asl
-att1.altitude = create_attributes(...
-    {},...
-    'Height of instrument above mean sea level', ...
-    'm');
-% altitude agl
-att1.altitude_agl = create_attributes(...
-    {},...
-    'Height of instrument above ground level', ...
-    'm');
 % azimuth
 att1.azimuth = create_attributes(...
     {'time'},...
@@ -384,7 +339,5 @@ att1.global.history = [current_date ' - Created by ' C.user ];
 data1 = orderfields(data1);
 att1  = orderfields(att1);
 
-% Create dimensiosn
-dim1 = struct('time',length(data1.time),'range',length(data1.range));
 
 end

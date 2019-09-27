@@ -48,7 +48,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
     
     % Convert back to numerical date
     DATE = str2double(datestr(DATEi,'yyyymmdd'));
-    thedate = datestr(DATEi,'yyyymmdd');
     
     % Get default and site specific parameters
     [C,fnames] = getconfig(site,DATE);
@@ -119,7 +118,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
         
         %% Ripple removal & background correction
         snr_corr_1 = correctHALOripples(site,DATE,snr,time_hrs,range_m);
-        if isfield(C,'opt_4_bkg_remnant_profiles') & isfield(C,'num_gates_to_ignore_4bkg_corr')
+        if isfield(C,'opt_4_bkg_remnant_profiles') && isfield(C,'num_gates_to_ignore_4bkg_corr')
             snr_corr_2 = correctBackground(snr_corr_1,snr,range_m,time_hrs,...
                 'correct_remnant',C.opt_4_bkg_remnant_profiles,...
                 'ignore',C.num_gates_to_ignore_4bkg_corr,...
@@ -154,13 +153,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                     if isempty(loadinfo.(abc).files), continue; end
                     data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{1}));
                      
-                    % Check order of time stamps and reorder if needed
-                    % Check order of time stamps and reorder if needed
                     % Sometimes the last time stamp(s) is(are) in the next day
                     if data0.time(end)<data0.time(end-1)
                         data0.time(find(diff(data0.time)<0)+1:end) = data0.time(find(diff(data0.time)<0)+1:end) + 24;
                     end                           
- %                   data0 = checkHALOtimeStamps(data0);
                     
                     % Check number of range gates
                     if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
@@ -188,8 +184,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         end
                         
                         % Convert into cloudnet naming scheme, implement the corrected signal
-                        [data1,att1,~] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
-                        
+                        [data1,att1,dim1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
+
                         % If more than one file per day
                         if length(loadinfo.(abc).files)>1
                             
@@ -243,14 +239,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             data1.time(end) = data1.time(end)+24;
                         end
                         
-                        dim1 = struct('time',length(data1.time),'range',length(data1.range));
                         fndate = loadinfo.(abc).files{1}(1:8);
-                        %if ~strcmp(fndate,thedate)
-			%    fndate = thedate;
-                        %end
                         
                         % correct focus TBD
                         data1 = correctHALOfocus(site,DATE,abc,data1);
+                        
+                        % Create time dimension
+                        dim1.time = length(data1.time);
                         
                         % write new file
                         write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
@@ -264,9 +259,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         % Check order of time stamps and reorder if needed
                         % Sometimes the last time stamp(s) is(are) in the next day
                         if data0.time(end)<data0.time(end-1)
-			                data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
+  	                        data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
                         end                           
-                        % data0 = checkHALOtimeStamps(data0);
                         
                         % Check number of range gates
                         if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
@@ -297,33 +291,21 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             end
                             
                             % Convert into cloudnet naming scheme, implement the corrected signal
-                            [data1,att1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
+			                [data1,att1,dim1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
                             
                             % If more than one file per day
-                            check_time = [thedate '_' datestr(decimal2daten(data0.time(1),datenum(thedate,'yyyymmdd')),'HHMMSS')];
                             if length(loadinfo.(abc).files)>1                
                                 fndate = loadinfo.(abc).files{i}(1:15);
-                                %if ~strcmp(fndate,check_time)
-			        %    fndate = check_time;
-                                %end
                             else
                                 fndate = loadinfo.(abc).files{i}(1:8);
-                                %if ~strcmp(fndate,thedate)
-   			        %    fndate = thedate;
-                                %end
                             end
-                            
-                            %% Sometimes the last time stamp is from the next day
-                            %if data1.time(end)<data1.time(end-1)
-                            %    data1.time(end) = data1.time(end)+24;
-                            %end
                             
                             % correct focus
                             data1 = correctHALOfocus(site,DATE,abc,data1);
-                            
-                            % Dimensions
-                            dim1 = struct('time',length(data1.time),'range',length(data1.range));
-                            
+
+                            % Create time dimension
+                            dim1.time = length(data1.time);
+                                                       
                             % write new file
                             write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
                         end

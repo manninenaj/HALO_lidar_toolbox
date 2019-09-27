@@ -26,7 +26,7 @@ function [varargout] = polarPcolor(R,theta,Z,varargin)
 %	* Z : 
 %        - type: float
 %        - size: [Ntheta x Nrr]
-%        - dimension: user's defined .
+%        - dimension: user defined .
 %	* varargin:
 %        - Ncircles: number  of circles for the grid definition.
 %        - Nspokes: number of spokes for the grid definition.
@@ -42,7 +42,7 @@ function [varargout] = polarPcolor(R,theta,Z,varargin)
 %% Examples 
 % R = linspace(3,10,100);
 % theta = linspace(0,180,360);
-% Z = linspace(0,10,360)'*linspace(0,10,100);
+% Z = transpose(linspace(0,10,360))*linspace(0,10,100);
 % figure
 % polarPcolor(R,theta,Z,'Ncircles',3)
 %
@@ -52,7 +52,8 @@ function [varargout] = polarPcolor(R,theta,Z,varargin)
 
 p.Ncircles = nan;
 p.Origin = 'auto';
-p.Nspokes = 8;
+p.Nspokes = 9;
+p.thetaStep = 60;
 p.labelR = '';
 p.RtickLabel = [];
 p.colBar = 1;
@@ -129,16 +130,16 @@ if p.colBar==1,
 else
     c = [];
 end
-pause(.2)
-axpos = get(gca,'Position');
-if ~isempty(c)
-    cpos = c.Position;
-    cpos(3) = .01;
-    cpos(1) = cpos(1); 
-    c.Position = cpos;
-end
-pause(.2)
-set(gca,'Position',axpos)
+%pause(1)
+%axpos = get(gca,'Position');
+%if ~isempty(c)
+%    cpos = c.Position;
+%    cpos(3) = .01;
+%    cpos(1) = cpos(1); 
+%    c.Position = cpos;
+%end
+%pause(1)
+%set(gca,'Position',axpos)
 %% Outputs
 nargoutchk(0,2)
 if nargout==1,
@@ -151,7 +152,12 @@ end
     %%--createSpokes--%%
     function createSpokes(p)
         
-        spokeMesh = linspace(p.thetaMin,p.thetaMax,p.Nspokes);
+        %spokeMesh = linspace(p.thetaMin,p.thetaMax,p.Nspokes);
+        spokeMesh = p.thetaMin:p.thetaStep:p.thetaMax;
+        if spokeMesh(end)~=p.thetaMax
+            spokeMesh = [spokeMesh p.thetaMax];
+        end
+
         if ~isnan(p.rStep)
 	    circleMesh = [0:p.rStep:p.rMax p.rMax];
         else
@@ -161,7 +167,7 @@ end
         
         cost = cosd(90-spokeMesh); % the zero angle is aligned with North
         sint = sind(90-spokeMesh); % the zero angle is aligned with North
-        for kk = 1:p.Nspokes
+        for kk = 1:length(spokeMesh)%p.Nspokes
             
             X = cost(kk)*contourD;
             Y = sint(kk)*contourD;
@@ -177,14 +183,14 @@ end
             if and(p.thetaMin==0,p.thetaMax == 360),
                 if spokeMesh(kk)<360,
                     
-                    text(1.25.*contourD(end).*cost(kk),...
-                        1.25.*contourD(end).*sint(kk),...
+                    text(1.2.*contourD(end).*cost(kk),...
+                        1.2.*contourD(end).*sint(kk),...
                         [num2str(spokeMesh(kk),3),char(176)],...
                         'horiz', 'center', 'vert', 'middle');
                 end
             else
-                text(1.25.*contourD(end).*cost(kk),...
-                    1.25.*contourD(end).*sint(kk),...
+                text(1.2.*contourD(end).*cost(kk),...
+                    1.2.*contourD(end).*sint(kk),...
                     [num2str(spokeMesh(kk),3),char(176)],...
                     'horiz', 'center', 'vert', 'middle');
             end
@@ -193,7 +199,7 @@ end
     end
 
     %%-- createCircles --%%
-	    function createCircles(p)
+	function createCircles(p)
 
         
         if ~isnan(p.rStep)
@@ -235,39 +241,38 @@ end
         % radius tick label
         for kk=1:length(tickMesh)
             
-            position = 0.51.*(spokeMesh(min(p.Nspokes,round(p.Ncircles/2)))+...
-                spokeMesh(min(p.Nspokes,1+round(p.Ncircles/2))));
+            position = (spokeMesh(min(p.Nspokes,round(p.Ncircles/2)))+spokeMesh(min(p.Nspokes,1+round(p.Ncircles/2))));
             
             if isempty(p.RtickLabel),
                 rtick = num2str(tickMesh(kk),2);
             else
                 rtick = p.RtickLabel(kk);
             end
-            if abs(round(position)) ==90,
+            if abs(round(position))==90,
                 % radial graduations
-                text((contourD(kk)).*cosd(90-position),...
-                    (0.1+contourD(kk)).*sind(86-position),...
+	      text((contourD(kk)).*cosd(90),...
+		   (contourD(kk)).*sind(90),...
                     rtick,'verticalalignment','BaseLine',...
                     'horizontalAlignment', 'center',...
                     'handlevisibility','off','parent',cax);
                 % annotate spokes
-                text(contourD(end).*0.6.*cosd(90-position),...
-                    0.07+contourD(end).*0.6.*sind(90-position),...
-                    [labelR],'verticalalignment','bottom',...
-                    'horizontalAlignment', 'right',...
+                text(contourD(end).*cosd(90),...
+                    contourD(end).*sind(90),...
+                    [p.labelR],'verticalalignment','bottom',...
+                    'horizontalAlignment', 'center',...
                     'handlevisibility','off','parent',cax);
             else
                 % radial graduations
-               text((contourD(kk)).*cosd(90-position),...
-                    (contourD(kk)).*sind(90-position),...
+               text((contourD(kk)).*cosd(90),...
+                    (contourD(kk)).*sind(90),...
                     rtick,'verticalalignment','BaseLine',...
                     'horizontalAlignment', 'right',...
                     'handlevisibility','off','parent',cax);
                 % annotate spokes
-                text(contourD(end).*0.6.*cosd(90-position),...
-                    contourD(end).*0.6.*sind(90-position),...
+                text(contourD(end).*cosd(90),...
+                    contourD(end).*sind(90),...
                     [p.labelR],'verticalalignment','bottom',...
-                    'horizontalAlignment', 'right',...
+                    'horizontalAlignment', 'center',...
                     'handlevisibility','off','parent',cax);
             end
         end
