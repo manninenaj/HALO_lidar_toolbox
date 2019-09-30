@@ -4,7 +4,7 @@ function plotHALOquicklooks(site,DATES,processlev,measmode,typeof,varargin)
 p.ylabel = '';
 p.masking = false;
 p.ymax = 99999;
-p.ystep = 1;
+p.ystep = 1000;
 p.azimin = 0;
 p.azimax = 360;
 p.azistep = 60;
@@ -103,7 +103,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         [dirto,files] = getHALOfileList(site,DATE,processlev,measmode);
     end
     if isempty(files), continue; end
-                          
+    
     
     % Get default and site/unit/period specific parameters
     C = getconfig(site,DATE);
@@ -115,9 +115,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     switch typeof
                         case {'co','cross','co12'}
                             data = load_nc_struct(fullfile([dirto files{1}]));
-
-                            if p.ymax == (99999/1000)
-			        p.ymax = data.range(end)/1000;
+                            
+                            if p.ymax == 99999
+                                p.ymax = ceil(data.range(end)/1000);
                             end
                             tmax = p.ymax+p.ymax*.075;
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
@@ -142,20 +142,19 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             cb = colorbar; cb.Label.String = '(SNR+1)'; text(0,tmax,'corrected signal')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8;  cb.Ticks = .99:.01:1.02; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                            X_out1 = [];ylabel('Range (km)');
+                            ylabel('Range (km)');
                             
                             sp3 = subplot(323);
                             imagesc(data.time,data.range/1000,transpose(real(log10(data.beta_raw)))); axis([0 24 0 p.ymax]); shading flat;
                             set(gca,'YDir','normal','Ytick',0:p.ystep:ceil(p.ymax),'XTick',0:3:24,'Units',...
                                 'centimeters','Position',[1.2 4.2 11 2.2],'Color',[.75 .75 .75]);
-                            caxis([-7.1 -4]); colormap(sp3,chilljet);
+                            caxis([-7 -4]); colormap(sp3,chilljet);
                             cb = colorbar; cb.Label.String = 'm-1 sr-1'; text(0,tmax,'beta');
                             cb.Ticks = -8:-3; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                                 num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.5; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Range (km)')
-                            X_out1 = [];
                             
                             sp4 = subplot(324);
                             imagesc(data.time,data.range/1000,transpose(data.beta_error)); axis([0 24 0 p.ymax]); shading flat;
@@ -165,7 +164,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             cb = colorbar; cb.Label.String = 'Fraction'; text(0,tmax,'signal error')
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; cb.Ticks = 0:.2:1; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                            X_out1 = [];ylabel('Range (km)');
+                            ylabel('Range (km)');
                             
                             sp5 = subplot(325);
                             imagesc(data.time,data.range/1000,transpose(data.v_raw)); axis([0 24 0 p.ymax]); shading flat;
@@ -176,7 +175,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Ticks = -2:.5:2; cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 10.5; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             ylabel('Range (km)'); xlabel('Time UTC (hours)')
-                            X_out1 = [];
                             
                             sp6 = subplot(326);
                             imagesc(data.time,data.range/1000,transpose(data.v_error)); axis([0 24 0 p.ymax]); shading flat;
@@ -187,120 +185,122 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             xlabel('Time UTC (hours)');ylabel('Range (km)');
-                           
-                            fname = fullfile([dirto strrep(files{1},'.nc','.png')]);                        
+                            
+                            fname = fullfile([dirto strrep(files{1},'.nc','.png')]);
                             fprintf('Writing %s\n',fname)
                             export_fig('-png','-m2',fname)
+                            
                             close(hf)
-		        otherwise
+                        otherwise
                             continue
-                        end
+                    end
                 case {'vad','sector'}
-
-		   for i = 1:length(files)
-	               %if i~=1, return; end
-                       data = load_nc_struct(fullfile([dirto files{i}]));
-                       if p.masking
-		          smask = logical(zeros(size(data.signal)));
-		          %for ia = 1:length(data.azimuth)
-			  %   ibegin = find(data.signal(ia,5:end)>1.2,1,'first');
-                          %   smask(ia,ibegin+4:end) = true;
-                          %end
-			  smask(data.signal<1.008) = true;             
-                          smask(:,1:4) = true;
-                          data.beta_raw(smask) = nan;
-                          data.v_raw(smask) = nan;
-                          data.signal(smask) = nan;
-                          data.beta_error(smask) = nan;  
-                          data.v_error(smask) = nan;  
-                       end
- 
-                       if p.ymax~=99999 % default 
-			   cond = data.range/1000>p.ymax;
-                           
-                           data.signal(:,cond) = [];  
-                           data.beta_raw(:,cond) = [];  
-                           data.v_raw(:,cond) = [];  
-                           data.beta_error(:,cond) = [];  
-                           data.v_error(:,cond) = [];  
-                           data.range(cond) = [];  
-                       end
-                       r = transpose(data.range(:)/1000);
-                       a = transpose(data.azimuth(:));
-                       a(a>360) = a(a>360)-360;
-                       s = transpose(10*real(log10(data.signal-1)));
-                       s_e = transpose(data.beta_error * 100);
-                       b = transpose(real(log10(data.beta_raw)));
-                       b_e = transpose(data.beta_error * 100);
-		       v = transpose(data.v_raw);
-                       v_e = transpose(data.v_error);
-
-                       nspokes = 9;
-    
-                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 12];
-                       hf.Color = 'white'; hf.Visible = 'off';
-                       sp1 = subplot(231);;
-                       [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
-                       ylabel(c,' signal intensity (dB)');
-                       set(gcf,'color','w')
-                       colormap(sp1,chilljet)
-                       caxis([-20 0])
-
-                       sp2 = subplot(232);
-                       [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
-                       ylabel(c,' log_{10} att. beta (m-1 sr-1)');
-                       set(gcf,'color','w')
-                       colormap(sp2,chilljet)
-                       caxis([-7 -4])
-
-                       sp3 = subplot(233);
-                       [~,c]= polarPcolor(r,a,v,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
-                       ylabel(c,' radial velocity (m s-1)');
-                       set(gcf,'color','w')
-                       colormap(sp3,cmocean('balance'))
-                       caxis([-10 10])
-
-                       sp4 = subplot(234);
-                       [~,c]= polarPcolor(r,a,s_e,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
-                       ylabel(c,' signal error (%)');
-                       set(gcf,'color','w')
-                       colormap(sp4,chilljet)
-                       caxis([0 100])
-
-                       sp5 = subplot(235);
-                       [~,c]= polarPcolor(r,a,b_e,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
-                       ylabel(c,' att. beta error (%)');
-                       set(gcf,'color','w')
-                       colormap(sp5,chilljet)
-                       caxis([0 100])
-
-                       sp6 = subplot(236);
-                       [~,c]= polarPcolor(r,a,v_e,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
-                       ylabel(c,' radial velocity error (m s-1)');
-                       set(gcf,'color','w')
-                       colormap(sp6,chilljet)
-                       caxis([0 .5])
-
-		       set(findall(hf,'-property','FontSize'),'FontSize',8)
-
-                       fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
-                       fprintf('Writing \n    %s\n',fname)
-                       export_fig('-png','-m2',fname)
-                       close(hf)
-
-                   end    
-
+                    
+                    for i = 1:length(files)
+                        %if i~=1, return; end
+                        data = load_nc_struct(fullfile([dirto files{i}]));
+                        if p.masking
+                            smask = logical(zeros(size(data.signal)));
+                            %for ia = 1:length(data.azimuth)
+                            %   ibegin = find(data.signal(ia,5:end)>1.2,1,'first');
+                            %   smask(ia,ibegin+4:end) = true;
+                            %end
+                            smask(data.signal<1.008) = true;
+                            smask(:,1:4) = true;
+                            data.beta_raw(smask) = nan;
+                            data.v_raw(smask) = nan;
+                            data.signal(smask) = nan;
+                            data.beta_error(smask) = nan;
+                            data.v_error(smask) = nan;
+                        end
+                        
+                        if p.ymax~=99999 % default
+                            cond = data.range/1000>p.ymax;
+                            
+                            data.signal(:,cond) = [];
+                            data.beta_raw(:,cond) = [];
+                            data.v_raw(:,cond) = [];
+                            data.beta_error(:,cond) = [];
+                            data.v_error(:,cond) = [];
+                            data.range(cond) = [];
+                        end
+                        r = transpose(data.range(:)/1000);
+                        a = transpose(data.azimuth(:));
+                        a(a>360) = a(a>360)-360;
+                        s = transpose(10*real(log10(data.signal-1)));
+                        s_e = transpose(data.beta_error * 100);
+                        b = transpose(real(log10(data.beta_raw)));
+                        b_e = transpose(data.beta_error * 100);
+                        v = transpose(data.v_raw);
+                        v_e = transpose(data.v_error);
+                        
+                        nspokes = 9;
+                        
+                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 12];
+                        hf.Color = 'white'; hf.Visible = 'off';
+                        sp1 = subplot(231);;
+                        [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
+                        ylabel(c,' signal intensity (dB)');
+                        set(gcf,'color','w')
+                        colormap(sp1,)
+                        caxis([-20 0])
+                        
+                        sp2 = subplot(232);
+                        [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
+                        ylabel(c,' log_{10} att. beta (m-1 sr-1)');
+                        set(gcf,'color','w')
+                        colormap(sp2,chilljet)
+                        caxis([-7 -4])
+                        
+                        sp3 = subplot(233);
+                        [~,c]= polarPcolor(r,a,v,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
+                        ylabel(c,' radial velocity (m s-1)');
+                        set(gcf,'color','w')
+                        colormap(sp3,cmocean('balance'))
+                        caxis([-20 20])
+                        
+                        sp4 = subplot(234);
+                        [~,c]= polarPcolor(r,a,s_e,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
+                        ylabel(c,' signal error (%)');
+                        set(gcf,'color','w')
+                        colormap(sp4,chilljet)
+                        caxis([0 100])
+                        
+                        sp5 = subplot(235);
+                        [~,c]= polarPcolor(r,a,b_e,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
+                        ylabel(c,' att. beta error (%)');
+                        set(gcf,'color','w')
+                        colormap(sp5,chilljet)
+                        caxis([0 100])
+                        
+                        sp6 = subplot(236);
+                        [~,c]= polarPcolor(r,a,v_e,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azimin,'thetaMax',p.azimax);
+                        ylabel(c,' radial velocity error (m s-1)');
+                        set(gcf,'color','w')
+                        colormap(sp6,chilljet)
+                        caxis([0 .5])
+                        
+                        set(findall(hf,'-property','FontSize'),'FontSize',8)
+                        
+                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);
+                        fprintf('Writing \n    %s\n',fname)
+                        export_fig('-png','-m2',fname)
+                        
+                        close(hf)
+                        
+                    end
+                    
                 otherwise
-                     continue
-                end
-
+                    continue
+            end
+            
         case 'original'
             switch measmode
                 case 'stare'
                     switch typeof
                         case 'co'
                             data = load_nc_struct(fullfile([dirto files{1}]));
-
+                            
                             tmax = p.ymax+p.ymax*.075;
                             hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                             hf.Color = 'white'; hf.Visible = 'off';
@@ -369,126 +369,126 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             ax1 = get(gca,'Position'); cb.Units = 'centimeters'; cb.Position(3) = .25;
                             cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                             xlabel('Time UTC')
-
-                            fname = fullfile([dirto strrep(files{1},'.nc','.png')]);                        
+                            
+                            fname = fullfile([dirto strrep(files{1},'.nc','.png')]);
                             fprintf('Writing %s\n',fname)
                             export_fig('-png','-m1',fname)
                             close(hf)
-                        
-
+                            
+                            
                         otherwise
                             continue
                     end
                 case 'vad'
-		   for i = 1:length(files)
-                       data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
-                       if p.masking
-		          smask = logical(zeros(size(data.signal)));
-		          for ia = 1:length(data.azimuth)
-			     ibegin = find(data.signal(ia,5:end)>1.2,1,'first');
-                             smask(ia,4+ibegin:end) = true;
-                          end
-			  smask(data.signal<1.01) = true;
-                          smask(:,1:4) = true;
-                          data.beta_raw(smask) = nan;
-                          data.v_raw(smask) = nan;
-                          data.signal(smask) = nan;
-                       end 
-                       if p.ymax~=99999
-   		           cond = data.range>p.ymax; 
-                           data.signal(:,cond) = [];  
-                           data.beta_raw(:,cond) = [];  
-                           data.v_raw(:,cond) = [];  
-                           data.range(cond) = [];  
-                       end
-                       r = transpose(data.range(:)/1000);
-                       a = transpose(data.azimuth(:));
-                       a(a>360) = a(a>360)-360;
-                       s = transpose(real(log10(data.signal-1)));
-                       s_e = transpose(data.beta_error * 100);
-                       b = transpose(real(log10(data.beta_raw)));
-                       b_e = transpose(data.beta_error * 100);
-		       v = transpose(data.v_raw);
-                       v_e = transpose(data.v_error);
-
-                       %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
-                       nspokes = 9;
-                       %rticklabel = cellstr(num2str(circles(:)));
-    
-                       hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 10];
-                       hf.Color = 'white'; hf.Visible = 'off';
-                       sp1 = subplot(231);
-                       [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'Nspokes',nspokes);
-                       ylabel(c,' signal intensity (dB)');
-                       set(gcf,'color','w')
-                       colormap(sp1,chilljet)
-                       caxis([-20 0])
-
-                       sp2 = subplot(232);
-                       [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'Nspokes',nspokes);
-                       ylabel(c,' log_{10} att. beta (m-1 sr-1)');
-                       set(gcf,'color','w')
-                       colormap(sp2,chilljet)
-                       caxis([-7 -4])
-
-                       sp3 = subplot(233);
-                       [~,c]= polarPcolor(r,a,v,'rStep',p.ystep,'Nspokes',nspokes);
-                       ylabel(c,' radial velocity (m s-1)');
-                       set(gcf,'color','w')
-                       colormap(sp3,cmocean('balance'))
-                       caxis([-10 10])
-
-                       sp4 = subplot(234);
-                       [~,c]= polarPcolor(r,a,s_e,'rStep',p.ystep,'Nspokes',nspokes);
-                       ylabel(c,' signal error (%)');
-                       set(gcf,'color','w')
-                       colormap(sp4,chilljet)
-                       caxis([0 100])
-
-                       sp5 = subplot(235);
-                       [~,c]= polarPcolor(r,a,b_e,'rStep',p.ystep,'Nspokes',nspokes);
-                       ylabel(c,' att. beta error (%)');
-                       set(gcf,'color','w')
-                       colormap(sp5,chilljet)
-                       caxis([0 100])
-
-                       sp6 = subplot(236);
-                       [~,c]= polarPcolor(r,a,v_e,'rStep',p.ystep,'Nspokes',nspokes);
-                       ylabel(c,' radial velocity error (m s-1)');
-                       set(gcf,'color','w')
-                       colormap(sp6,chilljet)
-                       caxis([0 .5])
-
-		       set(findall(hf,'-property','FontSize'),'FontSize',8)
-
-                       fname = fullfile([dirto strrep(files{i},'.nc','.png')]);                        
-                       fprintf('Writing %s\n',fname)
-                       export_fig('-png','-m2',fname)
-                       close(hf)
-
-                   end    
-
+                    for i = 1:length(files)
+                        data = load_nc_struct(fullfile([dirto files{i}]),{'range','azimuth','v_raw','beta_raw','signal'});
+                        if p.masking
+                            smask = logical(zeros(size(data.signal)));
+                            for ia = 1:length(data.azimuth)
+                                ibegin = find(data.signal(ia,5:end)>1.2,1,'first');
+                                smask(ia,4+ibegin:end) = true;
+                            end
+                            smask(data.signal<1.01) = true;
+                            smask(:,1:4) = true;
+                            data.beta_raw(smask) = nan;
+                            data.v_raw(smask) = nan;
+                            data.signal(smask) = nan;
+                        end
+                        if p.ymax~=99999
+                            cond = data.range>p.ymax;
+                            data.signal(:,cond) = [];
+                            data.beta_raw(:,cond) = [];
+                            data.v_raw(:,cond) = [];
+                            data.range(cond) = [];
+                        end
+                        r = transpose(data.range(:)/1000);
+                        a = transpose(data.azimuth(:));
+                        a(a>360) = a(a>360)-360;
+                        s = transpose(real(log10(data.signal-1)));
+                        s_e = transpose(data.beta_error * 100);
+                        b = transpose(real(log10(data.beta_raw)));
+                        b_e = transpose(data.beta_error * 100);
+                        v = transpose(data.v_raw);
+                        v_e = transpose(data.v_error);
+                        
+                        %circles = linspace(round(r(1),1),round(r(end),1),ncircles);
+                        nspokes = 9;
+                        %rticklabel = cellstr(num2str(circles(:)));
+                        
+                        hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 10];
+                        hf.Color = 'white'; hf.Visible = 'off';
+                        sp1 = subplot(231);
+                        [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'Nspokes',nspokes);
+                        ylabel(c,' signal intensity (dB)');
+                        set(gcf,'color','w')
+                        colormap(sp1,chilljet)
+                        caxis([-20 0])
+                        
+                        sp2 = subplot(232);
+                        [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'Nspokes',nspokes);
+                        ylabel(c,' log_{10} att. beta (m-1 sr-1)');
+                        set(gcf,'color','w')
+                        colormap(sp2,chilljet)
+                        caxis([-7 -4])
+                        
+                        sp3 = subplot(233);
+                        [~,c]= polarPcolor(r,a,v,'rStep',p.ystep,'Nspokes',nspokes);
+                        ylabel(c,' radial velocity (m s-1)');
+                        set(gcf,'color','w')
+                        colormap(sp3,cmocean('balance'))
+                        caxis([-10 10])
+                        
+                        sp4 = subplot(234);
+                        [~,c]= polarPcolor(r,a,s_e,'rStep',p.ystep,'Nspokes',nspokes);
+                        ylabel(c,' signal error (%)');
+                        set(gcf,'color','w')
+                        colormap(sp4,chilljet)
+                        caxis([0 100])
+                        
+                        sp5 = subplot(235);
+                        [~,c]= polarPcolor(r,a,b_e,'rStep',p.ystep,'Nspokes',nspokes);
+                        ylabel(c,' att. beta error (%)');
+                        set(gcf,'color','w')
+                        colormap(sp5,chilljet)
+                        caxis([0 100])
+                        
+                        sp6 = subplot(236);
+                        [~,c]= polarPcolor(r,a,v_e,'rStep',p.ystep,'Nspokes',nspokes);
+                        ylabel(c,' radial velocity error (m s-1)');
+                        set(gcf,'color','w')
+                        colormap(sp6,chilljet)
+                        caxis([0 .5])
+                        
+                        set(findall(hf,'-property','FontSize'),'FontSize',8)
+                        
+                        fname = fullfile([dirto strrep(files{i},'.nc','.png')]);
+                        fprintf('Writing %s\n',fname)
+                        export_fig('-png','-m2',fname)
+                        close(hf)
+                        
+                    end
+                    
                 otherwise
-
+                    
                     continue
             end
         case 'product'
             switch measmode
                 case 'wstats'
                     data = load_nc_struct(fullfile([dirto files{1}]));
-
+                    
                     beta_mean = data.beta_mean_3min;
                     snr_mean = data.signal_mean_3min;
                     velo_mean = data.radial_velocity_mean_3min;
                     velo_var = data.radial_velocity_variance_3min;
                     if isfield(data,'radial_velocity_skewness_60min')
-                     velo_skewn = data.radial_velocity_skewness_60min;
-                     velo_kurto = data.radial_velocity_kurtosis_60min;
-                     wstats_time = data.time_60min;
+                        velo_skewn = data.radial_velocity_skewness_60min;
+                        velo_kurto = data.radial_velocity_kurtosis_60min;
+                        wstats_time = data.time_60min;
                     else
-                     velo_skewn = data.radial_velocity_skewness_30min;
-                     velo_kurto = data.radial_velocity_kurtosis_30min;
-                     wstats_time = data.time_30min;
+                        velo_skewn = data.radial_velocity_skewness_30min;
+                        velo_kurto = data.radial_velocity_kurtosis_30min;
+                        wstats_time = data.time_30min;
                     end
                     %% Create a cleaning filter based what field are available
                     %fnames = fieldnames(data);
@@ -569,7 +569,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25;   cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)'); xlabel('Time UTC')
                     set(gca,'Color',[.5 .5 .5])
-
+                    
                     if exist('typeof','var') == 1
                         [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
                         export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
@@ -582,7 +582,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     close(hf)
                 case 'epsilon'
                     data = load_nc_struct(fullfile([dirto files{1}]));
-
+                    
                     [dirsnr,filessnr] = getHALOfileList(site,DATE,'product' ,'wstats');
                     wstats = load_nc_struct(fullfile([dirsnr filessnr{1}]));
                     
@@ -592,12 +592,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     L1 = data.L1_3min;
                     velovar_error = wstats.radial_velocity_simple_variance_error_3min;
                     velo_var = wstats.radial_velocity_simple_variance_3min - wstats.radial_velocity_instrumental_precision_variance_3min;
-		    velo_var(velo_var<0)=nan;
+                    velo_var(velo_var<0)=nan;
                     
                     cond = [];
-			%10*real(log10(wstats.signal_mean_3min-1))<-32 | ...
-                        %isnan(wstats.signal_mean_3min);% | ...
-%                        wstats.radial_velocity_mean_error_3min > .33;
+                    %10*real(log10(wstats.signal_mean_3min-1))<-32 | ...
+                    %isnan(wstats.signal_mean_3min);% | ...
+                    %                        wstats.radial_velocity_mean_error_3min > .33;
                     epsilon(cond) = nan;
                     epsilon_error(cond) = nan;
                     L(cond) = nan;
@@ -664,8 +664,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     close(hf)
                 case 'windshear'
                     data = load_nc_struct(fullfile([dirto files{1}]));
-
-                     
+                    
+                    
                     windhsear = data.vector_wind_shear_3min;
                     windhsear_e = data.vector_wind_shear_error_3min;
                     
@@ -676,9 +676,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
                     caxis([0 0.06]); colormap(sp1,cmocean('thermal')); text(0,3.35,'vector wind shear');
                     cb = colorbar; cb.Label.String = 's-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Ticks = 0:0.01:0.06; 
-%                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
-%                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
+                    cb.Ticks = 0:0.01:0.06;
+                    %                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+                    %                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     
                     sp1 = subplot(322);
@@ -690,7 +690,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     %                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
                     %                         num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-
+                    
                     
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
@@ -737,39 +737,39 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
-                    close(hf)              
+                    close(hf)
                     
                 case 'windvad'
-                   [data] = load_nc_struct(fullfile([dirto files{1}]));
-                   
+                    [data] = load_nc_struct(fullfile([dirto files{1}]));
+                    
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
-                                        
+                    
                     snr = transpose(data.mean_snr);
                     ws = transpose(data.wind_speed);
                     wd = transpose(data.wind_direction);
                     ws_e = transpose(data.wind_speed_error);
                     wd_e = transpose(data.wind_direction_error);
                     w = transpose(data.w);
-
+                    
                     if p.masking
-                       cond = data.mean_snr<1.01;
-                       cond(:,1:3) = true;
-                       ws(cond) = nan;
-                       wd(cond) = nan;
-                       ws_e(cond) = nan;
-                       wd_e(cond) = nan;
-                       w(cond) = nan;
-                       snr(cond) = nan; 
+                        cond = data.mean_snr<1.01;
+                        cond(:,1:3) = true;
+                        ws(cond) = nan;
+                        wd(cond) = nan;
+                        ws_e(cond) = nan;
+                        wd_e(cond) = nan;
+                        w(cond) = nan;
+                        snr(cond) = nan;
                     end
-
+                    
                     if ~isfield(data,'height_agl')
-		        height = data.height/1000;
+                        height = data.height/1000;
                     else
-		        height = data.height_agl/1000;
+                        height = data.height_agl/1000;
                     end
                     hlabel = 'Height agl (km)';
-                                 
+                    
                     sp1 = subplot(321);
                     pcolor(data.time,height,ws); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
@@ -812,7 +812,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1:3;
                     ylabel(hlabel);
-
+                    
                     sp6 = subplot(326);
                     pcolor(data.time,height,snr); axis([0 24 0 p.ymax]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
@@ -824,24 +824,24 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
                     fname = strrep(files{1},'.nc','.png');
-
+                    
                     fprintf('Writing %s\n',fullfile([dir_out fname]))
                     export_fig('-png','-m2',fullfile([dir_out fname]))
                     close(hf)
-                  
-                   
+                    
+                    
                     
                 case 'winddbs'
                     [data] = load_nc_struct(fullfile([dirto files{1}]));
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
-                                        
+                    
                     snr = data.mean_snr;
                     ws = data.wind_speed;
                     wd = data.wind_direction;
-%                     ws_e = data.wind_speed_error;
-%                     wd_e = data.wind_direction_error;
+                    %                     ws_e = data.wind_speed_error;
+                    %                     wd_e = data.wind_direction_error;
                     w = data.w;
                     
                     sp1 = subplot(321);
@@ -853,7 +853,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)');
                     
                     sp2 = subplot(322);
-%                     pcolor(data.time,data.height/1000,ws_e');
+                    %                     pcolor(data.time,data.height/1000,ws_e');
                     axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
                     caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,4.45,'Wind speed error')
@@ -871,7 +871,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)')
                     
                     sp4 = subplot(324);
-%                     pcolor(data.time,data.height/1000,wd_e');
+                    %                     pcolor(data.time,data.height/1000,wd_e');
                     axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
                     caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,4.45,'Wind direction error')
@@ -888,7 +888,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1:3;
                     ylabel('Height (km)')
-
+                    
                     sp6 = subplot(326);
                     pcolor(data.time,data.height/1000,snr'); axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
@@ -905,7 +905,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     
                 case 'wstats4precipfilter'
                     data = load_nc_struct(fullfile([dirto files{1}]));
-
+                    
                     beta_mean = data.beta_mean_3min;
                     beta_var = data.beta_variance_3min;
                     snr_mean = data.signal_mean_3min;
@@ -933,7 +933,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     snr_var(condnan) = nan;
                     velo_mean(condnan) = nan;
                     snr_instr_var(condnan) = nan;
-
+                    
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
