@@ -120,7 +120,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             calculateHALOveloError(site,DATE,'vad',elevangle1,Din.snr);
         
         % Wind retrieval
-        Dout = ppi2windsVAD(site,DATE,Din);
+        Dout = ppi2windsVAD(Din);
         
         % Collect
         uwind{i} = Dout.u;
@@ -153,9 +153,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
     
     % Create and copy common attributes and fields
-    [data,att,dim] = createORcopyCommonAttsDims(Din,'calibrated',C);  
+    [data,att,dim] = createORcopyCommonAttsDims(Din,'calibrated',C);
 
     %%--- Create variables ---%%
+    data.range = tmp.range;
     data.time = transpose(cell2mat(time)); % hrs
     data.elevation = transpose(cell2mat(elevation_angle)); % deg
     data.mean_snr = cell2mat(transpose(mean_snr));
@@ -198,6 +199,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     data.pulse_length = C.pulse_length;
     data.bandwidth = C.bandwidth;
     data.focus = C.(['focus_' abc]);
+    
+
+    
     
     %%--- Create attributes ---%%
     % mean snr

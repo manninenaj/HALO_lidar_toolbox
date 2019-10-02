@@ -88,8 +88,6 @@ else
     end
 end
 
-fontsize = 10;
-
 % Use datenum to accommodate leap years etc.
 for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         datenum(num2str(DATEend),'yyyymmdd')
