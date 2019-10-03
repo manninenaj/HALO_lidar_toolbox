@@ -144,7 +144,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     wstats = load_nc_struct(fullfile([dir_wstats_in '/' wstats_files{1}]));
 
     % Create common attribues, fields, and dimensions
-    [data,att,dim] = createORcopyCommonAttsDims(wstats,'product',C);
+    [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
 
     for it = 1:length(dt)
         

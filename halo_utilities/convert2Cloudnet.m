@@ -58,7 +58,7 @@ switch C.time_format_original
 end
 
 %% Assign new values, save old data
-[data1,att1,dim1] = createORcopyCommonAttsDims(data0,measmode,C);
+[data1,att1,dim1] = createORcopyCommonAttsDims(data0,C);
 
 
 % elevation

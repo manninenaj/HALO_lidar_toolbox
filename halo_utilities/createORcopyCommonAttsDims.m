@@ -1,4 +1,4 @@
-function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,processlev,C)
+function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 %createORcopyCommonAttsDims creates common attirubutes for all Doppler lidar products
 %                 
 %         - - - - - - - - - - - - - - - - - - 
@@ -30,17 +30,17 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,process
 % antti.manninen@fmi.fi
 
 
+if ~isfield(data_in,'elevation')
+    elev = 1; % Assume vertical profile data
+else 
+    elev = data_in.elevation;
+end
+
 % Add dims
 if ~isfield(data_in,'range')
     dim_out.range = length(data_in.height);
 else
     dim_out.range = length(data_in.range);
-end
-
-if any(strcmp(processlev,{'original','calibrated'}))
-    elev = sind(nanmedian(data_in.elevation(:)));
-else
-    elev = 1;
 end
 
 % NOTE: With old data, height = range and assumes instrument at ground level
@@ -88,7 +88,7 @@ if ~isfield(data_in,'height_agl') % check from input 'data_in'
         att_out.height_agl.axis = 'Z';
 
     % height
-    data_out.height_asl = data_in.range .* elev + actual_instrument_altitude_asl;
+    data_out.height_asl = data_in.range .* sind(elev) + actual_instrument_altitude_asl;
     att_out.height_asl = create_attributes(...
         {'range'},...
         'Height above mean sea level', ...

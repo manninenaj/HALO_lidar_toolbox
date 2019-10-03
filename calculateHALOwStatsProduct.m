@@ -145,7 +145,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
     %netcdf.close(ncid)
     
     % Create common fields and attributes
-    [data,att,dim] = createORcopyCommonAttsDims(co,'calibrated',C);
+    [data,att,dim] = createORcopyCommonAttsDims(co,C);
 
     % Define groups, which are used to process the data in chunks     
     ref.time_info = transpose((1:1:86400)/3600);

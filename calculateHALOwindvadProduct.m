@@ -155,7 +155,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
     
     % Create and copy common attributes and fields
-    [data,att,dim] = createORcopyCommonAttsDims(Din,'calibrated',C);
+    [data,att,dim] = createORcopyCommonAttsDims(Din,C);
 
     %%--- Create variables ---%%
     data.range = tmp.range;
