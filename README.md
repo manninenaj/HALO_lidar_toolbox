@@ -11,7 +11,7 @@ additions in to the toolbox!
 Please note that the toolbox requires that the original hpl files are converted into netcdf format!
 
 
-Height - range - height_agl - altitude - altitude_instrument notation:
+Height-range-altitude notation:
 -----------------------------------------------------------------------
                  
              - - - - - - - - - - - - - - - - - - 
