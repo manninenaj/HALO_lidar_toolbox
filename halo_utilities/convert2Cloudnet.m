@@ -67,6 +67,7 @@ data1.elevation = data0.(C.field_name_original_elevation)(:);
 if ~isfield(C,'home_point_azimuth'), C.home_point_azimuth = 0; end
 data1.azimuth = data0.(C.field_name_original_azimuth)(:) + C.home_point_azimuth;
 data1.azimuth(data1.azimuth<0) = data1.azimuth(data1.azimuth<0) + 360;
+data1.azimuth(data1.azimuth>360) = data1.azimuth(data1.azimuth>360) - 360;
 data1.home_point_azimuth = C.home_point_azimuth;
 
 % noise threshold

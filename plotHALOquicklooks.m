@@ -806,7 +806,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 1.1 11 2.2],'Color',rgb('DarkGray'));
                     caxis([-3 3]); colormap(sp5,cmocean('balance')); text(0,p.ymax+p.ymax*.1,'w wind component')
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = -3:1:3;
                     ylabel(hlabel);
                     
