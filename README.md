@@ -18,7 +18,7 @@ Height-range-altitude notation:
               \     |               |   |
           range\    |range          |   |
                 \   |               |   |
-                 \  |     height_agl|   |height
+                 \  |     height_agl|   |height_asl
                   \ |               |   |  
                    ____             |   |
                   _|__|_ - - - - - -|- -|- - -
@@ -31,8 +31,10 @@ Height-range-altitude notation:
                | __ __ __ |         |   |   |
                | || || || |         |   |   |
           _____|__________|_________|_  |   | 
-          ground level          |       |   |                           
-                        altitude|       |   |  
+          ground_level          |       |   |                           
+                                |       |   |  
+                   altitude_site|       |   |  
+                                |       |   |  
                                 |       |   |  
                                ~~~~~~~~~~~~~~~~~~~ 
                                mean sea level
