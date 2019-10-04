@@ -58,17 +58,16 @@ switch C.time_format_original
 end
 
 %% Assign new values, save old data
+data0.elevation = data0.(C.field_name_original_elevation)(:);
 [data1,att1,dim1] = createORcopyCommonAttsDims(data0,C);
 
-
-% elevation
-data1.elevation = data0.(C.field_name_original_elevation)(:);
 % azimuth, convert to degree from North
 if ~isfield(C,'home_point_azimuth'), C.home_point_azimuth = 0; end
 data1.azimuth = data0.(C.field_name_original_azimuth)(:) + C.home_point_azimuth;
 data1.azimuth(data1.azimuth<0) = data1.azimuth(data1.azimuth<0) + 360;
 data1.azimuth(data1.azimuth>360) = data1.azimuth(data1.azimuth>360) - 360;
 data1.home_point_azimuth = C.home_point_azimuth;
+
 
 % noise threshold
 data1.noise_threshold = C.(['snr_threshold_for_' abc]);
@@ -191,13 +190,7 @@ att1.time = create_attributes(...
     'Hours UTC');
 att1.time.axis = 'T';
 % range
-att1.range = create_attributes(...
-    {'range'},...
-    'Height above ground', ...
-    'm',...
-    [],...
-    'This variable is range from lidar * sin(elevation)');
-att1.range.axis = 'Z';
+
 % azimuth
 att1.azimuth = create_attributes(...
     {'time'},...
@@ -219,7 +212,7 @@ att1.elevation = create_attributes(...
     {'time'},...
     'Elevation from horizontal', ...
     'degrees');
-att1.elevation.standard_name = 'Alevation from the horizon';
+att1.elevation.standard_name = 'Elevation from the horizon';
 % num_pulses_m1
 att1.num_pulses_m1 = create_attributes(...
     {},...

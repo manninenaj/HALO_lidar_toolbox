@@ -30,11 +30,14 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 % antti.manninen@fmi.fi
 
 
+
 if ~isfield(data_in,'elevation')
-    elev = 1; % Assume vertical profile data
+    elev = 90; % Assume vertical profile data
 else 
     elev = data_in.elevation;
 end
+data_out.elevation = elev;
+
 
 % Add dims
 if ~isfield(data_in,'range')
@@ -66,19 +69,28 @@ if ~isfield(data_in,'height_agl') % check from input 'data_in'
     end
 
     att_out.range.axis = 'Z';
-    % height agl
+    
+    % heights
     if isfield(C,'altitude_instrument_level_m_asl') && isfield(C,'altitude_ground_level_m_asl')
         actual_height_above_ground = C.altitude_instrument_level_m_asl - C.altitude_ground_level_m_asl;
         actual_instrument_altitude_asl = C.altitude_instrument_level_m_asl;
         actual_site_altitude_asl = C.altitude_ground_level_m_asl;
-        cmnt = [];
+        cmnt = '.';
     else
         actual_height_above_ground = 0; % assumes instrument at ground level
         actual_instrument_altitude_asl = C.altitude_in_meters;
-        cmnt = ', assumes instrument at ground level, no information given.';
+        cmnt = ', assumes instrument at ground level becuase no information given.';
         actual_site_altitude_asl = C.altitude_in_meters;
     end
-    data_out.height_agl = data_in.range .* sind(elev) + actual_height_above_ground;
+    if length(unique(elev))~=1 && ~any(diff(elev)>.5)
+        for i = 1:length(elev)
+            data_out.height_agl(i,:) = data_in.range .* sind(elev(i)) + actual_height_above_ground;
+            data_out.height_asl(i,:) = data_in.range .* sind(elev(i)) + actual_instrument_altitude_asl;
+        end % assume the elevation was supposed to be the same...
+    else
+        data_out.height_agl = data_in.range .* sind(nanmedian(elev)) + actual_height_above_ground;
+        data_out.height_asl = data_in.range .* sind(nanmedian(elev)) + actual_instrument_altitude_asl;
+    end
     att_out.height_agl = create_attributes(...
         {'range'},...
         'Height above ground level', ...
@@ -86,15 +98,12 @@ if ~isfield(data_in,'height_agl') % check from input 'data_in'
         [],...
         ['Height_agl = range * sin(elevation) + height of instrument above ground' cmnt]);
         att_out.height_agl.axis = 'Z';
-
-    % height
-    data_out.height_asl = data_in.range .* sind(elev) + actual_instrument_altitude_asl;
     att_out.height_asl = create_attributes(...
         {'range'},...
         'Height above mean sea level', ...
         'm',...
         [],...
-        ['Height above mean sea level' cmnt]);
+        ['Height_asl = range * sin(elevation) + altitude of instrument above mean sea level' cmnt]);
     att_out.height_asl.axis = 'Z';
 
     % altitude
