@@ -3,7 +3,7 @@ function plotHALOquicklooks(site,DATES,processlev,measmode,typeof,varargin)
 
 p.ylabel = '';
 p.masking = 1; % SNR+1
-p.ylim = [0 99999]; % km
+p.ylim = [0 nan]; % km
 p.ystep = 2; % km
 p.azilim = [0 360]; % degrees
 p.azistep = 60; % degrees
@@ -117,7 +117,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         case {'co','cross','co12'}
                             data = load_nc_struct(fullfile([dirto files{1}]));
                             
-                            if p.ylim(2) == 99999
+                            if isnan(p.ylim(2))
                                 p.ylim(2) = ceil(data.range(end)/1000);
                             end
                             tmax = p.ylim(2)+p.ylim(2)*.075;
@@ -209,7 +209,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             data.v_error(smask) = nan;
                         end
                         
-                        if p.ylim(2)~=99999 % default
+                        if ~isnan(p.ylim(2)) % default
                             cond = data.range/1000>p.ylim(2);
                             
                             data.signal(:,cond) = [];
@@ -384,7 +384,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             data.v_raw(smask) = nan;
                             data.signal(smask) = nan;
                         end
-                        if p.ylim(2)~=99999
+                        if ~isnan(p.ylim(2))
                             cond = data.range>p.ylim(2);
                             data.signal(:,cond) = [];
                             data.beta_raw(:,cond) = [];
@@ -670,7 +670,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp1 = subplot(321);
                     pcolor(data.time_3min,data.height/1000,((windhsear))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
-                    caxis([0 0.06]); colormap(sp1,cmocean('thermal')); text(0,3.35,'vector wind shear');
+                    caxis([0 0.06]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,3.35,'vector wind shear');
                     cb = colorbar; cb.Label.String = 's-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:0.01:0.06;
                     %                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -680,7 +680,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp1 = subplot(322);
                     pcolor(data.time_3min,data.height/1000,((windhsear_e))'); axis([0 24 0 3]); shading flat
                     set(gca,'Ytick',0:3,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2]);
-                    caxis([0 0.01]); colormap(sp1,cmocean('thermal')); text(0,3.35,'vector wind shear error');
+                    caxis([0 0.01]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,3.35,'vector wind shear error');
                     cb = colorbar; cb.Label.String = 's-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:0.01:0.06;
                     %                     cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
@@ -755,21 +755,24 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     end
                     hlabel = 'Height agl (km)';
                     
-                    sp1 = subplot(321);
+                    if isnan(p.ylim(2))
+                        p.ylim(2) = ceil(height(end)/1000);
+                    end
+
+                    sp1 = subplot(521);
                     pcolor(data.time,height,ws); axis([0 24 0 p.ylim(2)]); shading flat
-                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[2 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
+                    caxis([0 20]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 11.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel);
                     
                     sp2 = subplot(322);
                     pcolor(data.time,height,ws_e); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed error')
+                    caxis([0 3]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.5:10; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    ylabel(hlabel);
                     
                     sp3 = subplot(323);
                     pcolor(data.time,height,wd); axis([0 24 0 p.ylim(2)]); shading flat
@@ -783,11 +786,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp4 = subplot(324);
                     pcolor(data.time,height,wd_e); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction error')
+                    caxis([0 2]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.5:2;
-                    ylabel(hlabel);
                     
                     sp5 = subplot(325);
                     pcolor(data.time,height,w); axis([0 24 0 p.ylim(2)]); shading flat
@@ -805,13 +807,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb = colorbar; cb.Label.String = 'SNR+1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = .995:.005:1.015;
-                    ylabel(hlabel);
                     
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
                     fname = strrep(files{1},'.nc','.png');
                     
                     fprintf('Writing %s\n',fullfile([dir_out fname]))
-                    export_fig('-png','-m2',fullfile([dir_out fname]))
+                    export_fig('-png','-m2','-nocrop',fullfile([dir_out fname]))
                     close(hf)
 
                     
@@ -831,7 +832,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp1 = subplot(321);
                     pcolor(data.time,data.height/1000,ws'); axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 20]); colormap(sp1,cmocean('thermal')); text(0,4.45,'Wind speed');
+                    caxis([0 20]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,4.45,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)');
@@ -840,7 +841,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     %                     pcolor(data.time,data.height/1000,ws_e');
                     axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 3]); colormap(sp2,cmocean('thermal')); text(0,4.45,'Wind speed error')
+                    caxis([0 3]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,4.45,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.5:10; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)')
@@ -858,7 +859,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     %                     pcolor(data.time,data.height/1000,wd_e');
                     axis([0 24 0 4]); shading flat
                     set(gca,'Ytick',0:4,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'));
-                    caxis([0 2]); colormap(sp4,cmocean('thermal')); text(0,4.45,'Wind direction error')
+                    caxis([0 2]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,4.45,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.5:2;

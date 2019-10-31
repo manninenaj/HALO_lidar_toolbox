@@ -1,4 +1,4 @@
-function calculateHALOwindvadProduct(site,DATES,elevangle)
+function calculateHALOwindvadProduct(site,DATES,elevangle,varargin)
 %CALCULATEHALOWINDVADPRODUCT reads ppi files and calculates (u,v,w) wind 
 % components, wind speed, wind direction, respective errors due to
 % random instumental noise, and overall errors using VAD tehcnique, and
@@ -17,6 +17,12 @@ function calculateHALOwindvadProduct(site,DATES,elevangle)
 % Antti Manninen
 % University of Helsinki, Finland
 % antti.j.manninen@helsinki.fi
+
+p.fit_error = true;
+if ~isempty(varargin)
+    p = parsePropertyValuePairs(p, varargin);
+end
+
 
 if nargin < 3
     error('''site'', ''DATES'', ''elevation'' are required inputs!')
@@ -47,6 +53,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     
     % Get default and site/unit/period specific parameters
     C = getconfig(site,DATE);
+
+    if isfield(C,'snr_threshold_for_windvad')    
+       th_cut_noise = C.snr_threshold_for_windvad;
+    else
+        th_cut_noise = 1.01; % very conservative!
+    end
+  
 
     % Get list of files
     elevangle1 = ['ele' elevangle];
@@ -95,11 +108,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             halo_vad_files{i}]),{'time','range','azimuth','elevation',...
 				 'v_raw','signal','beta_error','v_error'});
 
-        % Quick & dirty clutter-noise map, important especially in urban environments
-        if nanmedian(tmp.elevation) == 0
-          tmp.v_raw(tmp.signal > 1.2 | tmp.signal < 1.01) = nan;
-        end
-
         % Wind retrieval
         Din.time = tmp.time;
         Din.range = tmp.range;
@@ -108,7 +116,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         Din.velocity_raw = tmp.v_raw;
         Din.velocity = tmp.v_raw;
         Din.velocty_error = tmp.v_error;
-        Din.velocity(tmp.v_error>.5 | tmp.signal < 1.008) = nan;
+        Din.velocity(tmp.v_error>.5 | tmp.signal < th_cut_noise) = nan; % v_error 0.5 is really high..
         Din.snr = tmp.signal;
         Din.snr_e = tmp.beta_error .* tmp.signal;
 
@@ -122,7 +130,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         Din.velocity_error = calculateHALOveloError(site,DATE,'vad',elevangle1,Din.snr);
         
         % Wind retrieval
-        Dout = ppi2windsVAD(Din);
+        Dout = ppi2windsVAD(Din,'fit_error',p.fit_error);
         
         % Collect
         uwind{i} = Dout.u;

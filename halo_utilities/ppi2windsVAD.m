@@ -120,7 +120,7 @@ if ~isnumeric(S_in.velocity_error) || isscalar(S_in.velocity_error) || ...
         ' real finite numerical [time range]\ndimensional matrix.']))
 end
 % If infinite values, convert to nans
-condnan = (~isfinite(S_in.snr) | ~isfinite(S_in.velocity)) & ~isnan(S_in.snr);
+condnan = (~isfinite(S_in.snr) | ~isfinite(S_in.velocity)) | isnan(S_in.snr);
 S_in.snr(condnan) = nan;
 S_in.velocity(condnan) = nan;
 
