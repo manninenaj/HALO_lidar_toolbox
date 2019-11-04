@@ -116,7 +116,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         Din.velocity_raw = tmp.v_raw;
         Din.velocity = tmp.v_raw;
         Din.velocty_error = tmp.v_error;
-        Din.velocity(tmp.v_error>.5 | tmp.signal < th_cut_noise) = nan; % v_error 0.5 is really high..
+        Din.velocity(tmp.signal < th_cut_noise) = nan;
         Din.snr = tmp.signal;
         Din.snr_e = tmp.beta_error .* tmp.signal;
 

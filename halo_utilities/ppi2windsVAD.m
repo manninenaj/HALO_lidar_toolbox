@@ -251,14 +251,15 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         end
 
         
-        % As discussed by Newsom et al. (2017), radial velocity error is
-        % comprised of instrumental noise and turbulent contribution since
-        % a radial velocity measurement is averaged over n number of beams.
-        % Here it is assumed that the total radial velocity uncertainty is
-        % unknown, and more specifically the turbulent contribution of the
-        % uncertainty is unknown. Thus, the overall uncertainty sigma_r, as
-        % discussed by Newsom et al. (2017), is set to 1.
-        sigma_r = S_in.velocity_error;
+        % Radial velocity error is comprised of instrumental noise
+        % and turbulent contribution since a radial velocity
+        % measurement is averaged over n number of beams.
+        %
+        % Here the total radial velocity uncertainty is unknown,
+        % and more specifically the turbulent contribution of the
+        % uncertainty is unknown, and thus sigma_r is set to 1.
+        % Newsom et al. (2017)
+        sigma_r = 1;
         tmp_C_all = zeros(3,3);
         tmp_PSI_all = 0;
         for k = 1:length(S_in.azimuth)
