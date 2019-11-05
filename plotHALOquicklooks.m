@@ -9,6 +9,7 @@ p.azilim = [0 360]; % degrees
 p.azistep = 60; % degrees
 p.cmap = cmap_darkviolet_to_brickred;
 p.cmapdiv = cmocean('balance');
+p.cmapwdir = colorcet('C8');
 if ~isempty(varargin)
     p = parsePropertyValuePairs(p, varargin);
     p.ystep = p.ystep/1000; % km
@@ -761,23 +762,23 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 
                     sp1 = subplot(521);
                     pcolor(data.time,height,ws); axis([0 24 0 p.ylim(2)]); shading flat
-                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[2 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 20]); colormap(sp1,cmap_darkviolet_to_brickred); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
+                    set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
+                    caxis([0 20]); colormap(sp1,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 11.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel);
                     
                     sp2 = subplot(322);
                     pcolor(data.time,height,ws_e); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 3]); colormap(sp2,cmap_darkviolet_to_brickred); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed error')
+                    caxis([0 3]); colormap(sp2,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.5:10; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     
                     sp3 = subplot(323);
                     pcolor(data.time,height,wd); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 360]); colormap(sp3,colorcet('C8')); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction');
+                    caxis([0 360]); colormap(sp3,p.cmapwdir); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction');
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:90:360;
@@ -786,7 +787,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp4 = subplot(324);
                     pcolor(data.time,height,wd_e); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 4.2 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 2]); colormap(sp4,cmap_darkviolet_to_brickred); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction error')
+                    caxis([0 2]); colormap(sp4,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = 0:.5:2;

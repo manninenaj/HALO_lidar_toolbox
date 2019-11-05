@@ -259,17 +259,17 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         % and more specifically the turbulent contribution of the
         % uncertainty is unknown, and thus sigma_r is set to 1.
         % Newsom et al. (2017)
-        sigma_r = 1;
+	sigma_r = 1;
         tmp_C_all = zeros(3,3);
         tmp_PSI_all = 0;
         for k = 1:length(S_in.azimuth)
             r_k = [sind((S_in.azimuth(k))).*cosd(S_in.elevation(k)),...
                 cosd((S_in.azimuth(k))).*cosd(S_in.elevation(k)),...
                 sind(S_in.elevation(k))];
-            tmp_C = ((transpose(r_k)*r_k)/(sigma_r(k,i).^2));
+            tmp_C = ((transpose(r_k)*r_k)/(sigma_r.^2));
             tmp_C_all = tmp_C_all + tmp_C;
             tmp_PSI = ((transpose(wind_components_raw) * transpose(r_k) - ...
-                S_in.velocity_raw(k,i)).^2) / (sigma_r(k,i).^2);
+                S_in.velocity_raw(k,i)).^2) / (sigma_r.^2);
             tmp_PSI_all = tmp_PSI_all + tmp_PSI;
         end
         C_newsom = inv(tmp_C_all);
