@@ -291,7 +291,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             end
                             
                             % Convert into cloudnet naming scheme, implement the corrected signal
-			                [data1,att1,dim1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
+         	            [data1,att1,dim1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
                             
                             % If more than one file per day
                             if length(loadinfo.(abc).files)>1                
@@ -299,7 +299,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             else
                                 fndate = loadinfo.(abc).files{i}(1:8);
                             end
-                            
+                                                        
                             % correct focus
                             data1 = correctHALOfocus(site,DATE,abc,data1);
 

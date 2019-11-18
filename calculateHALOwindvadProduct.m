@@ -19,6 +19,8 @@ function calculateHALOwindvadProduct(site,DATES,elevangle,varargin)
 % antti.j.manninen@helsinki.fi
 
 p.fit_error = true;
+p.v_error_threshold = 20; % in (m s-1)), i.e. cuts nothing
+p.snr_threshold = 1; % in (SNR+1), i.e. cuts nothing
 if ~isempty(varargin)
     p = parsePropertyValuePairs(p, varargin);
 end
@@ -54,10 +56,19 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Get default and site/unit/period specific parameters
     C = getconfig(site,DATE);
 
-    if isfield(C,'snr_threshold_for_windvad')    
-       th_cut_noise = C.snr_threshold_for_windvad;
+    if ~isnan(p.v_error_threshold)
+       th_cut_v_error = p.v_error_threshold;
+    elseif isfield(C,'v_error_threshold_for_windvad')    
+       th_cut_v_error = C.v_error_threshold_for_windvad;
     else
-        th_cut_noise = 1.01; % very conservative!
+       th_cut_v_error = 20; % includes all
+    end
+    if ~isnan(p.snr_threshold)
+       th_cut_snr = p.snr_threshold;
+    elseif isfield(C,'snr_threshold_for_windvad')    
+       th_cut_snr = C.snr_threshold_for_windvad;
+    else
+       th_cut_snr = 1; % includes all
     end
   
 
@@ -116,7 +127,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         Din.velocity_raw = tmp.v_raw;
         Din.velocity = tmp.v_raw;
         Din.velocty_error = tmp.v_error;
-        Din.velocity(tmp.signal < th_cut_noise) = nan;
+        Din.velocity(tmp.v_error > th_cut_v_error | tmp.signal < th_cut_snr) = nan;
         Din.snr = tmp.signal;
         Din.snr_e = tmp.beta_error .* tmp.signal;
 

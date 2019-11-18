@@ -82,15 +82,16 @@ if ~isfield(data_in,'height_agl') % check from input 'data_in'
         cmnt = ', assumes instrument at ground level becuase no information given.';
         actual_site_altitude_asl = C.altitude_in_meters;
     end
-    if length(unique(elev))~=1 && ~any(diff(elev)>.5)
-        for i = 1:length(elev)
-            data_out.height_agl(i,:) = data_in.range .* sind(elev(i)) + actual_height_above_ground;
-            data_out.height_asl(i,:) = data_in.range .* sind(elev(i)) + actual_instrument_altitude_asl;
-        end % assume the elevation was supposed to be the same...
-    else
-        data_out.height_agl = data_in.range .* sind(nanmedian(elev)) + actual_height_above_ground;
-        data_out.height_asl = data_in.range .* sind(nanmedian(elev)) + actual_instrument_altitude_asl;
-    end
+    %if length(unique(elev))~=1 && any(diff(elev)>.5)
+    %    for i = 1:length(elev)
+    %        data_out.height_agl(i,:) = data_in.range .* sind(elev(i)) + actual_height_above_ground;
+    %        data_out.height_asl(i,:) = data_in.range .* sind(elev(i)) + actual_instrument_altitude_asl;
+    %    end
+    % assume the elevation was supposed to be the same...
+    %else
+    data_out.height_agl = data_in.range .* sind(nanmedian(elev)) + actual_height_above_ground;
+    data_out.height_asl = data_in.range .* sind(nanmedian(elev)) + actual_instrument_altitude_asl;
+    %end
     att_out.height_agl = create_attributes(...
         {'range'},...
         'Height above ground level', ...
