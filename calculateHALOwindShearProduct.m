@@ -113,7 +113,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]),{'time','height','u','v','u_error','v_error'});
 
     % Create common attribues, fields, and dimensions
-    [data,att,dim] = createORcopyCommonAttsDims(wind_today,'product',C);
+    [data,att,dim] = createORcopyCommonAttsDims(wind_tday,'product',C);
    
     if ~isempty(wind_files_yday)
         wind_yday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]),{'time','height','u','v','u_error','v_error'});

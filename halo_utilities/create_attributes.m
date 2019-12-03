@@ -1,4 +1,4 @@
-function attribute = create_attributes(dimensions, long_name, units, missing_value, comment, plot);
+function attribute = create_attributes(dimensions, long_name, units, missing_value, comment, plot)
 attribute.dimensions = dimensions;
 attribute.long_name = long_name;
 if iscell(units)

@@ -599,13 +599,25 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     epsilon_error = data.epsilon_error_3min;
                     L = data.L_3min;
                     L1 = data.L1_3min;
+                    % The naming of this variable has changed over the iterations. For existing data all versions are checked.
+                    wname_options = cellstr(strvcat('radial_velocity_instrumental_error_mean_3min',...
+                        'radial_velocity_instrumental_precision_mean_3min',...
+                        'radial_velocity_instrumental_uncertainty_mean_3min'));
+                    switch find(ismember(wname_options,fieldnames(wstats)))
+                        case 1
+                            noise_error = wstats.radial_velocity_instrumental_error_variance_3min;
+                        case 2
+                            noise_error = wstats.radial_velocity_instrumental_precision_variance_3min;
+                        case 3
+                            noise_error = wstats.radial_velocity_instrumental_uncertainty_variance_3min;
+                    end
                     velovar_error = wstats.radial_velocity_simple_variance_error_3min;
-                    velo_var = wstats.radial_velocity_simple_variance_3min - wstats.radial_velocity_instrumental_precision_variance_3min;
+                    velo_var = wstats.radial_velocity_simple_variance_3min - noise_error;
                     velo_var(velo_var<0)=nan;
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
-
+                    
                     sp1 = subplot(321);
                     pcolor(data.time_3min,height,transpose(real(log10(epsilon)))); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'));
@@ -653,7 +665,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)'); xlabel('Time UTC')
 
                     sp6 = subplot(326);
-                    pcolor(wstats.time_3min,wstats.height/1000,transpose(real(log10(velovar_error)))); axis([0 24 0 p.ylim(2)]); shading flat
+                    pcolor(wstats.time_3min,wstats.height_agl/1000,transpose(real(log10(velovar_error)))); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
                     caxis([-3 0]); colormap(sp6,p.cmap); text(0,3.35,'velocity variance error')
                     cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
@@ -758,7 +770,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     if ~isfield(data,'height_agl')
                         height = data.height/1000;
                     else
-                        height = data.height_agl/1000;
+                        height = data.height_agl_agl/1000;
                     end
                     hlabel = 'Height agl (km)';
                     
