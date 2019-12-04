@@ -132,7 +132,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         Din.snr_e = tmp.beta_error .* tmp.signal;
 
         % Check time vector
-        midnight = find(diff(Din.time)< -23);
+        midnight = find(diff(Din.time)< -24);
         if not(isempty(midnight))
             Din.time(midnight+1:end) = Din.time(midnight+1:end) + 24;
         end

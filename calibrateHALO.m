@@ -78,10 +78,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
   
             % Check order of time stamps and reorder if needed
             %data_tmp = checkHALOtimeStamps(data_tmp);
-            if data_tmp.time(end)<data_tmp.time(end-1)
-                data_tmp.time(find(diff(data_tmp.time)<0)+1:end) = data_tmp.time(find(diff(data_tmp.time)<0)+1:end) + 24;
-            end 
-            
+            % Sometimes the last time stamp(s) is(are) in the next day
+            % Should remove this issue by using seconds_since_1970!
+            if any(diff(data_tmp.time)<0)
+              data_tmp.time(find(diff(data_tmp.time)<0)+1:end) = data_tmp.time(find(diff(data_tmp.time)<0)+1:end) + 24;
+            end
+
             if isempty(data_tmp)
                 continue
             else
@@ -115,7 +117,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
         time_hrs = t_all_mat(isort);
         range_m = data_tmp.range(:);
         time_orig_measmode = time_orig_measmode(isort);
-        
+
         %% Ripple removal & background correction
         snr_corr_1 = correctHALOripples(site,DATE,snr,time_hrs,range_m);
         if isfield(C,'opt_4_bkg_remnant_profiles') && isfield(C,'num_gates_to_ignore_4bkg_corr')
@@ -128,7 +130,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
 	            'cloud_mask',logical(atm_mask));
         end
 
-        
         %% Reorganize into original form and write out
         for i_out = 1:size(fnames,1)
             % Measurement name and type
@@ -154,8 +155,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                     data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{1}));
                      
                     % Sometimes the last time stamp(s) is(are) in the next day
-                    if data0.time(end)<data0.time(end-1)
-                        data0.time(find(diff(data0.time)<0)+1:end) = data0.time(find(diff(data0.time)<0)+1:end) + 24;
+                    % Should remove this issue by using seconds_since_1970!
+                    if any(diff(data0.time)<0)
+                      data0.time(find(diff(data0.time)<0)+1:end) = data0.time(find(diff(data0.time)<0)+1:end) + 24;
                     end                           
                     
                     % Check number of range gates
@@ -235,10 +237,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         end
                         
                         % Sometimes the last time stamp is from the next day
-                        if data1.time(end)<data1.time(end-1)
-                            data1.time(end) = data1.time(end)+24;
+                        % Should remove this issue by using seconds_since_1970!
+                        if any(diff(data1.time)<0)
+                          data1.time(find(diff(data1.time)<0)+1:end) = data1.time(find(diff(data1.time)<0)+1:end) + 24;
                         end
-                        
                         fndate = loadinfo.(abc).files{1}(1:8);
                         
                         % correct focus TBD
@@ -258,8 +260,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
 
                         % Check order of time stamps and reorder if needed
                         % Sometimes the last time stamp(s) is(are) in the next day
-                        if data0.time(end)<data0.time(end-1)
-  	                        data0.time(find(diff(data0.time)<0+1):end) = data0.time(find(diff(data0.time)<0+1):end) + 24;
+                        % Should remove this issue by using seconds_since_1970!
+                        if any(diff(data0.time)<0)
+                          data0.time(find(diff(data0.time)<0)+1:end) = data0.time(find(diff(data0.time)<0)+1:end) + 24;
                         end                           
                         
                         % Check number of range gates
@@ -289,10 +292,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                 if size(data0.(C.field_name_original_snr),2)<2, continue; end
                                 data0.(fname) = transpose(snr_corr_2(time_orig_measmode==i_out & ismember(time_hrs,original_time_in_hrs),:));
                             end
-                            
+
                             % Convert into cloudnet naming scheme, implement the corrected signal
          	            [data1,att1,dim1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
-                            
+     
                             % If more than one file per day
                             if length(loadinfo.(abc).files)>1                
                                 fndate = loadinfo.(abc).files{i}(1:15);

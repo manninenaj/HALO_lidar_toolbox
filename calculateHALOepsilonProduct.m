@@ -56,7 +56,7 @@ if nargin < 5
     weighting = false;
 elseif nargin == 5
     if not(islogical(weighting))
-        error('The 4th input has to be logical ''true'' or ''false''.')
+        error('The 5th input has to be logical ''true'' or ''false''.')
     end
 elseif nargin > 6
     error('Too many inputs.')
@@ -242,6 +242,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         
         % Re-grid the winds
         [Xr,Yr] = meshgrid(wstats.height_agl, wstats.(fnames_time{ii}));
+
         if not(isempty(wind_tmrw) || isempty(wind_yday))
             [Xo,Yo] = meshgrid(wind_tday.height_agl,...
                 [wind_yday.time(:)-24;...

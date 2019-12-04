@@ -36,7 +36,6 @@ else
 end
 data_out.elevation = elev;
 
-
 % Add dims
 if ~isfield(data_in,'range')
     dim_out.range = length(data_in.height);
@@ -48,6 +47,7 @@ end
 % Add range if it does not exist, possible with products (old version)
 % where products were always calculated w.r.t. height agl
 if ~isfield(data_in,'range')
+    data_in.range = data_in.height;
     data_out.range = data_in.height;
     att_out.range = create_attributes(...
         {'range'},...

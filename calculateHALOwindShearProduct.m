@@ -110,20 +110,34 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     end
 
     % Load, assume only one *.nc file per day, load only the needed fields
-    wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]),{'time','height','u','v','u_error','v_error'});
+    windvars = {'time','height','height_agl','u','v','u_error','v_error'}; 
+    wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]), windvars);
+    if ~isfield(wind_tday, 'height') & isfield(wind_tday, 'height_agl')
+      wind_tday.height = wind_tday.height_agl'; 
+      wind_tday = rmfield(wind_tday,'height_agl');
+    end
 
     % Create common attribues, fields, and dimensions
-    [data,att,dim] = createORcopyCommonAttsDims(wind_tday,'product',C);
-   
+%    [data,att,dim] = createORcopyCommonAttsDims(wind_tday,'product',C);
+    [data,att,dim] = createORcopyCommonAttsDims(wind_tday,C);
+    data = rmfield(data, 'elevation');
+ 
+ 
     if ~isempty(wind_files_yday)
-        wind_yday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]),{'time','height','u','v','u_error','v_error'});
+        wind_yday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]), windvars);
+        if ~isfield(wind_yday, 'height') & isfield(wind_yday, 'height_agl')
+          wind_yday.height = wind_yday.height_agl';        
+        end
     else
         % empty otherwise
         wind_yday = [];
     end
     if ~isempty(wind_files_tmrw)
-        % load if exists
-        wind_tmrw = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tmrw{1}]),{'time','height','u','v','u_error','v_error'});
+      % load if exists
+      wind_tmrw = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tmrw{1}]),windvars );
+      if ~isfield(wind_tmrw, 'height') & isfield(wind_tmrw, 'height_agl')
+        wind_tmrw.height = wind_tmrw.height_agl';        
+      end
     else 
         % empty otherwise
         wind_tmrw = [];
@@ -253,7 +267,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Order fields
     data = orderfields(data);
     att  = orderfields(att);
-    
+ 
     % Write into new netcdf
     write_nc_struct(fullfile([dir_wind_shear_out '/' thedate ...
         '_' site '_halo-doppler-lidar_wind-shear.nc']), dim, data, att)
