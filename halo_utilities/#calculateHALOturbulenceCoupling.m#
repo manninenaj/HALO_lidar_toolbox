@@ -1,4 +1,4 @@
-function [ epsilon_field ] = calculateHALOturbulenceCoupling(epsilon,skewn,cloudmask,th,sun_rise_set,time)
+B1;5202;0cfunction [ epsilon_field ] = calculateHALOturbulenceCoupling(epsilon,skewn,cloudmask,th,sun_rise_set,time)
 %calculateHALOturbulenceCoupling creates a mask indicating is the turbulence
 %in contact with surface, cloud, both, or neither of them.
 %

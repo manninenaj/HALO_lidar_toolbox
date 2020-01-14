@@ -1,7 +1,7 @@
 function plotHALOquicklooks(site,DATES,processlev,measmode,varargin)
 % Check inputs
 
-p.typeof = '';
+p.typeof = nan;
 p.ylabel = '';
 p.xlabel = 'Time UTC (hrs)';
 p.masking = 1; % SNR+1
@@ -104,7 +104,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Convert date into required formats
     thedate = datestr(DATEi,'yyyymmdd');
     DATE = str2double(thedate);
-    if exist('typeof','var') == 1
+
+    if ~isnan(typeof)
         [dirto,files] = getHALOfileList(site,DATE,processlev,measmode,typeof);
     else
         [dirto,files] = getHALOfileList(site,DATE,processlev,measmode);
@@ -715,8 +716,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
                     close(hf)
+
                 case 'ABLclassification'
-                    [dir_bl,files_bl] = getHALOfileList(site,DATE,'product' ,'ABLclassification');
+
+                    [dir_bl,files_bl] = getHALOfileList(site,DATE,'product','ABLclassification');
                     [bl,blatt] = load_nc_struct(fullfile([dir_bl files_bl{1}]));
                     
                     TKEconnected = double(bl.turbulence_coupling_3min);

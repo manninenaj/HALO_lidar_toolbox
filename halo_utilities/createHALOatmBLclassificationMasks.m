@@ -6,7 +6,7 @@ category_bits = bitfield;
 % Read bitfield
 layer_bit = double(bitand(uint16(category_bits),uint16(1))>0);
 epsilon_bit = double(bitand(uint16(category_bits),uint16(2))>0);
-% contact_bit = double(bitand(uint16(category_bits),uint16(4))>0);
+contact_bit = double(bitand(uint16(category_bits),uint16(4))>0);
 heatflux_bit = double(bitand(uint16(category_bits),uint16(8))>0);
 heatfluxabshi_bit = double(bitand(uint16(category_bits),uint16(16))>0);
 shear_bit = double(bitand(uint16(category_bits),uint16(32))>0);
@@ -21,20 +21,27 @@ BL_mask = zeros(size(bitfield));
 BL_mask(~heatfluxabshi_bit | (~heatflux_bit & heatfluxabshi_bit)) = 1;
 BL_mask(heatflux_bit & heatfluxabshi_bit) = 2;
 fill = BL_mask;
+
 % Non-turbulentdt_i
 BL_mask(~epsilon_bit & layer_bit) = 3;
+
 % Turbulent
 BL_mask(epsilon_bit & layer_bit) = 3.5;
+
 % Convective mixing
-% BL_mask(BL_mask == 3.5 & heatflux_bit & heatfluxabshi_bit & contact_bit & layer_bit) = 4;
-BL_mask(convective_bit==1) = 4;
+BL_mask(BL_mask == 3.5 & heatflux_bit & heatfluxabshi_bit & contact_bit & layer_bit) = 4;
+%BL_mask(convective_bit==1) = 4;
+
 % In cloud
 BL_mask(incloud_bit & layer_bit) = 7;
 BL_mask(incloud_bit & ~layer_bit) = 7;
+
 % Cloud driven
 BL_mask(BL_mask == 3.5 & driven_bit == 1 & ~incloud_bit & layer_bit) = 8;
-% Wind shear1
+
+% Wind shear
 BL_mask(BL_mask == 3.5 & (heatflux_bit==0 | heatfluxabshi_bit==0) & BL_mask~=7 & BL_mask~=8 & shear_bit & layer_bit) = 5;
+
 % Decaying / intermittent
 BL_mask(BL_mask == 3.5) = 6;
 
@@ -43,18 +50,18 @@ BL_mask(:,1:3) = 0;
 BL_mask(:,1:3) = fill(:,end-2:end);
 BL_mask(~layer_bit & ~incloud_bit) = 0;
 BL_mask(BL_mask ~= 1 & BL_mask ~= 2 & fubarfield == 0) = 0;
-TKE_mask = fubarfield;
-TKE_mask(:,1:3) = 0;
-TKE_mask(~layer_bit & ~incloud_bit) = 0;
-TKE_mask(TKE_mask==6) = 2;
-TKE_mask(BL_mask==3) = 1;
-BL_mask(TKE_mask==1) = 3;
-TKE_mask(BL_mask==0) = 0;
-BL_mask(TKE_mask==0 & not(BL_mask==1 | BL_mask==2)) = 0;
+epsilon_mask = fubarfield;
+epsilon_mask(:,1:3) = 0;
+epsilon_mask(~layer_bit & ~incloud_bit) = 0;
+epsilon_mask(epsilon_mask==6) = 2;
+epsilon_mask(BL_mask==3) = 1;
+BL_mask(epsilon_mask==1) = 3;
+epsilon_mask(BL_mask==0) = 0;
+BL_mask(epsilon_mask==0 & not(BL_mask==1 | BL_mask==2)) = 0;
 
 % Add precipitation mask
 BL_mask(any(precipitation_bit==1,2),4:end) = 9;
-TKE_mask(any(precipitation_bit==1,2),4:end) = 7;
+epsilon_mask(any(precipitation_bit==1,2),4:end) = 7;
 
 %% Create product bl_classification
 product.(['bl_classification_' dt_i]) = int8(BL_mask);
@@ -103,9 +110,9 @@ product_attribute.(['bl_classification_' dt_i]).legend_key_blue =  [0.6602 0.6 1
 
 %% Turbulence coupling
 
-TKE_mask(TKE_mask==6) = 2;
-TKE_mask(TKE_mask==7) = 6;
-product.(['turbulence_coupling_' dt_i]) = int8(TKE_mask);
+epsilon_mask(epsilon_mask==6) = 2;
+epsilon_mask(epsilon_mask==7) = 6;
+product.(['turbulence_coupling_' dt_i]) = int8(epsilon_mask);
 
 product_attribute.(['turbulence_coupling_' dt_i]).long_name = 'Turbulence coupled with';
 product_attribute.(['turbulence_coupling_' dt_i]).comment = ...
