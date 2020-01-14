@@ -3,6 +3,7 @@ function plotHALOquicklooks(site,DATES,processlev,measmode,varargin)
 
 p.typeof = '';
 p.ylabel = '';
+p.xlabel = 'Time UTC (hrs)';
 p.masking = 1; % SNR+1
 p.ylim = [0 nan]; % km
 p.ystep = 2; % km
@@ -18,6 +19,9 @@ if ~isempty(varargin)
         p.ylim(1) = p.ylim(1)/1000; % km
     end
     p.ylim(2) = p.ylim(2)/1000; % km
+    if isfield(p,'typeof')
+      typeof = p.typeof;
+    end
 end
 
 if nargin < 4
@@ -670,7 +674,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     caxis([-3 0]); colormap(sp6,p.cmap); text(0,3.35,'velocity variance error')
                     cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25;   cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-		    xlabel('Time UTC');
+		            xlabel('Time UTC');
                    
                     fname = fullfile([dirto strrep(files{1},'.nc','.png')]);
                     fprintf('Writing %s\n',fname)
@@ -720,38 +724,39 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     BLclass = double(bl.bl_classification_3min);
                     BLclass(BLclass==0) = nan;
                     
-                    cmap_tkecw = [blatt.turbulence_coupling_3min.legend_key_red;...
-                        blatt.turbulence_coupling_3min.legend_key_green;...
-                        blatt.turbulence_coupling_3min.legend_key_blue]';
+                    cmap_tkecw = transpose([blatt.turbulence_coupling_3min.legend_key_red;...
+                                            blatt.turbulence_coupling_3min.legend_key_green;...
+                    	                    blatt.turbulence_coupling_3min.legend_key_blue]);
                     
-                    cmap_blc = [blatt.bl_classification_3min.legend_key_red;...
-                        blatt.bl_classification_3min.legend_key_green;...
-                        blatt.bl_classification_3min.legend_key_blue]';
+                    cmap_blc = transpose([blatt.bl_classification_3min.legend_key_red;...
+                                          blatt.bl_classification_3min.legend_key_green;...
+			                  blatt.bl_classification_3min.legend_key_blue]);
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
                     
                     sp1 = subplot(321);
-                    pcolor(bl.time_3min,bl.height/1000,TKEconnected'); axis([0 24 0 p.ylim(2)]); shading flat
-                    set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2]);
+                    pcolor(bl.time_3min,bl.height_agl/1000,transpose(TKEconnected)); axis([0 24 0 p.ylim(2)]); shading flat
+                    set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1.1 7.3 11 2.2]);
                     caxis([0 7]); colormap(sp1,cmap_tkecw); text(0,3.35,'Turbulence coupling');
                     cb = colorbar; cb.Ticks = .5:6.5;  cb.Units = 'centimeters';
-                    cb.TickLabels = sprintf(blatt.turbulence_coupling_3min.definition); cb.FontSize = 8; pause(.5); ax1 = get(gca,'Position');
-                    cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb.TickLabels = sprintf(blatt.turbulence_coupling_3min.definition); cb.FontSize = 6; pause(.5); ax1 = get(gca,'Position');
+                    cb.Position(3) = .25; cb.Position(1) = 10.4; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)');
                     
                     sp3 = subplot(323);
-                    pcolor(bl.time_3min,bl.height/1000,BLclass'); axis([0 24 0 p.ylim(2)]); shading flat
-                    set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1 4.2 11 2.2]);
+                    pcolor(bl.time_3min,bl.height_agl/1000,transpose(BLclass)); axis([0 24 0 p.ylim(2)]); shading flat
+                    set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1.1 4.2 11 2.2]);
                     caxis([0 10]); colormap(sp3,cmap_blc); text(0,3.35,'Boundary layer classification')
                     cb = colorbar; cb.Ticks = .5:9.5;  cb.Units = 'centimeters';
-                    cb.TickLabels = sprintf(blatt.bl_classification_3min.definition); cb.FontSize = 8; pause(.5); ax1 = get(gca,'Position');
-                    cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    ylabel('Height (km)'); xlabel('Time UTC'); pause(.1)
+                    cb.TickLabels = sprintf(blatt.bl_classification_3min.definition); cb.FontSize = 6; pause(.5); ax1 = get(gca,'Position');
+                    cb.Position(3) = .25; cb.Position(1) = 10.4; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    ylabel('Height (km)'); xlabel(p.xlabel); pause(.1)
                     
                     [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
-                    export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                        '-%s.png'], dir_out,num2str(DATE),site,measmode))
+                    fname = strrep(files_bl{1},'.nc','.png');
+                    fprintf('Writing %s\n',fullfile([dir_out fname]))
+                    export_fig('-png','-m2',fullfile([dir_out fname]))
                     close(hf)
                     
                 case 'windvad'

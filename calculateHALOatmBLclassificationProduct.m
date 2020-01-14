@@ -135,6 +135,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     th.windshear = 0.03;
     th.vert_velo = 0;
     th.cloud = real(log10(2e-5)); % log10
+
+if strcmp(site,'al-dhaid')
+    th.epsilon_hi = -5; % log10, is it turbulent?
+    th.epsilon = -5; % log10, is it turbulent?
+    th.windshear = 0.015;
+end
     
     %% Load low level jets - TBD
     
@@ -154,9 +160,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         signal_it = wstats.(['signal_mean_' dt_i]); 
         beta_it = real(log10(wstats.(['beta_mean_' dt_i])));
         
-        %% Cloud mask
+        %%-- Cloud mask --%%
         cloudmask = zeros(size(beta_it));
-        cloudbit = get_droplet_bit_matine(wstats.height,wstats.(['beta_mean_' dt_i]),0);
+        cloudbit = get_droplet_bit_matine(wstats.height, wstats.(['beta_mean_' dt_i]), 0);
 %         cloudmask(beta_it>th.cloud) = 1;
         cloudmask(cloudbit > 0) = 1;
         for i = 1:size(cloudmask,1)
@@ -176,8 +182,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
 %         cloudmask_dilated(BLclass.(['aerosol_layer_mask_' dt_i]) == 0) = 0;
         cloudmask = logical(cloudmask_dilated);
 
-        %% Find the top of the aerosol layer       
-        
+        %%-- Find the top of the aerosol layer --%%
         % Filter out noise
         beta_it(10*real(log10(signal_it-1))<-20 | isnan(signal_it)) = nan;
         beta_top = beta_it; %beta_top(cloudbit > 0) = nan;            
@@ -202,7 +207,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             end
         end
         
-        % Clean up
+        %%-- Clean up --%%
         aero_layer_mask_it(:,1:3) = 0;
         aero_top_beta_it(aero_top_beta_it<4) = nan;
         aero_top_beta_it = round(smooth(aero_top_beta_it,5));
@@ -225,19 +230,45 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             'aerosol backscatter signal (up to Aerosol_Layer_Top).'],...
             [0 1]);
         
-        %% Load TKE
-        TKE = load_nc_struct(fullfile([dir_tke_in '/' tke_files{1}]));
+        %%-- Load epsilon --%%
+        data_eps = load_nc_struct(fullfile([dir_tke_in '/' tke_files{1}]));
 
-        %% Load wind shear
+        % Smooth epsilon
+        if weighting
+            epsilon = data_eps.(['epsilon_w_' dt_i]);
+            epsilon_log10 = real(log10(epsilon));
+            epsilon_log10(data_eps.(['epsilon_error_' dt_i]) > 2 |...
+                10*real(log10(signal_it-1))<-20) = -7;
+        else
+            epsilon = data_eps.(['epsilon_' dt_i]);
+            epsilon_log10 = real(log10(epsilon));
+            epsilon_log10(data_eps.(['epsilon_error_' dt_i]) > 2 |...
+                10*real(log10(signal_it-1))<-20) = -7;
+        
+        end
+
+        epsilon_log10(isnan(beta_it)) = nan;
+        nan_profiles = all(isnan(epsilon_log10),2);
+        eps_smooth_nonans = nan(size(epsilon_log10));
+        eps_smooth_nonans(logical(aero_layer_mask_it)|cloudmask) = ...
+            epsilon_log10(logical(aero_layer_mask_it)|cloudmask);
+        eps_smooth_nonans_filled = inpaint_nans(eps_smooth_nonans,4);
+        eps_smooth_nonans_filled(not(aero_layer_mask_it)) = nan;
+        eps_smooth_nonans_filled_smoooth = windowSlider(eps_smooth_nonans_filled,[10,3],@nanmedian);
+        eps_filled = nan(size(beta_it));
+        eps_filled(~nan_profiles,:) = eps_smooth_nonans_filled_smoooth(~nan_profiles,:);
+        eps_filled(isnan(beta_it)) = nan;
+
+        %%-- Load wind shear --%%
         windshear = load_nc_struct(fullfile([dir_shear_in '/' shear_files{1}]));
 
-        %% Load skewness and re-grid into the temporal resolution of interest
+        %%-- Load skewness and re-grid into the temporal resolution of interest --%%
         if weighting
-        skewn_it = wstats.(['radial_velocity_weighted_skewness_' dtskewn]);
-        skewn_error_it = wstats.(['radial_velocity_weighted_skewness_error_' dtskewn]);
+            skewn_it = wstats.(['radial_velocity_weighted_skewness_' dtskewn]);
+            skewn_error_it = wstats.(['radial_velocity_weighted_skewness_error_' dtskewn]);
         else
-        skewn_it = wstats.(['radial_velocity_skewness_' dtskewn]);
-        skewn_error_it = wstats.(['radial_velocity_skewness_error_' dtskewn]);
+            skewn_it = wstats.(['radial_velocity_skewness_' dtskewn]);
+            skewn_error_it = wstats.(['radial_velocity_skewness_error_' dtskewn]);
         end
         skewn_it(skewn_error_it>1) = 0;
         skewn_fill_tmp = inpaint_nans(skewn_it,4);
@@ -248,56 +279,31 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         skewn_interp_smooth = windowSlider(skewn_interp_filled,[10,5],@nanmedian);
         skewn_interp_smooth(isnan(beta_it)) = nan;
 
-        %% Estimate sun rise and sun set times
+        %%-- Estimate sun rise and sun set times --%% TODO: use heat fluxes or similar
         sun_rise_set = suncycle(C.latitude,C.longitude,datenum(thedate,'yyyymmdd'));
         
-        %% Mask for precipitation
+        %%-- Mask for precipitation --%% TODO: improve
         velo = wstats.(['radial_velocity_mean_' dt_i]);
         velo(~aero_layer_mask_it|cloudmask) = nan;
         [velo_mean,a11,b22] = windowSlider(velo,[3,7],@prctile,[],95);
         precip_mask = velo_mean < -1 & b22./a11 > .8;
         precip_bit = any(precip_mask,2);
         
-        %% Smooth TKE
-        if weighting
-        epsilon = TKE.(['epsilon_w_' dt_i]);
-        epsilon_log10 = real(log10(epsilon));
-        epsilon_log10(TKE.(['epsilon_error_' dt_i]) > 2 |...
-            10*real(log10(signal_it-1))<-20) = -7;
-        else
-        epsilon = TKE.(['epsilon_' dt_i]);
-        epsilon_log10 = real(log10(epsilon));
-        epsilon_log10(TKE.(['epsilon_error_' dt_i]) > 2 |...
-            10*real(log10(signal_it-1))<-20) = -7;
-        
-        end
-        epsilon_log10(isnan(beta_it)) = nan;
-        nan_profiles = all(isnan(epsilon_log10),2);
-        eps_smooth_nonans = nan(size(epsilon_log10));
-        eps_smooth_nonans(logical(aero_layer_mask_it)|cloudmask) = ...
-            epsilon_log10(logical(aero_layer_mask_it)|cloudmask);
-        eps_smooth_nonans_filled = inpaint_nans(eps_smooth_nonans,4);
-        eps_smooth_nonans_filled(not(aero_layer_mask_it)) = nan;
-        eps_smooth_nonans_filled_smoooth = windowSlider(eps_smooth_nonans_filled,[3,3],@nanmedian);
-        eps_filled = nan(size(beta_it));
-        eps_filled(~nan_profiles,:) = eps_smooth_nonans_filled_smoooth(~nan_profiles,:);
-        eps_filled(isnan(beta_it)) = nan;
-
-        %% Calculate turbulence coupling
+        %%-- Calculate turbulence coupling --&&
         fubarfield.(['coupled_' dt_i]) = calculateHALOturbulenceCoupling(...
             eps_filled,skewn_interp_smooth,cloudmask,th,sun_rise_set,wstats.time_3min);
         
-        %% Create bitfield
+        %%-- Create bitfield --%%
         bitfield.(['bits_' dt_i]) = createHALObitfield(th, wstats.(['time_' dt_i]),wstats.(['signal_mean_' dt_i]),...
             data.(['aerosol_layer_top_' dt_i]),[],eps_filled,windshear.(['vector_wind_shear_' dt_i]),...
             sun_rise_set,fubarfield.(['coupled_' dt_i]),precip_bit);
 
-        %% Generate boundary layer classification product
+        %%-- Generate boundary layer classification product --%%
         [product, product_attribute, product_dimensions] = ...
             createHALOatmBLclassificationMasks(wstats.(['time_' dt_i]),wstats.height,...
             bitfield.(['bits_' dt_i]),fubarfield.(['coupled_' dt_i]),dt_i);
         
-        % Copy fields
+        %%-- Copy fields --%%
         fnames = fieldnames(product);
         for ifn = 1:length(fnames)
             data.(fnames{ifn}) = product.(fnames{ifn});
@@ -333,5 +339,3 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         '_halo-doppler-lidar_BL-classification.nc']), ...
         dim, data, att)
 end
-end
-

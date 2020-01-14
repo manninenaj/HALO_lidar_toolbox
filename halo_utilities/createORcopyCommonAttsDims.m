@@ -1,4 +1,4 @@
-function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C,att_in)
+function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 %createORcopyCommonAttsDims creates common attirubutes for all Doppler lidar products
 %                 
 %         - - - - - - - - - - - - - - - - - - 
@@ -35,6 +35,10 @@ else
     elev = data_in.elevation;
 end
 data_out.elevation = elev;
+att_out.elevation = create_attributes(...
+    {'time'},...
+    'Elevation from horizontal', ...
+    'degrees');
 
 % Add dims
 if ~isfield(data_in,'range')
