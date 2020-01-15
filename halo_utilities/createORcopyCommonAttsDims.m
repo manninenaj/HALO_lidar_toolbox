@@ -5,7 +5,7 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 %          \     |               |   |
 %      range\    |range          |   |
 %            \   |               |   |
-%             \  |     height_agl|   |height
+%             \  |   'height_agl'|   |'height_asl'
 %              \ |               |   |  
 %               ____             |   |
 %              _|__|_ - - - - - -|- -|- - -
@@ -14,17 +14,19 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 %           | __ __ __ |         |   |   |
 %           | || || || |         |   |   |
 %   building| __ __ __ |         |   |   |
-%           | || || || |         |   |   |altitude_instrument 
+%           | || || || |         |   |   |'altitude_instrument'
 %           | __ __ __ |         |   |   |
 %           | || || || |         |   |   |
 %      _____|__________|_________|_  |   | 
 %      ground level          |       |   |                           
-%                    altitude|       |   |  
+%           'altitude_ground'|       |   |  
 %                            |       |   |  
 %                           ~~~~~~~~~~~~~~~~~~~ 
 %                           mean sea level
 %
-% Created 2019-09-17
+% Created 2019-09-17, 
+% last updated 2020-01-15
+%
 % Antti Manninen
 % Finnish Meteorological Institute
 % antti.manninen@fmi.fi
