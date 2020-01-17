@@ -1,6 +1,11 @@
 function plotHALOquicklooks(site,DATES,processing_level,observation_type,varargin)
 % Check inputs
 
+list_of_processing_levels = {'original','corrected','calibrated','background','product','level3'};
+list_of_observation_types = {'stare','vad','dbs','rhi','custom','co','txt','nc'}; % TODO: make txt and nc optional inputs
+list_of_products = {'windvad','winddbs','epsilon','wstats','wstats4precipfilter','sigma2vad','windshear',...
+    'LLJ','ABLclassification','cloud','betavelocovariance','ABLclassificationClimatology'};
+
 p.sub_type = nan;
 p.ylabel = '';
 p.xlabel = 'Time UTC (hrs)';
@@ -19,27 +24,32 @@ if ~isempty(varargin)
         p.ylim(1) = p.ylim(1)/1000; % km
     end
     p.ylim(2) = p.ylim(2)/1000; % km
-    if isfield(p,'sub_type')
-      sub_type = p.sub_type;
-    end
 end
 
 % Check inputs
-list_of_processing_levels = {'original','corrected','calibrated','background','product','level3'};
-list_of_observation_types = {'stare','vad','dbs','rhi','custom','co','txt','nc'}; % TODO: make txt and nc optional inputs
-list_of_products = {'windvad','winddbs','epsilon','wstats','wstats4precipfilter','sigma2vad','windshear',...
-    'LLJ','ABLclassification','cloud','betavelocovariance','ABLclassificationClimatology'};
-if nargin < 4
-    error("At least inputs 'site', 'DATE', 'processing_level', and 'observation_type'")
+if ~ischar(site)
+    error('The first input ''site'' must be a string.')
 end
-if (nargin == 4 || nargin == 5) && (strcmp(processing_level,'product') && any(strcmp(observation_type,list_of_products)) || ...
+
+if length(DATES)>2
+    error('''DATES'' can have max. length of 2.')
+elseif length(DATES)==1
+    if length(num2str(DATES))~=8
+        error(['The value in the second input ''DATES'' must be' ...
+            ' numerical date in YYYYMMDD format.'])
+    else
+        DATEstart = DATES; DATEend = DATES;
+    end
+elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && ...
+        length(num2str(DATES(2)))~=8)
+    error(['The value(s) in the second input ''DATES'' must be' ...
+        ' numerical date(s) in YYYYMMDD format.'])
+else
+    DATEstart = DATES(1); DATEend = DATES(2);
+end
+
+if (strcmp(processing_level,'product') && any(strcmp(observation_type,list_of_products)) || ...
        strcmp(processing_level,'background'))
-    if ~ischar(site)
-        error("The 1st input (site name) must be a string.")
-    end
-    if ~isnumeric(DATE) || length(num2str(DATE))~=8
-        error("The 2nd input (date) must be a numeric value in YYYYMMDD format.")
-    end
     if ~ischar(processing_level) || ~any(strcmp(processing_level, list_of_processing_levels))
         error("The 3rd input (processing level) must be a string and one of these:\n%s", ...
            sprintf('%s,', list_of_processing_levels{:}))
@@ -48,10 +58,6 @@ if (nargin == 4 || nargin == 5) && (strcmp(processing_level,'product') && any(st
         error("The 4th input (observation type) must be a string and one of these:\n%s", ...
             sprintf("'%s','%s',", list_of_observation_types{:}, list_of_products{:}))
     end
-end
-if nargin < 5 && (~strcmp(processing_level,'product') && ~any(strcmp(observation_type, list_of_products)) && ...
-       ~strcmp(processing_level,'background'))
-    error("Input 'sub_type' is required with %s'", observation_type)
 end
 
 % Use datenum to accommodate leap years etc.
@@ -62,10 +68,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     thedate = datestr(DATEi,'yyyymmdd');
     DATE = str2double(thedate);
 
-    if ~isnan(sub_type)
-        [dirto,files] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
+    if ~isnan(p.sub_type)
+        [dirto,files] = getHALOfileList(site,DATE,processing_level,observation_type,p.sub_type);
     else
-        [dirto,files] = getHALOfileList(site,DATE,processlev,measmode);
+        [dirto,files] = getHALOfileList(site,DATE,processing_level,observation_type);
     end
     if isempty(files), continue; end
     
@@ -73,9 +79,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     % Get default and site/unit/period specific parameters
     C = getconfig(site,DATE);
     
-    switch processlev
+    switch processing_level
         case 'calibrated'
-            switch measmode
+            switch observation_type
                 case 'stare'
                     switch p.sub_type
                         case {'co','cross','co12'}
@@ -196,7 +202,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         
                         hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 30 12];
                         hf.Color = 'white'; hf.Visible = 'off';
-                        sp1 = subplot(231);;
+                        sp1 = subplot(231);
                         [~,c]= polarPcolor(r,a,s,'rStep',p.ystep,'thetaStep',p.azistep,'labelR',p.ylabel,'thetaMin',p.azilim(1),'thetaMax',p.azilim(2));
                         ylabel(c,' signal intensity (dB)');
                         set(gcf,'color','w')
@@ -253,9 +259,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             end
             
         case 'original'
-            switch measmode
+            switch observation_type
                 case 'stare'
-                    switch sub_type
+                    switch p.sub_type
                         case 'co'
                             data = load_nc_struct(fullfile([dirto files{1}]));
                             
@@ -427,7 +433,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     continue
             end
         case 'product'
-            switch measmode
+            switch observation_type
                 case 'wstats'
                     data = load_nc_struct(fullfile([dirto files{1}]));
                     
@@ -530,14 +536,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)'); xlabel('Time UTC')
                     set(gca,'Color',[.5 .5 .5])
                     
-                    if exist('sub_type','var') == 1
-                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
+                    if ~isnan(p.sub_type)
+                        [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type,p.sub_type);
                         export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,sub_type))
+                            '-%s-%s.png'], dir_out,num2str(DATE),site,observation_type,p.sub_type))
                     else
-                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
+                        [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type);
                         export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                            '-%s.png'], dir_out,num2str(DATE),site,measmode))
+                            '-%s.png'], dir_out,num2str(DATE),site,observation_type))
                     end
                     close(hf)
                 case 'epsilon'
@@ -669,9 +675,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25; cb.Position(1) = 10.2; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     
                     
-                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
+                    [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                        '-%s.png'], dir_out,num2str(DATE),site,measmode))
+                        '-%s.png'], dir_out,num2str(DATE),site,observation_type))
                     close(hf)
 
                 case 'ABLclassification'
@@ -713,7 +719,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25; cb.Position(1) = 10.4; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)'); xlabel(p.xlabel); pause(.1)
                     
-                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
+                    [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type);
                     fname = strrep(files_bl{1},'.nc','.png');
                     fprintf('Writing %s\n',fullfile([dir_out fname]))
                     export_fig('-png','-m2',fullfile([dir_out fname]))
@@ -792,7 +798,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = .995:.005:1.015;
                     
-                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
+                    [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type,p.sub_type);
                     fname = strrep(files{1},'.nc','.png');
                     
                     fprintf('Writing %s\n',fullfile([dir_out fname]))
@@ -867,9 +873,9 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Ticks = .995:.005:1.015;
                     ylabel('Height (km)')
                     
-                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
+                    [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type,p.sub_type);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                        '-%s.png'], dir_out,num2str(DATE),site,measmode))
+                        '-%s.png'], dir_out,num2str(DATE),site,observation_type))
                     close(hf)
                     
                 case 'wstats4precipfilter'
@@ -969,14 +975,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         num2str(cb6.Ticks(:)) repmat('}',length(cb6.Ticks(:)),1)];
                     set(gca,'Color',[.5 .5 .5])
                     
-                    if exist('sub_type','var') == 1
-                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
+                    if ~isnan(p.sub_type)
+                        [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type,p.sub_type);
                         export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,sub_type))
+                            '-%s-%s.png'], dir_out,num2str(DATE),site,observation_type,p.sub_type))
                     else
-                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
+                        [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type);
                         export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                            '-%s.png'], dir_out,num2str(DATE),site,measmode))
+                            '-%s.png'], dir_out,num2str(DATE),site,observation_type))
                     end
                     close(hf)
                 otherwise

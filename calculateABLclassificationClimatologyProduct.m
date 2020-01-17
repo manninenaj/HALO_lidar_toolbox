@@ -110,7 +110,7 @@ for daten = datenum(num2str(DATEstart),'yyyymmdd'):...
         for i0 = 1:length(fnames_time_out)
             tres_ini = fnames_time_out{i0}(strfind(fnames_time_out{i0},'_')+1:end);
             % class, month, hour, height
-            data_out.(['counts_abl_classification_' tres_ini]) = zeros(numel(bl_class_types), 12, 24, length(height_bins));
+            data_out.(['counts_bl_classification_' tres_ini]) = zeros(numel(bl_class_types), 12, 24, length(height_bins));
             data_out.(['counts_turbulence_coupling_' tres_ini]) = zeros(numel(turb_cpl_types), 12, 24, length(height_bins));
             data_out.(['number_of_elements_' tres_ini]) = zeros(12, 24, length(height_bins));
         end
@@ -125,7 +125,7 @@ for daten = datenum(num2str(DATEstart),'yyyymmdd'):...
         for ii = 1:length(fnames_time_new)
             tres_new = fnames_time_new{ii}(strfind(fnames_time_out{ii},'_')+1:end);
             % month, hour, range, class
-            data_out.(['counts_abl_classification_' tres_new]) = zeros(numel(bl_class_types), 12, 24, length(height_bins));
+            data_out.(['counts_bl_classification_' tres_new]) = zeros(numel(bl_class_types), 12, 24, length(height_bins));
             data_out.(['counts_turbulence_coupling_' tres_new]) = zeros(numel(turb_cpl_types), 12, 24, length(height_bins));
             data_out.(['number_of_elements_' tres_new]) = zeros(12, 24, length(height_bins));
         end
@@ -174,8 +174,8 @@ for daten = datenum(num2str(DATEstart),'yyyymmdd'):...
                 edges_bl_class = [transpose(bl_class_types(:)) bl_class_types(end)+1]-.5;
                 
                 % calculate counts
-                data_out.(['counts_abl_classification_' tres])(:,month,ihr,iheight) = ...
-                    squeeze(data_out.(['counts_abl_classification_' tres])(:,month,ihr,iheight)) + ...
+                data_out.(['counts_bl_classification_' tres])(:,month,ihr,iheight) = ...
+                    squeeze(data_out.(['counts_bl_classification_' tres])(:,month,ihr,iheight)) + ...
                     transpose(histcounts(abl_classification(:), edges_bl_class,'Normalization','count'));
                 
                 % create edges for turbulence coupling, should be:-0.5 0.5 1.5 2.5 3.5 4.5 5.5 6.5
@@ -270,7 +270,7 @@ for it2 = 1:length(fnames_time_out)
     %data_out.(['counts_abl_classification_' tres_out]) = histo_data.(['counts_abl_classification_' tres_out]);
     %data_out.(['counts_turbulence_coupling_' tres_out]) = histo_data.(['counts_turbulence_coupling_' tres_out]);
     %data_out.(['number_of_elements_' tres_out]) = histo_data.(['number_of_elements_' tres_out]);
-    att_out.(['counts_abl_classification_' tres_out]) = create_attributes(...
+    att_out.(['counts_bl_classification_' tres_out]) = create_attributes(...
         {'bl_classification_types','month','hour','height_agl'},...
         ['Histogram counts calculated from ABL classification ' tres_out ' field per class, month, hour, and every 100 m height range.'],...
         {'',''},...
@@ -312,6 +312,15 @@ dim_out  = orderfields(dim_out);
 % Write into new netcdf
 write_nc_struct(fullfile([dir_BLc_out '/' num2str(DATEstart) '-' num2str(DATEend) '_' site ...
     '_bl-classification_climatology.nc']), dim_out, data_out, att_out)
+
+% Plot quicklook
+hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 .5 20 25];
+hf.Color = 'white'; hf.Visible = 'off';
+
+for ip = 1:length(data_out.bl_classification_types)
+    subplot()
+end
+
 
 
 function [data_out, att_out] = createLatLonAtts(C, data_in, att_in)
@@ -374,7 +383,3 @@ att_out.longitude = create_attributes(...
     'Longitude of lidar', ...
     'degrees_east');
 att_out.longitude.standard_name = 'longitude';
-
-       % counts_per_hrange = cell2mat(arrayfun(@(x) sum(counts_reshaped(:, x:p.num_height_ranges:end)), [1:p.num_height_ranges], 'UniformOutput', 0)')
-        % res = arrayfun(@(x) counts_reshaped(:, x:p.num_height_ranges:end), height_ranges, 'UniformOutput', 0)
-
