@@ -1,4 +1,4 @@
-function status = checkHALOpath(site,DATE,processlev,measmode,typeof)
+function status = checkHALOpath(site,DATE,processing_level,observation_type,sub_type)
 %checkHALOpath checks do the date subdirectories exist, if not create
 %if they are located at the end of the stem path.
 %
@@ -6,67 +6,50 @@ function status = checkHALOpath(site,DATE,processlev,measmode,typeof)
 % status = checkHALOpath(site,DATE,processlev,measmode)
 %
 % Inputs:
-% - site        string, name of the site, e.g. 'kuopio'
-% - DATE        scalar, numerical date, e.g. 20171231
-% - processlev  string, 'corrected','calibrated','product'
-% - measmode    string, 'stare','ppi','rhi','co','windvad','winddbs',
-%               'velostats','epsilon','sigma2vad','BLclassification','cloudmask'
+% - site              string, name of the site, e.g. 'kuopio'
+% - DATE              scalar, numerical date, e.g. 20171231
+% - processing_level  string, e.g. 'calibrated'
+% - observation_type  string, e.g. 'stare', 'epsilon'
+% - sub_type          string, e.g. 'co', 'cross', '3beams', 'ele15', 'co12', 'azi270')
 %
 % Outputs:
 % - status      1 if path exits or was created succesfully, empty otherwise
 %
-% Created 2017-11-23
+% Created 2017-11-23, updated 2020-01-17
 % Antti Manninen
-% antti.j.manninen(at)helsinki.fi
-% University of Helsinki, Finland
+% antti.manninen@fmi.fi
+% Finnish Meteorological Institute
 
 % Check inputs
-if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
-        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'})))
-    error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for any other products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter''', ...
-        ' ''sigma2vad'',''windshear'', ''LLJ'', ''ABLclassification'', ''cloud'',''betavelocovariance''']))
+list_of_processing_levels = {'original','corrected','calibrated','background','product','level3'};
+list_of_observation_types = {'stare','vad','dbs','rhi','custom','co','txt','nc'}; % TODO: make txt and nc optional inputs
+list_of_products = {'windvad','winddbs','epsilon','wstats','wstats4precipfilter','sigma2vad','windshear',...
+    'LLJ','ABLclassification','cloud','betavelocovariance','ABLclassificationClimatology'};
+if nargin < 4
+    error("At least inputs 'site', 'DATE', 'processing_level', and 'observation_type'")
+end
+if (nargin == 4 || nargin == 5) && (strcmp(processing_level,'product') && any(strcmp(observation_type,list_of_products)) || ...
+       strcmp(processing_level,'background'))
     if ~ischar(site)
-        error('The 1st input ''site'' must be a string.')
+        error("The 1st input (site name) must be a string.")
     end
     if ~isnumeric(DATE) || length(num2str(DATE))~=8
-        error(['The 2nd input ''DATE'' must be a numerical date in' ...
-            ' YYYYMMDD format.'])
+        error("The 2nd input (date) must be a numeric value in YYYYMMDD format.")
     end
-    if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
-        error(['The 3rd input ''processlev'' must be a string and can be:'...
-            ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
+    if ~ischar(processing_level) || ~any(strcmp(processing_level, list_of_processing_levels))
+        error("The 3rd input (processing level) must be a string and one of these:\n%s", ...
+           sprintf('%s,', list_of_processing_levels{:}))
     end
-  if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','cross','sector','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
-        error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-            '''stare'',''vad'',''rhi'',''dbs'',''co'',''cross'',''sector'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'', ''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
-    end
-else
-    if nargin < 4
-        error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'''...
-            ' are required for the products: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
-            '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud'',''betavelocovariance''']))
-    end
-    if ~ischar(site)
-        error('The 1st input ''site'' must be a string.')
-    end
-    if ~isnumeric(DATE) || length(num2str(DATE))~=8
-        error(['The 2nd input ''DATE'' must be a numerical date in' ...
-            ' YYYYMMDD format.'])
-    end
-    if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
-        error(['The 3rd input ''processlev'' must be a string and can be:'...
-            ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
-    end
-  if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','cross','sector','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
-        error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-            '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''cross'',''sector'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
+    if ~ischar(observation_type) || ~any(strcmp(observation_type,[list_of_observation_types, list_of_products]))
+        error("The 4th input (observation type) must be a string and one of these:\n%s", ...
+            sprintf("'%s','%s',", list_of_observation_types{:}, list_of_products{:}))
     end
 end
+if nargin < 5 && (~strcmp(processing_level,'product') && ~any(strcmp(observation_type, list_of_products)) && ...
+       ~strcmp(processing_level,'background'))
+    error("Input 'sub_type' is required with %s'", observation_type)
+end
+
 
 % Get default and site specific parameters
 C = getconfig(site,DATE);
@@ -74,11 +57,11 @@ C = getconfig(site,DATE);
 % Convert to string
 thedate = num2str(DATE);
 
-% check if path for given combination of 'processlev' and 'measmode' exist
+% check if path for given combination of 'processing_level' and 'observation_type' exist
 if nargin == 4
-    cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode
+    cpmt = ['dir_' processing_level '_' observation_type]; % -C-.-p-rocesslev_-m-easmode
 elseif nargin == 5
-    cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+    cpmt = ['dir_' processing_level '_' observation_type '_' sub_type]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
 end
 if ~isfield(C,cpmt)
     error(['Can''t find parameter ''%s'' for the site ''%s'' \nand'...

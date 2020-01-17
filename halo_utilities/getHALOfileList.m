@@ -1,86 +1,61 @@
-function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measmode,typeof)
+function [dir_to_folder, file_list] = getHALOfileList(site,DATE,processing_level,observation_type,sub_type)
 %getHALOfileList generates a list of HALO file names measured with a given
 % measurement mode and with a given processing level. Also outputs full path to files.
 %
 % Usage:
-% [~, file_list] = getHALOfilelist(site,DATE,processlev,measmode)
-% [dir_to_folder,~] = getHALOfileList(site,DATE,processlev,measmode)
-% [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measmode)
-% [dir_to_folder, file_list] = getHALOfileList(site,DATE,processlev,measmode,typeof)
+% [~, file_list] = getHALOfilelist(site,DATE,processing_level,observation_type)
+% [dir_to_folder,~] = getHALOfileList(site,DATE,processing_level,observation_type)
+% [dir_to_folder, file_list] = getHALOfileList(site,DATE,processing_level,observation_type)
+% [dir_to_folder, file_list] = getHALOfileList(site,DATE,processing_level,observation_type,sub_type)
 %
 % Inputs:
-% - site            string, name of the site, e.g. 'kuopio'
-% - DATE            scalar, numerical date, e.g. 20171231
-% - processlev      string, 'corrected','original','calibrated','background','product'
-% - measmode        string, 'stare','vad','rhi','co','custom','cross','sector','windvad','winddbs','txt','nc','wstats',
-%                   'epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'
-% - typeof          string, 'co', 'cross','eleXX', 'aziXXX','coXX', where 'XX' is elevation angle (e.g. 'ele15'), 
-%                   or number of rays (e.g. 'co12'), and 'XXX' is azimuth angle (e.g. 'azi023' or 'azi270')
-%                                           
+% - site              string, name of the site, e.g. 'kuopio'
+% - DATE              scalar, numerical date, e.g. 20171231
+% - processing_level  string, e.g. 'calibrated'
+% - observation_type  string, e.g. 'stare', 'epsilon'
+% - sub_type          string, e.g. 'co', 'cross', '3beams', 'ele15', 'co12', 'azi270')      
 %
 % Outputs:
 % - dir_to_folder   full path to the folder 
 % - fille_list      cell array of string,  file names for the site,
 %                   measurement mode and processing level
 %
-% Created 2017-10-20
+% Created 2017-10-20, updated 2020-01-17
 % Antti Manninen
-% antti.j.manninen(at)helsinki.fi
-% University of Helsinki, Finland
+% antti.manninen@hfmi.fi
+% Finnish Meteorological Institute
+
 
 % Check inputs
+list_of_processing_levels = {'original','corrected','calibrated','background','product','level3'};
+list_of_observation_types = {'stare','vad','dbs','rhi','custom','co','txt','nc'}; % TODO: make txt and nc optional inputs
+list_of_products = {'windvad','winddbs','epsilon','wstats','wstats4precipfilter','sigma2vad','windshear',...
+    'LLJ','ABLclassification','cloud','betavelocovariance','ABLclassificationClimatology'};
 if nargin < 4
-    error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
-        ' are required for the products: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
-        '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
+    error("At least inputs 'site', 'DATE', 'processing_level', and 'observation_type'")
 end
-if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'epsilon',...
-        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'})) || ...
-        strcmp(processlev,'background'))
+if (nargin == 4 || nargin == 5) && (strcmp(processing_level,'product') && any(strcmp(observation_type,list_of_products)) || ...
+       strcmp(processing_level,'background'))
     if ~ischar(site)
-        error('The 1st input ''site'' must be a string.')
+        error("The 1st input (site name) must be a string.")
     end
     if ~isnumeric(DATE) || length(num2str(DATE))~=8
-        error(['The 2nd input ''DATE'' must be a numerical date in' ...
-            ' YYYYMMDD format.'])
+        error("The 2nd input (date) must be a numeric value in YYYYMMDD format.")
     end
-    if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
-        error(['The 3rd input ''processlev'' must be a string and can be:'...
-            ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
+    if ~ischar(processing_level) || ~any(strcmp(processing_level, list_of_processing_levels))
+        error("The 3rd input (processing level) must be a string and one of these:\n%s", ...
+           sprintf('%s,', list_of_processing_levels{:}))
     end
-    if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','windvad','winddbs',...
-            'txt','nc','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
-        error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-            '''stare'',''vad'',''dbs'',''rhi'',''co'',''custom'',''windvad'',''winddbs'',''txt'',''nc'',''wstats''\n'...
-            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
+    if ~ischar(observation_type) || ~any(strcmp(observation_type,[list_of_observation_types, list_of_products]))
+        error("The 4th input (observation type) must be a string and one of these:\n%s", ...
+            sprintf("'%s','%s',", list_of_observation_types{:}, list_of_products{:}))
     end
 end
-if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
-        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'})) && ...
-        ~strcmp(processlev,'background'))
-        error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-            ' are required for ANY OTHER products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
-            ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud'',''betavelocovariance''']))
+if nargin < 5 && (~strcmp(processing_level,'product') && ~any(strcmp(observation_type, list_of_products)) && ...
+       ~strcmp(processing_level,'background'))
+    error("Input 'sub_type' is required with %s'", observation_type)
 end
-if nargin == 5
-        if ~ischar(site)
-            error('The 1st input ''site'' must be a string.')
-        end
-        if ~isnumeric(DATE) || length(num2str(DATE))~=8
-            error(['The 2nd input ''DATE'' must be a numerical date in' ...
-                ' YYYYMMDD format.'])
-        end
-        if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
-            error(['The 3rd input ''processlev'' must be a string and can be:'...
-                ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
-        end
-  if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','custom','sector','windvad','winddbs',...
-                'txt','nc','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud','betavelocovariance'}))
-            error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-                '''stare'',''vad'',''rhi'',''dbs'',''co'',''custom'',''sector'',''windvad'',''winddbs'',''txt'',''nc'',''wstats''\n'...
-                '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud'',''betavelocovariance''.']))
-        end        
-end
+
 % Get default and site/unit specific parameters
 C = getconfig(site,DATE);
 
@@ -90,17 +65,17 @@ file_list = {};
 % Convert the date into character array
 thedate = num2str(DATE);
 
-% check if path for given combination of 'processlev' and 'measmode' exist
+% check if path for given combination of 'processing_level' and 'observation_type' exist
 switch nargin
   case 5
-    cpmt = ['dir_' processlev '_' measmode '_' typeof]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+    cpmt = ['dir_' processing_level '_' observation_type '_' sub_type];
   case 4
-    cpmt = ['dir_' processlev '_' measmode]; % -C-.-p-rocesslev_-m-easmode -t-ypeof
+    cpmt = ['dir_' processing_level '_' observation_type];
 end
 if ~isfield(C,cpmt)
-    error(['Can''t find parameter ''%s'' for the site ''%s'' \nand'...
-        ' which would be valid for the date ''%s'' from halo_config.txt'...
-        ' file.'], cpmt,site,num2str(DATE))
+    error(["Can't find parameter '%s' for the site '%s'\n"...
+        "that would be valid on '%s', as specified in halo_config.txt."], ...
+        cpmt,site,num2str(DATE))
 end
 
 % Get directory to the folder
@@ -117,9 +92,9 @@ else
 end
 
 % Generate path
-switch processlev
- case 'original'
-     file_naming = C.(['file_naming_original_' measmode '_' typeof]);
+switch processing_level
+    case 'original'
+     file_naming = C.(['file_naming_original_' observation_type '_' sub_type]);
      file_format = C.file_format_after_hpl2netcdf;
      %   switch ~isempty(findstr(site,'arm-'))
      %    case 1 % ARM site
@@ -132,7 +107,7 @@ switch processlev
      end
      %    end
   case 'background'
-    switch measmode
+    switch observation_type
       case 'txt'
         file_format = '.txt';
         file_names_2look4 = ['*' thedate([7:8 5:6 3:4]) '*' ...
@@ -152,14 +127,14 @@ direc = dir([dir_to_folder,file_names_2look4]);
 if isempty(direc)
   file_list = [];
   if nargin < 5 && nargout == 1
-      warning(['Can''t find ' processlev ' ' measmode ' Halo files for site ' site ' and date ' num2str(DATE) '!'])
+      warning(["Can't find " processing_level " " observation_type " files for site " site " and date " num2str(DATE) "!"])
   elseif nargout == 1
-      warning(['Can''t find ' processlev ' ' measmode ' ' typeof ' Halo files for site ' site ' and date ' num2str(DATE) '!'])
+      warning(["Can't find " processing_level " " observation_type " " sub_type " files for site " site " and date " num2str(DATE) "!"])
   end      
 else
     % Get list of files
     [file_list{1:length(direc),1}] = deal(direc.name);
-    switch processlev
+    switch processing_level
         case 'original'
             % More complex for AMR naming scheme..
             if length(site)>3 && strcmp(site(1:4),'arm-')
@@ -175,7 +150,7 @@ else
                     file_list = file_list(fnids == theuniqs(imin));
                 end
                 i_file = ~cellfun('isempty',strfind(file_list,...
-                    C.(['file_naming_original_' measmode '_' typeof])));
+                    C.(['file_naming_original_' observation_type '_' sub_type])));
                 file_list = file_list(i_file);
                 file_list = sort(file_list);
             else
@@ -200,7 +175,7 @@ else
                     file_list = file_list(fnids == theuniqs(imax));
                 end
                 i_file = ~cellfun('isempty',strfind(file_list,...
-                    C.(['file_naming_original_' measmode '_' typeof])));
+                    C.(['file_naming_original_' observation_type '_' sub_type])));
                 file_list = file_list(i_file);
                 file_list = sort(file_list);
             else
