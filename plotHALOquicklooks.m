@@ -1,7 +1,7 @@
-function plotHALOquicklooks(site,DATES,processlev,measmode,varargin)
+function plotHALOquicklooks(site,DATES,processing_level,observation_type,varargin)
 % Check inputs
 
-p.typeof = nan;
+p.sub_type = nan;
 p.ylabel = '';
 p.xlabel = 'Time UTC (hrs)';
 p.masking = 1; % SNR+1
@@ -19,82 +19,39 @@ if ~isempty(varargin)
         p.ylim(1) = p.ylim(1)/1000; % km
     end
     p.ylim(2) = p.ylim(2)/1000; % km
-    if isfield(p,'typeof')
-      typeof = p.typeof;
+    if isfield(p,'sub_type')
+      sub_type = p.sub_type;
     end
 end
 
+% Check inputs
+list_of_processing_levels = {'original','corrected','calibrated','background','product','level3'};
+list_of_observation_types = {'stare','vad','dbs','rhi','custom','co','txt','nc'}; % TODO: make txt and nc optional inputs
+list_of_products = {'windvad','winddbs','epsilon','wstats','wstats4precipfilter','sigma2vad','windshear',...
+    'LLJ','ABLclassification','cloud','betavelocovariance','ABLclassificationClimatology'};
 if nargin < 4
-    error(sprintf(['At least inputs ''site'', ''DATE'', ''processlev'', and ''measmode'''...
-        ' are required for the products: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad''',...
-        '''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
+    error("At least inputs 'site', 'DATE', 'processing_level', and 'observation_type'")
 end
-if nargin == 4 && (strcmp(processlev,'product') && any(strcmp(measmode,{'epsilon',...
-        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) || ...
-        strcmp(processlev,'background'))
+if (nargin == 4 || nargin == 5) && (strcmp(processing_level,'product') && any(strcmp(observation_type,list_of_products)) || ...
+       strcmp(processing_level,'background'))
     if ~ischar(site)
-        error('The 1st input ''site'' must be a string.')
+        error("The 1st input (site name) must be a string.")
     end
-    if length(DATES)>2
-        error('''DATES'' can have max. length of 2.')
-    elseif length(DATES)==1
-        DATEstart = DATES; DATEend = DATES;
-    elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && ...
-            length(num2str(DATES(2)))~=8)
-        error(['The value(s) in the second input ''DATES'' must be' ...
-            ' numerical date(s) in YYYYMMDD format.'])
-    else
-        DATEstart = DATES(1); DATEend = DATES(2);
+    if ~isnumeric(DATE) || length(num2str(DATE))~=8
+        error("The 2nd input (date) must be a numeric value in YYYYMMDD format.")
     end
-    if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
-        error(['The 3rd input ''processlev'' must be a string and can be:'...
-            ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
+    if ~ischar(processing_level) || ~any(strcmp(processing_level, list_of_processing_levels))
+        error("The 3rd input (processing level) must be a string and one of these:\n%s", ...
+           sprintf('%s,', list_of_processing_levels{:}))
     end
-    if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','custom','co','cross','sector','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
-        error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-            '''stare'',''vad'',''dbs'',''rhi'',''co'',''cross'',''sector'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
+    if ~ischar(observation_type) || ~any(strcmp(observation_type,[list_of_observation_types, list_of_products]))
+        error("The 4th input (observation type) must be a string and one of these:\n%s", ...
+            sprintf("'%s','%s',", list_of_observation_types{:}, list_of_products{:}))
     end
 end
-if nargin < 5 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
-        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
-        ~strcmp(processlev,'background'))
-    error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for ANY OTHER products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
-        ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
-end
-if nargin == 4 && (~strcmp(processlev,'product') && ~any(strcmp(measmode,{'epsilon',...
-        'wstats','wstats4precipfilter','sigma2vad','windshear','LLJ','ABLclassification','cloud'})) && ...
-        ~strcmp(processlev,'background'))
-    error(sprintf(['Inputs ''site'', ''DATE'', ''processlev'', ''measmode'', and ''typeof'''...
-        ' are required for ANY OTHER products than: \n''epsilon'', ''wstats'', ''wstats4precipfilter'', ''sigma2vad'','...
-        ' ''windshear'', ''LLJ'', ''ABLclassification'', ''cloud''']))
-else
-    if ~ischar(site)
-        error('The 1st input ''site'' must be a string.')
-    end
-    if length(DATES)>2
-        error('''DATES'' can have max. length of 2.')
-    elseif length(DATES)==1
-        DATEstart = DATES; DATEend = DATES;
-    elseif ~isnumeric(DATES) || (length(num2str(DATES(1)))~=8 && ...
-            length(num2str(DATES(2)))~=8)
-        error(['The value(s) in the second input ''DATES'' must be' ...
-            ' numerical date(s) in YYYYMMDD format.'])
-    else
-        DATEstart = DATES(1); DATEend = DATES(2);
-    end
-    if ~ischar(processlev) || ~any(strcmp(processlev,{'original','corrected','calibrated','background','product'}))
-        error(['The 3rd input ''processlev'' must be a string and can be:'...
-            ' ''original'', ''corrected'', ''calibrated'', ''background'', or ''product''.'])
-    end
-    if ~ischar(measmode) || ~any(strcmp(measmode,{'stare','vad','dbs','rhi','co','cros','sector','custom','windvad','winddbs',...
-            'txt','wstats','wstats4precipfilter','epsilon','sigma2vad','windshear','LLJ','ABLclassification','cloud'}))
-        error(sprintf(['The 4th input ''measmode'' must be a string and can be:\n'...
-            '''stare'',''vad'',''rhi'',''dbs'',''co'',''sector'',''cross'',''custom'',''windvad'',''winddbs'',''txt'',''wstats''\n'...
-            '''wstats4precipfilter'',''epsilon'',''sigma2vad'',''windshear'',''LLJ'',''ABLclassification'',''cloud''.']))
-    end
+if nargin < 5 && (~strcmp(processing_level,'product') && ~any(strcmp(observation_type, list_of_products)) && ...
+       ~strcmp(processing_level,'background'))
+    error("Input 'sub_type' is required with %s'", observation_type)
 end
 
 % Use datenum to accommodate leap years etc.
@@ -105,8 +62,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     thedate = datestr(DATEi,'yyyymmdd');
     DATE = str2double(thedate);
 
-    if ~isnan(typeof)
-        [dirto,files] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+    if ~isnan(sub_type)
+        [dirto,files] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
     else
         [dirto,files] = getHALOfileList(site,DATE,processlev,measmode);
     end
@@ -120,7 +77,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         case 'calibrated'
             switch measmode
                 case 'stare'
-                    switch p.typeof
+                    switch p.sub_type
                         case {'co','cross','co12'}
                             data = load_nc_struct(fullfile([dirto files{1}]));
                             
@@ -198,7 +155,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             close(hf)
                         otherwise
-			    error("typeof has to be 'co', 'cross', or 'co12'.")
+			    error("sub_type has to be 'co', 'cross', or 'co12'.")
                     end
                 case {'vad','sector'}
                     
@@ -298,7 +255,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         case 'original'
             switch measmode
                 case 'stare'
-                    switch typeof
+                    switch sub_type
                         case 'co'
                             data = load_nc_struct(fullfile([dirto files{1}]));
                             
@@ -374,7 +331,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             
                             
                         otherwise
-			    error("typeof has to be 'co', 'cross', or 'co12'.")
+			    error("sub_type has to be 'co', 'cross', or 'co12'.")
                     end
                 case 'vad'
                     for i = 1:length(files)
@@ -573,10 +530,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     ylabel('Height (km)'); xlabel('Time UTC')
                     set(gca,'Color',[.5 .5 .5])
                     
-                    if exist('typeof','var') == 1
-                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                    if exist('sub_type','var') == 1
+                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
                         export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof))
+                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,sub_type))
                     else
                         [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
                         export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
@@ -835,7 +792,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     cb.Ticks = .995:.005:1.015;
                     
-                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
                     fname = strrep(files{1},'.nc','.png');
                     
                     fprintf('Writing %s\n',fullfile([dir_out fname]))
@@ -910,7 +867,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     cb.Ticks = .995:.005:1.015;
                     ylabel('Height (km)')
                     
-                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                    [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
                     export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
                         '-%s.png'], dir_out,num2str(DATE),site,measmode))
                     close(hf)
@@ -1012,10 +969,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         num2str(cb6.Ticks(:)) repmat('}',length(cb6.Ticks(:)),1)];
                     set(gca,'Color',[.5 .5 .5])
                     
-                    if exist('typeof','var') == 1
-                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,typeof);
+                    if exist('sub_type','var') == 1
+                        [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode,sub_type);
                         export_fig('-png',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
-                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,typeof))
+                            '-%s-%s.png'], dir_out,num2str(DATE),site,measmode,sub_type))
                     else
                         [dir_out,~] = getHALOfileList(site,DATE,processlev,measmode);
                         export_fig('-png','-m2',sprintf(['%s%s_%s_halo-doppler-lidar-' num2str(C.halo_unit_id) ...
