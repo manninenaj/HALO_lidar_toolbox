@@ -30,25 +30,35 @@ end
 x = data.hour;
 y = data.height_agl/1000;
 
+bl_class_names = cell(length(data.bl_classification_types),1);
 for i = 1:length(data.bl_classification_types)
    istart = strfind(att.bl_classification_types.definition,':')-1;
    istop = [istart(2:end) length(att.bl_classification_types.definition)];
    bl_class_names{i} = att.bl_classification_types.definition(istart(i):istop(i)-2);
 end
+
+turb_cpl_names = cell(length(data.turbulence_coupling_types),1);
+for i = 1:length(data.turbulence_coupling_types)
+   istart = strfind(att.turbulence_coupling_types.definition,':')-1;
+   istop = [istart(2:end) length(att.turbulence_coupling_types.definition)];
+   turb_cpl_names{i} = att.turbulence_coupling_types.definition(istart(i):istop(i)-2);
+end
+
 fnames = fieldnames(data);
 fnames_time = fnames(strmatch('counts_bl_classification', fnames));
 for ir = 1:length(fnames_time)
     strtmp = strfind(fnames_time{ir},'_');
     tres = fnames_time{ir}(strtmp(end)+1:end);
-    
-    n_classes = length(data.bl_classification_types)-1;
     n_seasons = length(p.seasons);
     
-    hf = figure;
-    hf.Units = 'centimeters';
-    hf.Position = [.5 .5 20 20];
-    hf.Color = 'white';
-    hf.Visible = 'off';
+    %%-- BL classification --%%
+    n_classes = length(data.bl_classification_types)-1;
+    
+    hf1 = figure;
+    hf1.Units = 'centimeters';
+    hf1.Position = [.5 .5 20 20];
+    hf1.Color = 'white';
+    hf1.Visible = 'off';
     
     ip = 1;
     for iclass = 1:n_classes
@@ -91,17 +101,78 @@ for ir = 1:length(fnames_time)
             if iclass == n_classes
                 xlabel(p.xlabel)
             end
-            text(.75,p.ylims(2)*.85,bl_class_names{iclass},'Color','w','FontSize',6)
+            text(.75,p.ylims(2)*.9,bl_class_names{iclass},'Color','w','FontSize',6)
             ip = ip + 1;
         end
     end
+    
+    file_name_out_bl = strrep(file_name,'.nc','.png');
+    fprintf('Writing %s\n',file_name_out_bl)
+    export_fig('-png','-m2','-nocrop',file_name_out_bl,hf1)
+    close(hf1)
+    
+    %%-- Turbulence coupling --%%
+    n_classes2 = length(data.turbulence_coupling_types);
+    
+    hf2 = figure;
+    hf2.Units = 'centimeters';
+    hf2.Position = [.5 .5 20 20];
+    hf2.Color = 'white';
+    hf2.Visible = 'off';
+    
+    ip_2 = 1;
+    for iclass2 = 1:n_classes2
+        for iseason2 = 1:n_seasons
+            
+            counts_turb_cpl = 0;
+            elements_turb_cpl = 0;
+            for imon = p.seasons{iseason2}
+                counts_turb_cpl = counts_turb_cpl + squeeze(data.(['counts_turbulence_coupling_' tres])(iclass2,imon,:,:));
+                elements_turb_cpl = elements_turb_cpl + squeeze(data.(['number_of_elements_' tres])(imon,:,:));
+            end
+            
+            % Calculate probability
+            z = counts_turb_cpl ./ elements_turb_cpl;
+            
+            subplot(n_classes2, n_seasons, ip_2);
+            pcolor(x, y, z');
+            shading flat;
+            caxis([0 1]);
+            colormap(p.cmap)
+            axis([0 24 0 p.ylims(2)])
+            set(gca,'XTick',0:6:24,'YTick',0:p.y_tick_step:p.ylims(2))
+            if ip_2 == n_seasons*iclass2
+                pause(.2)   
+                apos = get(gca,'Position');
+                cb = colorbar;
+                cb.Units = 'centimeters';
+                cb.Position(3) = .1;
+                cb.Position(1) = 18.5;
+                cb.Ticks = 0:.2:1;
+                cb.Label.String = 'probability';
+                set(gca,'Position',apos);
+            end
+            if iclass2 == 1
+                tmp = month_names(p.seasons{iseason2});
+                title([tmp{:}])
+            end
+            if iseason2 == 1
+                ylabel(p.ylabel)
+            end
+            if iclass2 == n_classes2
+                xlabel(p.xlabel)
+            end
+            text(.75,p.ylims(2)*.9,turb_cpl_names{iclass2},'Color','w','FontSize',6)
+            ip_2 = ip_2 + 1;
+        end
+    end
+    
+    file_name_out_tc = strrep(file_name_out_bl,'bl-classification_climatology.png', 'turbulence-coupling_climatology.png');
+    fprintf('Writing %s\n',file_name_out_tc)
+    export_fig('-png','-m2','-nocrop',file_name_out_tc,hf2)
+    close(hf2)
+ 
 end
-
-file_name_out = strrep(file_name,'.nc','.png');
-fprintf('Writing %s\n',file_name_out)
-export_fig('-png','-m2','-nocrop',file_name_out)
-
-close(hf)
 
 
 % hf = figure; hf.Units = 'Normalized'; hf.Position = [.2 .1 .4 .65]; hf.Color = 'w';

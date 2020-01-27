@@ -127,9 +127,9 @@ direc = dir([dir_to_folder,file_names_2look4]);
 if isempty(direc)
   file_list = [];
   if nargin < 5 && nargout == 1
-      warning(["Can't find " processing_level " " observation_type " files for site " site " and date " num2str(DATE) "!"])
+      warning(['Can''t find ' processing_level ' ' observation_type ' files for site=' site ' and date=' num2str(DATE) '!'])
   elseif nargout == 1
-      warning(["Can't find " processing_level " " observation_type " " sub_type " files for site " site " and date " num2str(DATE) "!"])
+      warning(['Can''t find ' processing_level ' ' observation_type ' ' sub_type ' files for site=' site ' and date=' num2str(DATE) '!'])
   end      
 else
     % Get list of files

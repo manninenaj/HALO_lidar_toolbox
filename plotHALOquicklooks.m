@@ -19,11 +19,6 @@ p.cmapdiv = cmocean('balance');
 p.cmapwdir = colorcet('C8');
 if ~isempty(varargin)
     p = parsePropertyValuePairs(p, varargin);
-    p.ystep = p.ystep/1000; % km
-    if p.ylim(1) ~= 0
-        p.ylim(1) = p.ylim(1)/1000; % km
-    end
-    p.ylim(2) = p.ylim(2)/1000; % km
 end
 
 % Check inputs
@@ -355,7 +350,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             data.signal(smask) = nan;
                         end
                         if ~isnan(p.ylim(2))
-                            cond = data.range>p.ylim(2);
+                            cond = data.range/1000>p.ylim(2);
                             data.signal(:,cond) = [];
                             data.beta_raw(:,cond) = [];
                             data.v_raw(:,cond) = [];
@@ -382,7 +377,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         ylabel(c,' signal intensity (dB)');
                         set(gcf,'color','w')
                         colormap(sp1,p.cmap)
-                        caxis([-20 0])
+                        caxis([-20 10])
                         
                         sp2 = subplot(232);
                         [~,c]= polarPcolor(r,a,b,'rStep',p.ystep,'Nspokes',nspokes);
