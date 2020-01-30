@@ -3,12 +3,10 @@ HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
 This software is released under DRAPL license, for now. See the CRAPL-LICENSE.txt for more details.
 
-This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM sites where Doppler 
-lidar was deployed, Jülich (Germany), and Granada (Spain). However, note that the toolbox is still in development 
-phase and errors might occur. Please let me know if that happens. You are also more than welcome to suggest changes or 
-additions in to the toolbox! 
+The toolbox is still under development and errors might occur. Please let me know if that happens. 
+You are also more than welcome to suggest changes or additions in to the toolbox! 
 
-Please note that the toolbox requires that the original hpl files are converted into netcdf format!
+Please note also, that the toolbox requires that the original hpl files are converted into netcdf format!
 
 
 Height-range-altitude notation:
@@ -16,9 +14,9 @@ Height-range-altitude notation:
                  
              - - - - - - - - - - - - - - - - - - 
               \     |               |   |
-          range\    |range          |   |
+        'range'\    |'range'        |   |
                 \   |               |   |
-                 \  |     height_agl|   |height_asl
+                 \  |   'height_agl'|   |'height_asl'
                   \ |               |   |  
                    ____             |   |
                   _|__|_ - - - - - -|- -|- - -
@@ -27,13 +25,13 @@ Height-range-altitude notation:
                | __ __ __ |         |   |   |
                | || || || |         |   |   |
        building| __ __ __ |         |   |   |
-               | || || || |         |   |   |altitude_instrument 
+               | || || || |         |   |   |'altitude_instrument'
                | __ __ __ |         |   |   |
                | || || || |         |   |   |
           _____|__________|_________|_  |   | 
           ground_level          |       |   |                           
                                 |       |   |  
-                   altitude_site|       |   |  
+                 'altitude_site'|       |   |  
                                 |       |   |  
                                 |       |   |  
                                ~~~~~~~~~~~~~~~~~~~ 
