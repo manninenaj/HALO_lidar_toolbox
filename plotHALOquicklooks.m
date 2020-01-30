@@ -445,30 +445,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         velo_kurto = data.radial_velocity_kurtosis_30min;
                         wstats_time = data.time_30min;
                     end
-                    %% Create a cleaning filter based what field are available
-                    %fnames = fieldnames(data);
-                    %switch ~isempty(strmatch('signal_instrumental_precision_variance_',fnames))
-                    %    case 1
-                    %        condnan = ...
-                    %            10*real(log10(data.signal_mean_3min-1)) < -23 | ...
-                    %            isnan(data.signal_mean_3min) | ...
-                    %            real(log10(data.signal_instrumental_precision_variance_3min)) > 0 | ...
-                    %            data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
-                    %    case 0
-                    %        condnan = ...
-                    %            10*real(log10(data.signal_mean_3min-1)) < -23 | ...
-                    %            isnan(data.signal_mean_3min) | ...
-                    %            data.nsamples_3min < round(max(data.nsamples_3min(:))*.66);
-                    %end
-                    %beta_mean(condnan) = nan;
-                    %snr_var(condnan) = nan;
-                    %velo_mean(condnan) = nan;
-                    %velo_var(condnan) = nan;
-                    %condnan = 10*real(log10(data.signal_mean_60min-1))<-20 | ...
-                    %    isnan(data.signal_mean_60min) | ...
-                    %    data.radial_velocity_mean_error_60min > .33;
-                    %velo_skewn(condnan) = nan;
-                    %velo_kurto(condnan) = nan;
                     
                     hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
                     hf.Color = 'white'; hf.Visible = 'off';
@@ -736,7 +712,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     if ~isfield(data,'height_agl')
                         height = data.height/1000;
                     else
-                        height = data.height_agl_agl/1000;
+                        height = data.height_agl/1000;
                     end
                     hlabel = 'Height agl (km)';
                     

@@ -137,12 +137,6 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
     co = load_nc_struct(fullfile([dir_to_folder_in halo_files{1}]),{'time','range','latitude','longitude','altitude'});
     time_info = co.time;
     range_len = length(co.range);
-    %ncid = netcdf.open([dir_to_folder_in halo_files{1}],'NC_NOWRITE');
-    %varid = netcdf.inqVarID(ncid,'time');
-    %time_info = double(netcdf.getVar(ncid,varid));
-    %varid = netcdf.inqVarID(ncid,'range');
-    %range_len = length(double(netcdf.getVar(ncid,varid)));
-    %netcdf.close(ncid)
     
     % Create common fields and attributes
     [data,att,dim] = createORcopyCommonAttsDims(co,C);
@@ -243,15 +237,6 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
            tmp.(in_vars{i})(cond) = nan;
         end 
 
-        %varid = netcdf.inqVarID(ncid,'v_error');
-        %tmp.v_error = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
-        %varid = netcdf.inqVarID(ncid,'signal');
-        %tmp.signal = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
-        %varid = netcdf.inqVarID(ncid,'beta_raw');
-        %tmp.beta_raw = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
-        %varid = netcdf.inqVarID(ncid,'beta_error');
-        %tmp.beta_error = transpose(double(netcdf.getVar(ncid,varid,istarts,icounts)));
-
         % Get time and range
         varid = netcdf.inqVarID(ncid,'time');
         tmp.time = double(netcdf.getVar(ncid,varid,istarts(2),icounts(2))); tmp.time = tmp.time(:);
@@ -259,15 +244,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
         tmp.range = double(netcdf.getVar(ncid,varid,istarts(1),icounts(1))); tmp.range = tmp.range(:);
         netcdf.close(ncid)
         
-        %cond_nan = isnan(tmp.signal) | isnan(tmp.beta_raw) | isnan(tmp.v_raw) | ...
-        %tmp.signal == C.missing_value | tmp.beta_raw == C.missing_value | ...
-        %tmp.v_raw == C.missing_value;
-        %tmp.v_raw(cond_nan | tmp.v_raw == C.missing_value) = nan;
-        %tmp.v_error(cond_nan | tmp.v_error == C.missing_value) = nan;
-        %tmp.signal(cond_nan | tmp.signal == C.missing_value) = nan;
-        %tmp.beta_raw(cond_nan | tmp.beta_raw == C.missing_value) = nan;
-        %tmp.beta_error(cond_nan | tmp.beta_error == C.missing_value) = nan;
-            
+           
         % Grid into 1 sec resolution
         ref.time_sec = ref.time_info(ref.time_block_indices==ichunk);
         [~,ib] = look4nearest(tmp.time,ref.time_sec);
@@ -277,16 +254,7 @@ for iDATE = datenum(num2str(DATEstart),'yyyymmdd'):...
             ref.(in_vars{ir}) = nan(length(ref.time_sec),length(tmp.range));
             ref.(in_vars{ir})(ib,:) = tmp.(in_vars{ir});
         end
-        %ref.v_error = nan(length(ref.time_sec),length(tmp.range));
-        %ref.signal = nan(length(ref.time_sec),length(tmp.range));
-        %ref.beta = nan(length(ref.time_sec),length(tmp.range));
-        %ref.beta_error = nan(length(ref.time_sec),length(tmp.range));
-        %ref.v_raw(ib,:) = tmp.v_raw;
-        %ref.v_error(ib,:) = tmp.v_error;
-        %ref.signal(ib,:) = tmp.signal;
-        %ref.beta(ib,:) = tmp.beta_raw;
-        %ref.beta_error(ib,:) = tmp.beta_error;
-                
+
         % Set up the little-bag-of-bootstraps.
         lbob.subsample_size = .67;
         lbob.n_subsamples = 15;
