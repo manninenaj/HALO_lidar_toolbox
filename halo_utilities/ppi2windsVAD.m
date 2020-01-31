@@ -1,4 +1,4 @@
-    function [S_out] = ppi2windsVAD(S_in,varargin)
+function [S_out] = ppi2windsVAD(S_in,varargin)
 %ppi2windsVAD calculates wind retrieval and uncertainties based on methods
 % described by: Paeschke et al. (2015) and Newsom et al. (2017).
 %
@@ -49,7 +49,7 @@ end
 % Check inputs
 if ~isstruct(S_in) || ~isfield(S_in,'time') || ~isfield(S_in,'range') ||...
         ~isfield(S_in,'azimuth') || ~isfield(S_in,'elevation') || ...
-        ~isfield(S_in,'velocity') || ~isfield(S_in,'snr') || ~isfield(S_in,'velocity_error')
+        ~isfield(S_in,'velocity_raw') || ~isfield(S_in,'snr') || ~isfield(S_in,'velocity_error')
     error(sprintf(['The input must be a struct variable with followind'...
         ' fields:\n''time'', ''range'', ''azimuth'', ''elevation'',' ...
         ' ''velocity'', ''snr'', and ''velocity_error''.']))
@@ -89,14 +89,6 @@ if ~isnumeric(S_in.elevation) || isscalar(S_in.elevation) || ...
         ' real finite numerical vector with all' ...
         ' values >= 0 and <= 90, and it cannot contain any NaNs.']))
 end
-if ~isnumeric(S_in.velocity) || isscalar(S_in.velocity) || ...
-        isvector(S_in.velocity) || ~isreal(S_in.velocity) || ...
-        size(S_in.velocity,1)~=length(S_in.time) || ...
-        size(S_in.velocity,2)~=length(S_in.range)
-    error(sprintf(['The field ''velocity'' in ''S_in'' has to be a' ...
-        ' real finite numerical [time range] dimensional matrix.']))
-end
-
 if ~isnumeric(S_in.velocity_raw) || isscalar(S_in.velocity_raw) || ...
         isvector(S_in.velocity_raw) || ~isreal(S_in.velocity_raw) || ...
         size(S_in.velocity_raw,1)~=length(S_in.time) || ...
@@ -120,53 +112,38 @@ if ~isnumeric(S_in.velocity_error) || isscalar(S_in.velocity_error) || ...
         ' real finite numerical [time range]\ndimensional matrix.']))
 end
 % If infinite values, convert to nans
-condnan = (~isfinite(S_in.snr) | ~isfinite(S_in.velocity));% | isnan(S_in.snr);
+condnan = (~isfinite(S_in.snr) | ~isfinite(S_in.velocity_raw));% | isnan(S_in.snr);
 S_in.snr(condnan) = nan;
-S_in.velocity(condnan) = nan;
 
 % Initialize
-u = nan(size(S_in.velocity,2),1);
-v = nan(size(S_in.velocity,2),1);
-w = nan(size(S_in.velocity,2),1);
-u_raw = nan(size(S_in.velocity,2),1);
-v_raw = nan(size(S_in.velocity,2),1);
-w_raw = nan(size(S_in.velocity,2),1);
-ws = nan(size(S_in.velocity,2),1);
-wd = nan(size(S_in.velocity,2),1);
-u_error = nan(size(S_in.velocity,2),1);
-v_error = nan(size(S_in.velocity,2),1);
-w_error = nan(size(S_in.velocity,2),1);
-ws_error = nan(size(S_in.velocity,2),1);
-wd_error = nan(size(S_in.velocity,2),1);
-u_error_instr = nan(size(S_in.velocity,2),1);
-v_error_instr = nan(size(S_in.velocity,2),1);
-w_error_instr = nan(size(S_in.velocity,2),1);
-ws_error_instr = nan(size(S_in.velocity,2),1);
-wd_error_instr = nan(size(S_in.velocity,2),1);
-R_squared = nan(size(S_in.velocity,2),1);
-RMSE = nan(size(S_in.velocity,2),1);
-CN = nan(size(S_in.velocity,2),1);
+u = nan(size(S_in.velocity_raw,2),1);
+v = nan(size(S_in.velocity_raw,2),1);
+w = nan(size(S_in.velocity_raw,2),1);
+ws = nan(size(S_in.velocity_raw,2),1);
+wd = nan(size(S_in.velocity_raw,2),1);
+u_error = nan(size(S_in.velocity_raw,2),1);
+v_error = nan(size(S_in.velocity_raw,2),1);
+w_error = nan(size(S_in.velocity_raw,2),1);
+ws_error = nan(size(S_in.velocity_raw,2),1);
+wd_error = nan(size(S_in.velocity_raw,2),1);
+u_error_instr = nan(size(S_in.velocity_raw,2),1);
+v_error_instr = nan(size(S_in.velocity_raw,2),1);
+w_error_instr = nan(size(S_in.velocity_raw,2),1);
+ws_error_instr = nan(size(S_in.velocity_raw,2),1);
+wd_error_instr = nan(size(S_in.velocity_raw,2),1);
+R_squared = nan(size(S_in.velocity_raw,2),1);
+RMSE = nan(size(S_in.velocity_raw,2),1);
+CN = nan(size(S_in.velocity_raw,2),1);
 
-%%--- Calculate wind components ---%%
-% Solve overdetermined linear system A * vr = V_r
-A = [sind(S_in.azimuth(:)) .* sind(90-S_in.elevation(:)),...
-    cosd(S_in.azimuth(:)) .* sind(90-S_in.elevation(:)),...
-    cosd(90-S_in.elevation(:))];
 
-[U,D,V] = svd(A); % A = U*S*transpose(V) to check
+for i = 1:size(S_in.velocity_raw,2) % loop over range gates
+    ia = unique([1; find(~isnan(S_in.velocity_raw(:,i))); length(S_in.velocity_raw(:,i))]);
+    azi_sort = sort(S_in.azimuth);
+    azi_gap = zeros(length(ia)-1,1); 
+    for j = 1:length(ia)-1, azi_gap(j) = abs(azi_sort(ia(j))-azi_sort(ia(j+1))); end
 
-for i = 1:size(S_in.velocity,2) % loop over range gates
-% Only perform fitting if enough data
-    if numel(S_in.velocity(:,i)) - sum(isnan(S_in.velocity(:,i))) < 6
-    % if i<4 %sum(isnan(S_in.velocity(:,i))) > numel(S_in.velocity(:,i))*.25
-        u(i) = nan;
-        v(i) = nan;
-        w(i) = nan;
-        u_raw(i) = nan;
-        v_raw(i) = nan;
-        w_raw(i) = nan;
-        ws(i) = nan;
-        wd(i) = nan;
+    % Only calculate if enough data
+    if numel(S_in.velocity_raw(~condnan(:,i),i))<6 || any(azi_gap>240) % Paeschke et al., (2015)
         u_error_instr(i) = nan;
         v_error_instr(i) = nan;
         w_error_instr(i) = nan;
@@ -181,61 +158,27 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         ws_error(i) = nan;
         wd_error(i) = nan;
     else
-        % Wind components
-
-        % Require finite data only - an issue for Leosphere systems with thresholding applied 
-        if any(isnan(S_in.velocity(:,i)))
-          % Redo SVD
-          index = find(isfinite(S_in.velocity(:,i)));
-          az = S_in.azimuth(index);
-          el = S_in.elevation(index);
-          vr = S_in.velocity(index,i);
-          vr_raw = S_in.velocity_raw(index,i);
-          [nU,nD,nV] = svd([sind(az(:)).*sind(90-el(:)), cosd(az(:)).*sind(90-el(:)), cosd(90-el(:))]);
-          wind_components = nV * pinv(nD) * transpose(nU) * vr;
-          wind_components_raw = nV * pinv(nD) * transpose(nU) * vr_raw;
-        else
-          wind_components = V * pinv(D) * transpose(U) * S_in.velocity(:,i);
-          wind_components_raw = V * pinv(D) * transpose(U) * S_in.velocity_raw(:,i);
-        end
-
+        
+        %%--- Calculate wind components ---%%
+        % unit vectors along the n pointing directions (or rays) with azimuth
+        A = [sind(S_in.azimuth(~condnan(:,i))) .* sind(90-S_in.elevation(~condnan(:,i))),...
+            cosd(S_in.azimuth(~condnan(:,i))) .* sind(90-S_in.elevation(~condnan(:,i))),...
+            cosd(90-S_in.elevation(~condnan(:,i)))];
+        
+        [U,D,V] = svd(A); % A = U*S*transpose(V) to check
+        
+        wind_components = V * pinv(D) * transpose(U) * (S_in.velocity_raw(~condnan(:,i),i));
         u(i) = wind_components(1);
         v(i) = wind_components(2);
         w(i) = wind_components(3);
-        u_raw(i) = wind_components_raw(1);
-        v_raw(i) = wind_components_raw(2);
-        w_raw(i) = wind_components_raw(3);
         % Wind speed
         ws(i) = sqrt(u(i).^2 + v(i).^2);
         % Wind direction
         r2d = 45.0/atan(1.0); % conversion factor
         wd(i) = atan2(u(i), v(i)) * r2d + 180;
         
-        %%--- Error propagation ---%        
-        % variance-covariance matrices
-        C_vr_vr = diag(S_in.velocity_error(:,i));
-        C_v_v = pinv(A) * C_vr_vr * transpose(pinv(A));
-        
-        % Instrumental random noise error for u,v,w
-        wind_comp_error = sqrt(diag(C_v_v));
-        u_error_instr(i) = wind_comp_error(1);
-        v_error_instr(i) = wind_comp_error(2);
-        w_error_instr(i) = wind_comp_error(3);
-        
-        % Instrumental random noise error for wind speed and direction
-        ws_error_instr(i) = sqrt((u(i)*u_error_instr(i))^2 + ...
-            (v(i)*v_error_instr(i))^2) / sqrt(u(i)^2+v(i)^2);
-        wd_error_instr(i) = sqrt((u(i)*v_error_instr(i))^2 + ...
-            (v(i)*u_error_instr(i))^2) / (sqrt(u(i)^2+v(i)^2))^2;
-        
-        % Calculate sine wave fit and goodness-of-fit values
-        if p.fit_error % true
-            [~,R_squared(i),RMSE(i)] = calculateSinusoidalFit(...
-                S_in.azimuth,S_in.velocity(:,i));
-        else % false
-            R_squared(i) = nan;
-            RMSE(i) = nan;
-        end
+        %%--- Error propagation ---%  
+
         
         % Calculate condition number
         s_1 = (transpose(A(:,1))*A(:,1))^(-1/2);
@@ -243,12 +186,48 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         s_3 = (transpose(A(:,3))*A(:,3))^(-1/2);
         S = diag([s_1,s_2,s_3]);
         Z = A * S;
-
-        if any(isnan(Z(:))) | any(not(isfinite(Z(:))))
+        if any(isnan(Z(:))) || any(not(isfinite(Z(:))))
             CN(i) = nan;
         else
             CN(i) = max(svd(Z))/min(svd(Z));
         end
+        if all(isnan(S_in.velocity_error(~condnan(:,i),i)))
+            u_error_instr(i) = nan;
+            v_error_instr(i) = nan;
+            w_error_instr(i) = nan;
+            ws_error_instr(i) = nan;
+            wd_error_instr(i) = nan;
+        else
+           % Initialize variance-covariance matrix 
+           C_Vr_Vr = eye(length(S_in.velocity_raw(~condnan(:,i),i)));
+           C_Vr_Vr(C_Vr_Vr==1) = S_in.velocity_error(~condnan(:,i),i);
+           sqrt_diag_C_v_v = sqrt(diag(pinv(A)*C_Vr_Vr*(pinv(A))'));
+           %C_vr_vr = diag(S_in.velocity_error(:,i));
+           %C_v_v = pinv(A) * C_vr_vr * transpose(pinv(A));
+           
+           % Instrumental random noise error for u,v,w
+           %wind_comp_error = sqrt(diag(C_v_v));
+           u_error_instr(i) = sqrt_diag_C_v_v(1);%wind_comp_error(1);
+           v_error_instr(i) = sqrt_diag_C_v_v(2);%wind_comp_error(2);
+           w_error_instr(i) = sqrt_diag_C_v_v(3);%wind_comp_error(3);
+           
+           % Instrumental random noise error for wind speed and direction
+           ws_error_instr(i) = sqrt((u(i)*u_error_instr(i))^2 + ...
+               (v(i)*v_error_instr(i))^2) / sqrt(u(i)^2+v(i)^2);
+           wd_error_instr(i) = sqrt((u(i)*v_error_instr(i))^2 + ...
+               (v(i)*u_error_instr(i))^2) / (sqrt(u(i)^2+v(i)^2))^2;
+        end
+        
+        % Calculate sine wave fit and goodness-of-fit values
+        if p.fit_error % true
+            [~,R_squared(i),RMSE(i)] = calculateSinusoidalFit(...
+                S_in.azimuth,S_in.velocity_raw(:,i));
+        else % false
+            R_squared(i) = nan;
+            RMSE(i) = nan;
+        end
+        
+
 
         
         % Radial velocity error is comprised of instrumental noise
@@ -259,40 +238,51 @@ for i = 1:size(S_in.velocity,2) % loop over range gates
         % and more specifically the turbulent contribution of the
         % uncertainty is unknown, and thus sigma_r is set to 1.
         % Newsom et al. (2017)
-	sigma_r = 1;
-        tmp_C_all = zeros(3,3);
-        tmp_PSI_all = 0;
-        for k = 1:length(S_in.azimuth)
-            r_k = [sind((S_in.azimuth(k))).*cosd(S_in.elevation(k)),...
-                cosd((S_in.azimuth(k))).*cosd(S_in.elevation(k)),...
-                sind(S_in.elevation(k))];
-            tmp_C = ((transpose(r_k)*r_k)/(sigma_r.^2));
-            tmp_C_all = tmp_C_all + tmp_C;
-            tmp_PSI = ((transpose(wind_components_raw) * transpose(r_k) - ...
-                S_in.velocity_raw(k,i)).^2) / (sigma_r.^2);
-            tmp_PSI_all = tmp_PSI_all + tmp_PSI;
+        if all(isnan(S_in.velocity_raw(~condnan(:,i),i)))
+            u_error(i) = nan;
+            v_error(i) = nan;
+            w_error(i) = nan;
+            ws_error(i) = nan;
+            wd_error(i) = nan;
+        else
+            sigma_r = 1;
+            tmp_C_all = zeros(3,3);
+            tmp_PSI_all = 0;
+            azi_sel = S_in.azimuth(~condnan(:,i));
+            ele_sel = S_in.elevation(~condnan(:,i));
+            v_raw_sel = S_in.velocity_raw(~condnan(:,i),i);
+            for k = 1:length(azi_sel)
+                r_k = [sind((azi_sel(k))).*cosd(ele_sel(k)),...
+                    cosd((azi_sel(k))).*cosd(ele_sel(k)),...
+                    sind(ele_sel(k))];
+                tmp_C = ((transpose(r_k)*r_k)/(sigma_r.^2));
+                tmp_C_all = tmp_C_all + tmp_C;
+                tmp_PSI = ((transpose(wind_components(:)) * transpose(r_k) - ...
+                    v_raw_sel(k)).^2) / (sigma_r.^2);
+                tmp_PSI_all = tmp_PSI_all + tmp_PSI;
+            end
+            C_newsom = inv(tmp_C_all);
+            [~, mID] = lastwarn; % 'Matrix is singular to working precision' warning turned off
+            if ~isempty(mID)
+                warning('off',mID)
+            end
+            
+            PSI = sqrt(tmp_PSI_all);
+            u_error(i) = PSI * sqrt(C_newsom(1,1) / (length(azi_sel) - 3));
+            v_error(i) = PSI * sqrt(C_newsom(2,2) / (length(azi_sel) - 3));
+            w_error(i) = PSI * sqrt(C_newsom(3,3) / (length(azi_sel) - 3));
+            
+            % % % Note: if the total uncertainty of radial velocity would be
+            % % % known the wind component errors could be calculated by:
+            % % % Sigma_uvw = sqrt(diag(C_newsom));
+            % % % u_error(i) = Sigma_uvw(1);
+            % % % v_error(i) = Sigma_uvw(2);
+            % % % w_error(i) = Sigma_uvw(3);
+            
+            % Wind speed and direction error as given by Newsom et al. (2017)
+            ws_error(i) = sqrt((u(i) * u_error(i))^2 + (v(i) * v_error(i))^2) / sqrt(u(i)^2 + v(i)^2);
+            wd_error(i) = sqrt((u(i) * v_error(i))^2 + (v(i) * u_error(i))^2) / (sqrt(u(i)^2 + v(i)^2))^2;
         end
-        C_newsom = inv(tmp_C_all);
-        [~, mID] = lastwarn; % 'Matrix is singular to working precision' warning turned off
-        if ~isempty(mID)
-          warning('off',mID)
-        end
-
-        PSI = sqrt(tmp_PSI_all);
-        u_error(i) = PSI * sqrt(C_newsom(1,1) / (length(S_in.azimuth) - 3));
-        v_error(i) = PSI * sqrt(C_newsom(2,2) / (length(S_in.azimuth) - 3));
-        w_error(i) = PSI * sqrt(C_newsom(3,3) / (length(S_in.azimuth) - 3));
-        
-        % % % Note: if the total uncertainty of radial velocity would be
-        % % % known the wind component errors could be calculated by:
-        % % % Sigma_uvw = sqrt(diag(C_newsom));
-        % % % u_error(i) = Sigma_uvw(1);
-        % % % v_error(i) = Sigma_uvw(2);
-        % % % w_error(i) = Sigma_uvw(3);
-        
-        % Wind speed and direction error as given by Newsom et al. (2017)
-        ws_error(i) = sqrt((u_raw(i) * u_error(i))^2 + (v_raw(i) * v_error(i))^2) / sqrt(u_raw(i)^2 + v_raw(i)^2);
-        wd_error(i) = sqrt((u_raw(i) * v_error(i))^2 + (v_raw(i) * u_error(i))^2) / (sqrt(u_raw(i)^2 + v_raw(i)^2))^2;
     end
 end
 

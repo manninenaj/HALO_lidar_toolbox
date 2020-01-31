@@ -14,12 +14,16 @@ p.ylim = [0 nan]; % km
 p.ystep = 2; % km
 p.azilim = [0 360]; % degrees
 p.azistep = 60; % degrees
-p.cmap = cmap_darkviolet_to_brickred;
+p.cmap = cmocean('thermal');
 p.cmapdiv = cmocean('balance');
 p.cmapwdir = colorcet('C8');
+p.font_size = 8;
 if ~isempty(varargin)
     p = parsePropertyValuePairs(p, varargin);
 end
+
+set(0,'defaulttextfontsize',p.font_size);
+set(0,'defaultaxesfontsize',p.font_size);
 
 % Check inputs
 if ~ischar(site)
@@ -693,7 +697,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1.1 7.3 11 2.2]);
                     caxis([0 7]); colormap(sp1,cmap_tkecw); text(0,3.35,'Turbulence coupling');
                     cb = colorbar; cb.Ticks = .5:6.5;  cb.Units = 'centimeters';
-                    cb.TickLabels = sprintf(blatt.turbulence_coupling_3min.definition); cb.FontSize = 6; pause(.5); ax1 = get(gca,'Position');
+                    cb.TickLabels = sprintf(blatt.turbulence_coupling_3min.definition); cb.FontSize = p.font_size; pause(.5); ax1 = get(gca,'Position');
                     cb.Position(3) = .25; cb.Position(1) = 10.4; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)');
                     
@@ -702,7 +706,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[1.1 4.2 11 2.2]);
                     caxis([0 10]); colormap(sp3,cmap_blc); text(0,3.35,'Boundary layer classification')
                     cb = colorbar; cb.Ticks = .5:9.5;  cb.Units = 'centimeters';
-                    cb.TickLabels = sprintf(blatt.bl_classification_3min.definition); cb.FontSize = 6; pause(.5); ax1 = get(gca,'Position');
+                    cb.TickLabels = sprintf(blatt.bl_classification_3min.definition); cb.FontSize = p.font_size; pause(.5); ax1 = get(gca,'Position');
                     cb.Position(3) = .25; cb.Position(1) = 10.4; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel('Height (km)'); xlabel(p.xlabel); pause(.1)
                     
@@ -739,17 +743,18 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     sp1 = subplot(521);
                     pcolor(data.time,height,ws); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([0 20]); colormap(sp1,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
+                    caxis([0 25]); colormap(sp1,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    ylabel(hlabel);
+                    ylabel(hlabel); set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size;
                     
                     sp2 = subplot(322);
                     pcolor(data.time,height,ws_e); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
                     caxis([0 3]); colormap(sp2,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed error')
                     cb = colorbar; cb.Ticks = 0:.5:10; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters'); 
+                    set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size; ylabel(hlabel);
                     
                     sp3 = subplot(323);
                     pcolor(data.time,height,wd); axis([0 24 0 p.ylim(2)]); shading flat
@@ -757,7 +762,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     caxis([0 360]); colormap(sp3,p.cmapwdir); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction');
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = 0:90:360;
+                    cb.Ticks = 0:90:360; set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size;
                     ylabel(hlabel);
                     
                     sp4 = subplot(324);
@@ -766,7 +771,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     caxis([0 2]); colormap(sp4,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind direction error')
                     cb = colorbar; cb.Label.String = 'degrees'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = 0:.5:2;
+                    cb.Ticks = 0:.5:2; set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size;ylabel(hlabel);
                     
                     sp5 = subplot(325);
                     pcolor(data.time,height,w); axis([0 24 0 p.ylim(2)]); shading flat
@@ -774,16 +779,16 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     caxis([-3 3]); colormap(sp5,p.cmapdiv); text(0,p.ylim(2)+p.ylim(2)*.1,'w wind component')
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = -3:1:3;
-                    ylabel(hlabel);
+                    cb.Ticks = -3:1:3; set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size;
+                    ylabel(hlabel); xlabel(p.xlabel)
                     
                     sp6 = subplot(326);
-                    pcolor(data.time,height,snr); axis([0 24 0 p.ylim(2)]); shading flat
+                    pcolor(data.time,height,10*real(log10((snr-1)))); axis([0 24 0 p.ylim(2)]); shading flat
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
-                    caxis([.995 1.015]); colormap(sp6,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Mean signal')
-                    cb = colorbar; cb.Label.String = 'SNR+1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
+                    caxis([-40 10]); colormap(sp6,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Mean signal (SNR)')
+                    cb = colorbar; cb.Label.String = 'dB'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
                     cb.Position(3) = .25; cb.Position(1) = 22.8; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
-                    cb.Ticks = .995:.005:1.015;
+                    cb.Ticks = -40:10:10; xlabel(p.xlabel); set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size; ylabel(hlabel);
                     
                     [dir_out,~] = getHALOfileList(site,DATE,processing_level,observation_type,p.sub_type);
                     fname = strrep(files{1},'.nc','.png');

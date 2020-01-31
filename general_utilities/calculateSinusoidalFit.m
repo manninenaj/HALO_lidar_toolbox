@@ -19,7 +19,7 @@ else
 
   % Range of ?y?
   yr = (yu-yl);
-  yz = y-yu+(yr/2);
+  %yz = y-yu+(yr/2);
   %%% Find zero-crossings
   %%% zx = x(yz .* circshift(yz,[-1 1]) <= 0);
   % Estimate period
@@ -44,7 +44,7 @@ else
   % Goodness-of-fit parameters
   R_squared = 1 - nansum((vr(iazi) - (transpose(func_to_fit(s,xp)) + nanmean(vr(iazi)))  ).^2) ./ nansum((vr(iazi) - nansum(vr(iazi))).^2);
 
-RMSE = sqrt(nansum(sine_fit(:) - vr(:)).^2 / length(vr));
+  RMSE = sqrt(nansum(sine_fit(:) - vr(:)).^2 / length(vr));
 end
-end
+
 
