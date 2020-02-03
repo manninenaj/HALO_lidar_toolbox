@@ -1,7 +1,7 @@
 # HALO lidar toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
-This software is released under DRAPL license, for now. See the CRAPL-LICENSE.txt for more details.
+This software is released under CRAPL license, for now. See the CRAPL-LICENSE.txt for more details.
 
 The toolbox is still under development and errors might occur. Please let me know if that happens. 
 You are also more than welcome to suggest changes or additions in to the toolbox! 
