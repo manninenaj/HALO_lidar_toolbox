@@ -32,14 +32,12 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 % antti.manninen@fmi.fi
 
 if ~isfield(data_in,'elevation')
-    elev = 90; % Assume vertical profile data
-else 
-    elev = data_in.elevation;
+    error('Field ''elevation'' missing from input struct!')
 end
-data_out.elevation = elev;
+data_out.elevation = data_in.elevation;
 att_out.elevation = create_attributes(...
     {'time'},...
-    'Elevation from horizontal', ...
+    'Elevation from horizon', ...
     'degrees');
 
 % Add dims
@@ -92,8 +90,8 @@ end
 %    end
 % assume the elevation was supposed to be the same...
 %else
-data_out.height_agl = data_in.range .* sind(nanmedian(elev)) + actual_height_above_ground;
-data_out.height_asl = data_in.range .* sind(nanmedian(elev)) + actual_instrument_altitude_asl;
+data_out.height_agl = data_in.range ./ sind(nanmedian(data_in.elevation)) + actual_height_above_ground;
+data_out.height_asl = data_in.range ./ sind(nanmedian(data_in.elevation)) + actual_instrument_altitude_asl;
 %end
 att_out.height_agl = create_attributes(...
     {'range'},...

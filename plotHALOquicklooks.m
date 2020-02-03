@@ -745,7 +745,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                     set(gca,'XTick',0:3:24,'Units','centimeters','Position',[1 7.3 11 2.2],'Color',rgb('DarkGray'),'YTick',0:p.ystep:p.ylim(2));
                     caxis([0 25]); colormap(sp1,p.cmap); text(0,p.ylim(2)+p.ylim(2)*.1,'Wind speed');
                     cb = colorbar; cb.Label.String = 'm s-1'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
-                    cb.Ticks = 0:5:20; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
+                    cb.Ticks = 0:5:25; cb.Position(3) = .25; cb.Position(1) = 10.3; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                     ylabel(hlabel); set(gca,'FontSize',p.font_size); cb.FontSize = p.font_size;
                     
                     sp2 = subplot(322);
