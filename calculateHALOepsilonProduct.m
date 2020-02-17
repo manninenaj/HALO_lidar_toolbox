@@ -123,6 +123,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]));
 
     % Create common attribues, fields, and dimensions
+    wstats.elevation = 90;
     [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
     data = rmfield(data, 'elevation');
     if strcmp(windproduct,'winddbs')
