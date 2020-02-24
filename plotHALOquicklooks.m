@@ -689,12 +689,28 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         
                     case 'windvad'
                         
-                        snr = transpose(data.mean_snr);
                         ws = transpose(data.wind_speed);
                         wd = transpose(data.wind_direction);
-                        ws_e = transpose(data.wind_speed_error);
-                        wd_e = transpose(data.wind_direction_error);
-                        w = transpose(data.w);
+                        if ~isfield(data,'mean_snr')
+    			    snr = nan(size(ws));
+			else
+                            snr = transpose(data.mean_snr);			  
+                        end
+                        if ~isfield(data,'wind_speed_error')
+    			    ws_e = nan(size(ws));
+			else
+                            ws_e = transpose(data.wind_speed_error);
+                        end
+                        if ~isfield(data,'wind_direction_error')
+    			    wd_e = nan(size(ws));
+			else
+                            wd_e = transpose(data.wind_direction_error);			  
+                        end
+                        if ~isfield(data,'w')
+    			    w = nan(size(ws));
+			else
+                            w = transpose(data.w);			  
+                        end
                         
                         if ~isfield(data,'height_agl')
                             height = data.height/1000;
