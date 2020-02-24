@@ -724,18 +724,6 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             p.ylim(2) = ceil(height(end)/1000);
                         end
 
-                        if size(ws,1)==length(data.time)
-			  ws = transpose(ws);
-			  wd = transpose(wd);
-			  ws_e = transpose(ws_e);
-			  wd_e = transpose(wd_e);
-			  snr = transpose(snr);
-			  w = transpose(w);
-                        end
-			disp(size(ws))
-			disp(size(data.time))
-			disp(size(height))
-
                         
                         sp1 = subplot(521);
                         pcolor(data.time,height,ws); axis([0 24 0 p.ylim(2)]); shading flat

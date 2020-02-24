@@ -1,5 +1,7 @@
 function [data,att] = my_load_nc_struct(file_name, var_names)
 
+fprintf('load_nc_struct failed to open a netcdf file, trying with my_load_nc_struct...')
+
 data = [];
 att = [];
 if nargout < 1; error('No outputs..there must be outputs!'); end
@@ -38,6 +40,7 @@ for i = 1:length(var_names)
         att.(var_names{i}).(att_names{j}) = att_vals{j};
     end
 end
+fprintf('Success!\n')
 
 end
 
