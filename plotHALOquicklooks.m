@@ -551,8 +551,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                             case 3
                                 noise_error = wstats.radial_velocity_instrumental_uncertainty_variance_3min;
                         end
-                        velovar_error = wstats.radial_velocity_simple_variance_error_3min;
-                        velo_var = wstats.radial_velocity_simple_variance_3min - noise_error;
+                        if isfield(wstats,'radial_velocity_simple_variance_error_3min')
+                            velovar_error = wstats.radial_velocity_simple_variance_error_3min;
+                            velo_var = wstats.radial_velocity_simple_variance_3min - noise_error;
+			else
+			    velo_var = wstats.radial_velocity_variance_3min - noise_error;
+                            velovar_error = wstats.radial_velocity_variance_error_3min;
+                        end
                         velo_var(velo_var<0)=nan;
                         
                         
