@@ -140,10 +140,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         end
         if not(isfield(wind_tday,'u'))
             % Calculate u and v components
-            wind_tday.u = abs(wind_tday.wind_speed) .* sin(pi.*wind_tday.wind_direction/180);% u = u';
+            wind_tday.u = abs(wind_tday.wind_speed) .* sin(pi.*wind_tday.wind_direction/180);
         end
         if not(isfield(wind_tday,'v'))
-            wind_tday.v = abs(wind_tday.wind_speed) .* cos(pi.*wind_tday.wind_direction/180);% v = v';
+            wind_tday.v = abs(wind_tday.wind_speed) .* cos(pi.*wind_tday.wind_direction/180);
         end
     end
     if ~isempty(wind_files_yday)
@@ -179,12 +179,17 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     fnames = fieldnames(wstats);
     ifs = strmatch('radial_velocity_simple_variance', fnames);
     fnames_var = fnames(ifs);
-    if isempty(fnames_var)
-        warning(['Simple variance not calculated for ' thedate ' at ' site '. Try recalculating wstats.'])
-        continue
-    end
     ifs_false = strmatch('radial_velocity_simple_variance_error',fnames_var);
     fnames_var(ifs_false) = [];
+    if isempty(fnames_var)
+        warning(sprintf(['Simple variance not calculated for ' thedate ' at ' site '.\n' ...
+            'It is recommend to recalculate wstats, when you have time...\n'...
+	    'For now, using unbiased Rimoldini variance.']))
+        ifs = strmatch('radial_velocity_variance', fnames);
+        fnames_var = fnames(ifs);
+        ifs_no = strmatch('radial_velocity_variance_error', fnames_var);
+        fnames_var(ifs_no) = [];
+    end
 
     % The naming of this variable has changed over the iterations. For existing data all versions are checked.
     name_options = cellstr(strvcat('radial_velocity_instrumental_error_mean_3min',...
@@ -263,6 +268,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
         nsamples_in_wstats = wstats.(fnames_nsamples{ii});
         
         % Re-grid the winds
+	if ~isfield(wstats,'height_agl') % assume it is the same...
+	    wstats.height_agl = wstats.height;
+        end
+	if ~isfield(wind_tday,'height_agl') % assume it is the same...
+	    wind_tday.height_agl = wind_tday.height;
+        end
+
         [Xr,Yr] = meshgrid(wstats.height_agl, wstats.(fnames_time{ii}));
 
         if not(isempty(wind_tmrw) || isempty(wind_yday))
