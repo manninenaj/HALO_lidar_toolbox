@@ -122,6 +122,14 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     wstats = load_nc_struct(fullfile([dir_wstats_in '/' wstats_files{1}]));
     wind_tday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]));
 
+    if isempty(wind_tday)
+        wind_tday = my_load_nc_struct(fullfile([dir_wind_in '/' wind_files_tday{1}]));
+    end
+    if isempty(wind_tday)
+        Warning('Cannot open file %s',fullfile([dir_wind_in '/' wind_files_tday{1}]));
+        continue
+    end
+
     % Create common attribues, fields, and dimensions
     wstats.elevation = 90;
     [data,att,dim] = createORcopyCommonAttsDims(wstats,C);
@@ -141,6 +149,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     if ~isempty(wind_files_yday)
         % load if exists
         wind_yday = load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]));
+        if isempty(wind_yday)
+            wind_yday = my_load_nc_struct(fullfile([dir_wind_in '/' wind_files_yday{1}]));
+        end
+        if isempty(wind_yday)
+            Warning('Cannot open file %s',fullfile([dir_wind_in '/' wind_files_yday{1}]));
+            continue
+        end
     else
         % empty otherwise
         wind_yday = [];
@@ -148,6 +163,13 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
     if ~isempty(wind_files_tmrw)
         % load if exists
         wind_tmrw = load_nc_struct(fullfile([dir_wind_in '/' wind_files_tmrw{1}]));
+        if isempty(wind_tmrw)
+            wind_tmrw = my_load_nc_struct(fullfile([dir_wind_in '/' wind_files_tmrw{1}]));
+        end
+        if isempty(wind_tmrw)
+            Warning('Cannot open file %s',fullfile([dir_wind_in '/' wind_files_tmrw{1}]));
+            continue
+        end
     else 
         % empty otherwise
         wind_tmrw = [];

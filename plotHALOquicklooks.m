@@ -84,7 +84,8 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
             [data,att] = my_load_nc_struct([dirto files{1}]);
         end
         if isempty(data)
-            error('Cannot open file %s',[dirto files{1}]);
+            Warning('Cannot open file %s',[dirto files{1}]);
+            continue
         end
             
         hf = figure; hf.Units = 'centimeters'; hf.Position = [.5 2 25 10];
