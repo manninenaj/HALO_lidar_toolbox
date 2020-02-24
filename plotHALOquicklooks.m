@@ -534,6 +534,11 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         
                         [dirsnr,filessnr] = getHALOfileList(site,DATE,'product' ,'wstats');
                         wstats = load_nc_struct(fullfile([dirsnr filessnr{1}]));
+                        if ~isfield(wstats,'height_agl')
+                            wstats_height = wstats.height/1000;
+                        else
+                            wstats_height = wstats.height_agl/1000;
+                        end
                         
                         epsilon = data.epsilon_3min;
                         epsilon_error = data.epsilon_error_3min;
@@ -608,10 +613,12 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):...
                         ylabel('Height (km)'); xlabel('Time UTC')
                         
                         sp6 = subplot(326);
-                        pcolor(wstats.time_3min,wstats.height_agl/1000,transpose(real(log10(velovar_error)))); axis([0 24 0 p.ylim(2)]); shading flat
+                        pcolor(wstats.time_3min,wstats_height,transpose(real(log10(velovar_error)))); axis([0 24 0 p.ylim(2)]); shading flat
                         set(gca,'YTick',0:p.ystep:p.ylim(2),'XTick',0:3:24,'Units','centimeters','Position',[13.5 1.1 11 2.2],'Color',rgb('DarkGray'));
                         caxis([-3 0]); colormap(sp6,p.cmap); text(0,3.35,'velocity variance error')
                         cb = colorbar; cb.Label.String = 'm2 s-2'; ax1 = get(gca,'Position'); cb.Units = 'centimeters';
+                        cb.Ticks = -3:0; cb.TickLabels = [repmat('10^{',length(cb.Ticks(:)),1), ...
+                                     num2str(cb.Ticks(:)) repmat('}',length(cb.Ticks(:)),1)];
                         cb.Position(3) = .25;   cb.Position(1) = 22.7; pause(.1); set(gca,'Position',ax1,'Units','centimeters');
                         xlabel('Time UTC');
                         
