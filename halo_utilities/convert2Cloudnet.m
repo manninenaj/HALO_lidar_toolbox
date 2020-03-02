@@ -137,8 +137,8 @@ data1.v = data1.v_raw;
 data1.v(data1.signal < double(data1.noise_threshold)) = nan;
 
 if isfield(data0,[C.field_name_original_snr '_' C.corrected_field_name_identifier])
-    data1.beta_error0 = (1/sqrt(data0.num_pulses_m1)) .* (1+(1./abs(data0.signal-1)));
-    [data1.v_error0,att1.v_error0] = calculateHALOveloError(site,DATE,measmode,typeof,data0.signal);
+    data1.beta_error0 = (1/sqrt(C.(['num_pulses_m1_' abc]))) .* (1+(1./abs(data0.(C.field_name_original_snr)-1)));
+    [data1.v_error0,att1.v_error0] = calculateHALOveloError(site,DATE,measmode,typeof,data0.(C.field_name_original_snr));
     att1.v_error0.comments = 'Uncertainty of radial velocity estimated from original signal';
     % original signal
     att1.signal0 = create_attributes(...

@@ -161,10 +161,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                     end                           
                     
                     % Check number of range gates
-                    if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
-                        warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
-                            num2str(length(data0.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
-                    else
+                    %if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
+                    %    warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
+                    %        num2str(length(data0.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
+                    %else
                         % Convert time into decimal hrs
                         switch C.time_format_original
                             case 'julian'
@@ -194,10 +194,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                             % load the rest
                             for i = 2:length(loadinfo.(abc).files)
                                 data0 = load_nc_struct(fullfile(loadinfo.(abc).path_to,loadinfo.(abc).files{i}));
-                                if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
-                                    warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
-                                        num2str(length(data0.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
-                                else
+                                %if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
+                                %    warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
+                                %        num2str(length(data0.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
+                                %else
                                     
                                     % Convert time into decimal hrs
                                     switch C.time_format_original
@@ -232,7 +232,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                         % Stack the rest...
                                         data1.(fnamesdata1{i2}) = [data1.(fnamesdata1{i2}); tmpdata1.(fnamesdata1{i2})];
                                     end
-                                end
+                                %end
                             end
                         end
                         
@@ -251,7 +251,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         
                         % write new file
                         write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
-                    end
+                    %end
                 otherwise
                     for i = 1:length(loadinfo.(abc).files)
                         %-- load --%
@@ -266,10 +266,10 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                         end                           
                         
                         % Check number of range gates
-                        if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
-                            warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
-                                num2str(length(data0.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
-                        else
+                        %if C.num_range_gates ~= length(data0.(C.field_name_original_range)(:))
+                        %    warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
+                        %        num2str(length(data0.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
+                        %else
                             
                             % Convert time into decimal hrs
                             switch C.time_format_original
@@ -297,10 +297,18 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
          	            [data1,att1,dim1] = convert2Cloudnet(site,DATE,fnames{i_out,1},fnames{i_out,2},data0);
      
                             % If more than one file per day
-                            if length(loadinfo.(abc).files)>1                
-                                fndate = loadinfo.(abc).files{i}(1:15);
+                            if length(loadinfo.(abc).files)>1
+			        if strmatch('arm-', site)
+			            fndate = [loadinfo.(abc).files{i}(15:22) '_' loadinfo.(abc).files{i}(24:29)];
+                                else
+                                    fndate = loadinfo.(abc).files{i}(1:15);
+                                end
                             else
-                                fndate = loadinfo.(abc).files{i}(1:8);
+			        if strmatch('arm-', site)
+			            fndate = [loadinfo.(abc).files{i}(15:22) '_' loadinfo.(abc).files{i}(24:29)];
+                                else
+                                    fndate = loadinfo.(abc).files{i}(1:8);
+                                end
                             end
                                                         
                             % correct focus
@@ -311,7 +319,7 @@ for DATEi = datenum(num2str(DATEstart),'yyyymmdd'):datenum(num2str(DATEend),'yyy
                                                        
                             % write new file
                             write_nc_struct(fullfile([dir_to_folder_out '/' fndate '_' site '_halo-doppler-lidar-' num2str(C.halo_unit_id) '-' mname '.nc']),dim1,data1,att1);
-                        end
+                        %end
                     end
             end
         end

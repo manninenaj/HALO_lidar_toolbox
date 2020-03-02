@@ -66,10 +66,13 @@ else
         end
         
         % Check number of range gates
-        if C.num_range_gates ~= length(data.(C.field_name_original_range)(:))
-            warning('\n Number of range gates is %s and not %s as specified in the config file --> skipping...',...
-                num2str(length(data.(C.field_name_original_range)(:))),num2str(C.num_range_gates))
-        else
+        num_range_gates_actual = length(data.(C.field_name_original_range)(:));
+        %if C.num_range_gates ~= num_range_gates_actual
+        %    warning('\n Number of range gates is %s and not %s as specified in the config file --> using %s...',...
+	%	    num2str(num_range_gates_actual),num2str(C.num_range_gates),num2str(num_range_gates_actual))
+	%   C.num_range_gates = length(data.(C.field_name_original_range)(:))
+        %end
+        %else
             % time
             time_tmp{i} = data.(C.field_name_original_time)(:);
             
@@ -114,6 +117,6 @@ else
             data_4bkgcorr.time = time;
             data_4bkgcorr.range = range;
             data_4bkgcorr.snr = snr;
-        end
+        %end
     end
 end
