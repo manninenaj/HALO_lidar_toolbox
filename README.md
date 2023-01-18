@@ -1,18 +1,19 @@
 # HALO lidar toolbox
 HALO Streamline Photonics Doppler lidar data postprocessing toolbox
 
-This software is released under CRAPL license, for now. See the CRAPL-LICENSE.txt for more details.
+This software is released under CRAPL license, and as is. See the CRAPL-LICENSE.txt for more details.
 
 This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM sites where Doppler 
-lidar was deployed, Jülich (Germany), and Granada (Spain). However, note that the toolbox is still in development 
-phase and errors might occur. Please let me know if that happens. You are also more than welcome to suggest changes or 
-additions in to the toolbox! 
+lidar was deployed, Jülich (Germany), and Granada (Spain). 
+
+Please note that the toolbox is not developed aynomre phase and errors might occur. 
+I've since moved on to different tasks so I cannot provide any suppor for this toolbox. 
+Feel free to modify and improve if needed!
 
 Please note that the toolbox requires that the original hpl files are converted into netcdf format!
 
-8 November 2018  
+18 Jan 2023  
 Antti J Manninen  
-contact at anttijuhanimanninen at gmail com
 
 ----
 ### Sequence for processing HALO Doppler lidar data by using this toolbox:
