@@ -6,7 +6,7 @@ This software is released under CRAPL license, and as is. See the CRAPL-LICENSE.
 This toolbox has been succesfully tested at several sites: FMI Dopper lidar network sites, ARM sites where Doppler 
 lidar was deployed, Jülich (Germany), and Granada (Spain). 
 
-Please note that the toolbox is not developed aynomre phase and errors might occur. 
+Please note that the toolbox is not developed anymore and errors might occur. 
 I've since moved on to different tasks so I cannot provide any suppor for this toolbox. 
 Feel free to modify and improve if needed!
 
