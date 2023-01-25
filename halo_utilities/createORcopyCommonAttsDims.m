@@ -32,13 +32,14 @@ function [data_out,att_out,dim_out] = createORcopyCommonAttsDims(data_in,C)
 % antti.manninen@fmi.fi
 
 if ~isfield(data_in,'elevation')
-    error('Field ''elevation'' missing from input struct!')
+    warning('Field ''elevation'' missing from input struct.')
+else
+    data_out.elevation = data_in.elevation;
+    att_out.elevation = create_attributes(...
+        {'time'},...
+        'Elevation from horizon', ...
+        'degrees');
 end
-data_out.elevation = data_in.elevation;
-att_out.elevation = create_attributes(...
-    {'time'},...
-    'Elevation from horizon', ...
-    'degrees');
 
 % Add dims
 if ~isfield(data_in,'range')
